@@ -1,0 +1,97 @@
+{
+  "description": "Include directive tests - requires template loader setup",
+  "note": "These tests require a configured include_root with partial files",
+  "tests": [
+    {
+      "name": "basic include",
+      "template": "{[> /simple]}",
+      "partials": {
+        "/simple": "Hello from partial"
+      },
+      "data": {},
+      "expected": "Hello from partial"
+    },
+    {
+      "name": "include with nested path",
+      "template": "{[> /components/header]}",
+      "partials": {
+        "/components/header": "Header Content"
+      },
+      "data": {},
+      "expected": "Header Content"
+    },
+    {
+      "name": "include with argument",
+      "template": "{[> /greeting name=user]}",
+      "partials": {
+        "/greeting": "Hello, {[ name ]}!"
+      },
+      "data": {"user": "Alice"},
+      "expected": "Hello, Alice!"
+    },
+    {
+      "name": "include with multiple arguments",
+      "template": "{[> /card title=cardTitle body=cardBody]}",
+      "partials": {
+        "/card": "[{[ title ]}] {[ body ]}"
+      },
+      "data": {"cardTitle": "Title", "cardBody": "Body"},
+      "expected": "[Title] Body"
+    },
+    {
+      "name": "include with path argument",
+      "template": "{[> /user name=user.name]}",
+      "partials": {
+        "/user": "User: {[ name ]}"
+      },
+      "data": {"user": {"name": "Bob"}},
+      "expected": "User: Bob"
+    },
+    {
+      "name": "include in if block",
+      "template": "{[#if show]}{[> /content]}{[/if]}",
+      "partials": {
+        "/content": "Shown"
+      },
+      "data": {"show": true},
+      "expected": "Shown"
+    },
+    {
+      "name": "include in each block",
+      "template": "{[#each items as item]}{[> /item value=item]}{[/each]}",
+      "partials": {
+        "/item": "[{[ value ]}]"
+      },
+      "data": {"items": ["a", "b"]},
+      "expected": "[a][b]"
+    },
+    {
+      "name": "include allows shadowing",
+      "template": "{[> /shadow name=other]}",
+      "partials": {
+        "/shadow": "{[ name ]}"
+      },
+      "data": {"name": "original", "other": "shadowed"},
+      "expected": "shadowed"
+    },
+    {
+      "name": "include with variable in partial",
+      "template": "{[> /wrapper]}",
+      "partials": {
+        "/wrapper": "{[ globalVar ]}"
+      },
+      "data": {"globalVar": "global"},
+      "expected": "global"
+    },
+    {
+      "name": "nested includes",
+      "template": "{[> /outer]}",
+      "partials": {
+        "/outer": "Outer[{[> /inner]}]",
+        "/inner": "Inner"
+      },
+      "data": {},
+      "expected": "Outer[Inner]"
+    }
+  ]
+}

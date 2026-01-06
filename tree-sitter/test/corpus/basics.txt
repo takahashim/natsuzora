@@ -1,0 +1,48 @@
+==================
+text and variables
+==================
+Hello {[user.name]}!
+---
+(template
+  (text)
+  (variable
+    (tag_open)
+    (path
+      (identifier)
+      (identifier))
+    (tag_close))
+  (text))
+
+==================
+comments and delimiter escape
+==================
+{[! block comment ]}
+{[{]} literal
+---
+(template
+  (comment)
+  (text)
+  (delimiter_escape)
+  (text))
+
+==================
+include with arguments
+==================
+{[> /partials/card user=user profile=profile.item]}
+---
+(template
+  (include
+    (tag_open)
+    (include_name)
+    (include_args
+      (include_arg
+        (identifier)
+        (path
+          (identifier)))
+      (include_arg
+        (identifier)
+        (path
+          (identifier)
+          (identifier))))
+    (tag_close)))
+

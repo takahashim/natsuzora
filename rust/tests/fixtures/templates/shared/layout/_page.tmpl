@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{[ page.title ]} - {[ site.title ]}</title>
+</head>
+<body>
+{[> /layout/header]}
+<main>
+  <h2>{[ page.title ]}</h2>
+  {[#if page.cards]}
+  <div class="cards">
+{[#each page.cards as card]}    {[> /components/card title=card.title body=card.body]}
+{[/each]}  </div>
+  {[/if]}
+</main>
+{[> /layout/footer]}
+</body>
+</html>

@@ -1,0 +1,83 @@
+{
+  "description": "Loop block tests",
+  "tests": [
+    {
+      "name": "each with string array",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": ["a", "b", "c"]},
+      "expected": "abc"
+    },
+    {
+      "name": "each with integer array",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": [1, 2, 3]},
+      "expected": "123"
+    },
+    {
+      "name": "each with empty array",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": []},
+      "expected": ""
+    },
+    {
+      "name": "each with index",
+      "template": "{[#each items as item, idx]}{[ idx ]}:{[ item ]},{[/each]}",
+      "data": {"items": ["a", "b"]},
+      "expected": "0:a,1:b,"
+    },
+    {
+      "name": "each with object items",
+      "template": "{[#each users as user]}{[ user.name ]}{[/each]}",
+      "data": {"users": [{"name": "Alice"}, {"name": "Bob"}]},
+      "expected": "AliceBob"
+    },
+    {
+      "name": "each with nested path",
+      "template": "{[#each data.items as item]}{[ item ]}{[/each]}",
+      "data": {"data": {"items": ["x", "y"]}},
+      "expected": "xy"
+    },
+    {
+      "name": "each with surrounding text",
+      "template": "Before{[#each items as item]}[{[ item ]}]{[/each]}After",
+      "data": {"items": ["a", "b"]},
+      "expected": "Before[a][b]After"
+    },
+    {
+      "name": "nested each blocks",
+      "template": "{[#each rows as row]}{[#each row as cell]}{[ cell ]}{[/each]},{[/each]}",
+      "data": {"rows": [["a", "b"], ["c", "d"]]},
+      "expected": "ab,cd,"
+    },
+    {
+      "name": "each with if inside",
+      "template": "{[#each items as item]}{[#if item.active]}{[ item.name ]}{[/if]}{[/each]}",
+      "data": {"items": [{"name": "A", "active": true}, {"name": "B", "active": false}, {"name": "C", "active": true}]},
+      "expected": "AC"
+    },
+    {
+      "name": "if with each inside",
+      "template": "{[#if show]}{[#each items as item]}{[ item ]}{[/each]}{[/if]}",
+      "data": {"show": true, "items": ["a", "b"]},
+      "expected": "ab"
+    },
+    {
+      "name": "each index starts at zero",
+      "template": "{[#each items as item, i]}{[ i ]}{[/each]}",
+      "data": {"items": ["a", "b", "c"]},
+      "expected": "012"
+    },
+    {
+      "name": "each with single item",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": ["only"]},
+      "expected": "only"
+    },
+    {
+      "name": "each with null items in array",
+      "template": "{[#each items as item]}[{[ item ]}]{[/each]}",
+      "data": {"items": ["a", null, "b"]},
+      "expected": "[a][][b]"
+    }
+  ]
+}

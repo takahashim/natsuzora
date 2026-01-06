@@ -1,0 +1,71 @@
+{
+  "description": "Stringify tests - only string, integer, and null can be stringified",
+  "tests": [
+    {
+      "name": "stringify string",
+      "template": "[{[ value ]}]",
+      "data": {"value": "hello"},
+      "expected": "[hello]"
+    },
+    {
+      "name": "stringify empty string",
+      "template": "[{[ value ]}]",
+      "data": {"value": ""},
+      "expected": "[]"
+    },
+    {
+      "name": "stringify positive integer",
+      "template": "[{[ value ]}]",
+      "data": {"value": 42},
+      "expected": "[42]"
+    },
+    {
+      "name": "stringify negative integer",
+      "template": "[{[ value ]}]",
+      "data": {"value": -42},
+      "expected": "[-42]"
+    },
+    {
+      "name": "stringify zero",
+      "template": "[{[ value ]}]",
+      "data": {"value": 0},
+      "expected": "[0]"
+    },
+    {
+      "name": "stringify null",
+      "template": "[{[ value ]}]",
+      "data": {"value": null},
+      "expected": "[]"
+    },
+    {
+      "name": "stringify max safe integer",
+      "template": "[{[ value ]}]",
+      "data": {"value": 9007199254740991},
+      "expected": "[9007199254740991]"
+    },
+    {
+      "name": "stringify min safe integer",
+      "template": "[{[ value ]}]",
+      "data": {"value": -9007199254740991},
+      "expected": "[-9007199254740991]"
+    },
+    {
+      "name": "stringify string with special chars (escaped)",
+      "template": "[{[ value ]}]",
+      "data": {"value": "<>&\"'"},
+      "expected": "[&lt;&gt;&amp;&quot;&#39;]"
+    },
+    {
+      "name": "stringify unicode string",
+      "template": "[{[ value ]}]",
+      "data": {"value": "こんにちは"},
+      "expected": "[こんにちは]"
+    },
+    {
+      "name": "stringify emoji",
+      "template": "[{[ value ]}]",
+      "data": {"value": "Hello 👋"},
+      "expected": "[Hello 👋]"
+    }
+  ]
+}

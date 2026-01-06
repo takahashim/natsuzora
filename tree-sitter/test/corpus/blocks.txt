@@ -1,0 +1,105 @@
+==================
+if with else
+==================
+{[#if user]}
+Hello {[user.name]}
+{[#else]}
+Guest
+{[/if]}
+---
+(template
+  (if_block
+    (if_open
+      (tag_open)
+      (path
+        (identifier))
+      (tag_close))
+    (text)
+    (variable
+      (tag_open)
+      (path
+        (identifier)
+        (identifier))
+      (tag_close))
+    (text)
+    (else_clause
+      (else_open
+        (tag_open)
+        (tag_close))
+      (text))
+    (if_close
+      (tag_open)
+      (tag_close))))
+
+==================
+unless block
+==================
+{[#unless user.name]}
+Missing name
+{[/unless]}
+---
+(template
+  (unless_block
+    (unless_open
+      (tag_open)
+      (path
+        (identifier)
+        (identifier))
+      (tag_close))
+    (text)
+    (unless_close
+      (tag_open)
+      (tag_close))))
+
+==================
+each with index
+==================
+{[#each users as user, idx]}
+- {[user.name]} ({[idx]})
+{[/each]}
+---
+(template
+  (each_block
+    (each_open
+      (tag_open)
+      (path
+        (identifier))
+      (identifier)
+      (each_index
+        (identifier))
+      (tag_close))
+    (text)
+    (variable
+      (tag_open)
+      (path
+        (identifier)
+        (identifier))
+      (tag_close))
+    (text)
+    (variable
+      (tag_open)
+      (path
+        (identifier))
+      (tag_close))
+    (text)
+    (each_close
+      (tag_open)
+      (tag_close))))
+
+==================
+unsecure block
+==================
+{[#unsecure]}
+<script>alert(1)</script>
+{[/unsecure]}
+---
+(template
+  (unsecure_block
+    (unsecure_open
+      (tag_open)
+      (tag_close))
+    (text)
+    (unsecure_close
+      (tag_open)
+      (tag_close))))
+

@@ -1,0 +1,40 @@
+{
+  "name": "tree-sitter-natsuzora",
+  "version": "1.0.0",
+  "description": "Tree-sitter grammar for Natsuzora template language",
+  "keywords": [
+    "tree-sitter",
+    "parser",
+    "natsuzora",
+    "template"
+  ],
+  "files": [
+    "grammar.js",
+    "queries/*",
+    "src/**"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aozorahack/natsuzora"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "tree-sitter-cli": "^0.22.0"
+  },
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "parse": "tree-sitter parse"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.natsuzora",
+      "injection-regex": "natsuzora",
+      "file-types": [
+        "tmpl",
+        "natsuzora"
+      ],
+      "highlights": "queries/highlights.scm"
+    }
+  ]
+}

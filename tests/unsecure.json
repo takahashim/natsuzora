@@ -1,0 +1,77 @@
+{
+  "description": "Unsecure block tests - HTML escaping disabled",
+  "tests": [
+    {
+      "name": "unsecure outputs raw html",
+      "template": "{[#unsecure]}{[ html ]}{[/unsecure]}",
+      "data": {"html": "<b>bold</b>"},
+      "expected": "<b>bold</b>"
+    },
+    {
+      "name": "unsecure with script tag",
+      "template": "{[#unsecure]}{[ html ]}{[/unsecure]}",
+      "data": {"html": "<script>alert('test')</script>"},
+      "expected": "<script>alert('test')</script>"
+    },
+    {
+      "name": "unsecure with ampersand",
+      "template": "{[#unsecure]}{[ value ]}{[/unsecure]}",
+      "data": {"value": "a & b"},
+      "expected": "a & b"
+    },
+    {
+      "name": "unsecure with quotes",
+      "template": "{[#unsecure]}{[ value ]}{[/unsecure]}",
+      "data": {"value": "\"quoted\" and 'single'"},
+      "expected": "\"quoted\" and 'single'"
+    },
+    {
+      "name": "unsecure with angle brackets",
+      "template": "{[#unsecure]}{[ value ]}{[/unsecure]}",
+      "data": {"value": "<tag>content</tag>"},
+      "expected": "<tag>content</tag>"
+    },
+    {
+      "name": "unsecure block with plain text",
+      "template": "{[#unsecure]}plain text{[/unsecure]}",
+      "data": {},
+      "expected": "plain text"
+    },
+    {
+      "name": "unsecure with mixed content",
+      "template": "{[#unsecure]}Text {[ var ]} more{[/unsecure]}",
+      "data": {"var": "<em>html</em>"},
+      "expected": "Text <em>html</em> more"
+    },
+    {
+      "name": "escaped outside unsecure",
+      "template": "{[ html ]}{[#unsecure]}{[ html ]}{[/unsecure]}{[ html ]}",
+      "data": {"html": "<b>"},
+      "expected": "&lt;b&gt;<b>&lt;b&gt;"
+    },
+    {
+      "name": "nested unsecure blocks",
+      "template": "{[#unsecure]}{[#unsecure]}{[ html ]}{[/unsecure]}{[/unsecure]}",
+      "data": {"html": "<b>"},
+      "expected": "<b>"
+    },
+    {
+      "name": "unsecure with if inside",
+      "template": "{[#unsecure]}{[#if show]}{[ html ]}{[/if]}{[/unsecure]}",
+      "data": {"show": true, "html": "<b>bold</b>"},
+      "expected": "<b>bold</b>"
+    },
+    {
+      "name": "unsecure with each inside",
+      "template": "{[#unsecure]}{[#each items as item]}{[ item ]}{[/each]}{[/unsecure]}",
+      "data": {"items": ["<a>", "<b>"]},
+      "expected": "<a><b>"
+    },
+    {
+      "name": "if inside unsecure with escaping check",
+      "template": "{[#unsecure]}{[#if show]}{[ html ]}{[#else]}{[ other ]}{[/if]}{[/unsecure]}",
+      "data": {"show": false, "html": "<a>", "other": "<b>"},
+      "expected": "<b>"
+    }
+  ]
+}

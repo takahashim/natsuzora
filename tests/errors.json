@@ -1,0 +1,167 @@
+{
+  "description": "Error case tests - these should produce errors",
+  "tests": [
+    {
+      "name": "undefined variable",
+      "template": "{[ unknown ]}",
+      "data": {},
+      "error": "UndefinedVariable"
+    },
+    {
+      "name": "undefined nested path",
+      "template": "{[ user.name ]}",
+      "data": {"user": {}},
+      "error": "UndefinedVariable"
+    },
+    {
+      "name": "undefined first segment",
+      "template": "{[ user.name ]}",
+      "data": {},
+      "error": "UndefinedVariable"
+    },
+    {
+      "name": "stringify boolean true",
+      "template": "{[ value ]}",
+      "data": {"value": true},
+      "error": "TypeError"
+    },
+    {
+      "name": "stringify boolean false",
+      "template": "{[ value ]}",
+      "data": {"value": false},
+      "error": "TypeError"
+    },
+    {
+      "name": "stringify array",
+      "template": "{[ value ]}",
+      "data": {"value": [1, 2, 3]},
+      "error": "TypeError"
+    },
+    {
+      "name": "stringify object",
+      "template": "{[ value ]}",
+      "data": {"value": {"key": "val"}},
+      "error": "TypeError"
+    },
+    {
+      "name": "each on non-array string",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": "not an array"},
+      "error": "TypeError"
+    },
+    {
+      "name": "each on non-array integer",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": 42},
+      "error": "TypeError"
+    },
+    {
+      "name": "each on non-array object",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": {"a": 1}},
+      "error": "TypeError"
+    },
+    {
+      "name": "each on null",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": null},
+      "error": "TypeError"
+    },
+    {
+      "name": "access property on non-object",
+      "template": "{[ value.prop ]}",
+      "data": {"value": "string"},
+      "error": "TypeError"
+    },
+    {
+      "name": "access property on integer",
+      "template": "{[ value.prop ]}",
+      "data": {"value": 42},
+      "error": "TypeError"
+    },
+    {
+      "name": "access property on array",
+      "template": "{[ value.prop ]}",
+      "data": {"value": [1, 2, 3]},
+      "error": "TypeError"
+    },
+    {
+      "name": "reserved word if as variable",
+      "template": "{[ if ]}",
+      "data": {"if": "test"},
+      "error": "ReservedWordError"
+    },
+    {
+      "name": "reserved word each as variable",
+      "template": "{[ each ]}",
+      "data": {"each": "test"},
+      "error": "ReservedWordError"
+    },
+    {
+      "name": "reserved word as as variable",
+      "template": "{[ as ]}",
+      "data": {"as": "test"},
+      "error": "ReservedWordError"
+    },
+    {
+      "name": "reserved word true as variable",
+      "template": "{[ true ]}",
+      "data": {"true": "test"},
+      "error": "ReservedWordError"
+    },
+    {
+      "name": "reserved word false as variable",
+      "template": "{[ false ]}",
+      "data": {"false": "test"},
+      "error": "ReservedWordError"
+    },
+    {
+      "name": "reserved word null as variable",
+      "template": "{[ null ]}",
+      "data": {"null": "test"},
+      "error": "ReservedWordError"
+    },
+    {
+      "name": "identifier starting with underscore",
+      "template": "{[ _private ]}",
+      "data": {"_private": "test"},
+      "error": "LexerError"
+    },
+    {
+      "name": "each item name starting with underscore",
+      "template": "{[#each items as _item]}{[ _item ]}{[/each]}",
+      "data": {"items": [1]},
+      "error": "LexerError"
+    },
+    {
+      "name": "shadowing error in each",
+      "template": "{[#each items as name]}{[ name ]}{[/each]}",
+      "data": {"items": [1], "name": "existing"},
+      "error": "ShadowingError"
+    },
+    {
+      "name": "whitespace after {[ before #",
+      "template": "{[ #if x]}y{[/if]}",
+      "data": {"x": true},
+      "error": "LexerError"
+    },
+    {
+      "name": "whitespace after {[ before /",
+      "template": "{[#if x]}y{[ /if]}",
+      "data": {"x": true},
+      "error": "LexerError"
+    },
+    {
+      "name": "each item and index same name",
+      "template": "{[#each items as item, item]}{[ item ]}{[/each]}",
+      "data": {"items": [1]},
+      "error": "ParseError"
+    },
+    {
+      "name": "include name with only slash",
+      "template": "{[> /]}",
+      "data": {},
+      "error": "ParseError"
+    }
+  ]
+}

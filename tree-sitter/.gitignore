@@ -1,0 +1,8 @@
+# Node artifacts
+node_modules/
+package-lock.json
+
+# Build artifacts
+*.wasm
+*.log
+log.html

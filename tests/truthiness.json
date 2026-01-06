@@ -1,0 +1,95 @@
+{
+  "description": "Truthiness tests - falsy values: false, null, 0, empty string, empty array, empty object",
+  "tests": [
+    {
+      "name": "false is falsy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": false},
+      "expected": "no"
+    },
+    {
+      "name": "true is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": true},
+      "expected": "yes"
+    },
+    {
+      "name": "null is falsy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": null},
+      "expected": "no"
+    },
+    {
+      "name": "zero is falsy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": 0},
+      "expected": "no"
+    },
+    {
+      "name": "positive integer is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": 1},
+      "expected": "yes"
+    },
+    {
+      "name": "negative integer is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": -1},
+      "expected": "yes"
+    },
+    {
+      "name": "large integer is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": 9007199254740991},
+      "expected": "yes"
+    },
+    {
+      "name": "empty string is falsy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": ""},
+      "expected": "no"
+    },
+    {
+      "name": "non-empty string is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": "hello"},
+      "expected": "yes"
+    },
+    {
+      "name": "whitespace string is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": " "},
+      "expected": "yes"
+    },
+    {
+      "name": "empty array is falsy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": []},
+      "expected": "no"
+    },
+    {
+      "name": "non-empty array is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": [1, 2, 3]},
+      "expected": "yes"
+    },
+    {
+      "name": "array with null is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": [null]},
+      "expected": "yes"
+    },
+    {
+      "name": "empty object is falsy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": {}},
+      "expected": "no"
+    },
+    {
+      "name": "non-empty object is truthy",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": {"key": "value"}},
+      "expected": "yes"
+    }
+  ]
+}

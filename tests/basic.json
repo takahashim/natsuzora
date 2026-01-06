@@ -1,0 +1,113 @@
+{
+  "description": "Basic variable interpolation tests",
+  "tests": [
+    {
+      "name": "plain text",
+      "template": "Hello, world!",
+      "data": {},
+      "expected": "Hello, world!"
+    },
+    {
+      "name": "simple string variable",
+      "template": "Hello, {[ name ]}!",
+      "data": {"name": "Alice"},
+      "expected": "Hello, Alice!"
+    },
+    {
+      "name": "integer variable",
+      "template": "Count: {[ count ]}",
+      "data": {"count": 42},
+      "expected": "Count: 42"
+    },
+    {
+      "name": "negative integer",
+      "template": "Value: {[ value ]}",
+      "data": {"value": -123},
+      "expected": "Value: -123"
+    },
+    {
+      "name": "zero integer",
+      "template": "Value: {[ value ]}",
+      "data": {"value": 0},
+      "expected": "Value: 0"
+    },
+    {
+      "name": "null variable renders empty",
+      "template": "[{[ value ]}]",
+      "data": {"value": null},
+      "expected": "[]"
+    },
+    {
+      "name": "dotted path",
+      "template": "{[ user.name ]}",
+      "data": {"user": {"name": "Bob"}},
+      "expected": "Bob"
+    },
+    {
+      "name": "deep nested path",
+      "template": "{[ a.b.c.d ]}",
+      "data": {"a": {"b": {"c": {"d": "deep"}}}},
+      "expected": "deep"
+    },
+    {
+      "name": "multiple variables",
+      "template": "{[ first ]} {[ last ]}",
+      "data": {"first": "John", "last": "Doe"},
+      "expected": "John Doe"
+    },
+    {
+      "name": "variable with surrounding text",
+      "template": "Hello, {[ name ]}! Welcome.",
+      "data": {"name": "World"},
+      "expected": "Hello, World! Welcome."
+    },
+    {
+      "name": "html escaping ampersand",
+      "template": "{[ value ]}",
+      "data": {"value": "a & b"},
+      "expected": "a &amp; b"
+    },
+    {
+      "name": "html escaping less than",
+      "template": "{[ value ]}",
+      "data": {"value": "a < b"},
+      "expected": "a &lt; b"
+    },
+    {
+      "name": "html escaping greater than",
+      "template": "{[ value ]}",
+      "data": {"value": "a > b"},
+      "expected": "a &gt; b"
+    },
+    {
+      "name": "html escaping double quote",
+      "template": "{[ value ]}",
+      "data": {"value": "a \"b\" c"},
+      "expected": "a &quot;b&quot; c"
+    },
+    {
+      "name": "html escaping single quote",
+      "template": "{[ value ]}",
+      "data": {"value": "a 'b' c"},
+      "expected": "a &#39;b&#39; c"
+    },
+    {
+      "name": "html escaping script tag",
+      "template": "{[ html ]}",
+      "data": {"html": "<script>alert('xss')</script>"},
+      "expected": "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;"
+    },
+    {
+      "name": "whitespace in tag",
+      "template": "{[  name  ]}",
+      "data": {"name": "test"},
+      "expected": "test"
+    },
+    {
+      "name": "no whitespace in tag",
+      "template": "{[name]}",
+      "data": {"name": "test"},
+      "expected": "test"
+    }
+  ]
+}

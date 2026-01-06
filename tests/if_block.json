@@ -1,0 +1,101 @@
+{
+  "description": "Conditional block tests",
+  "tests": [
+    {
+      "name": "if true shows content",
+      "template": "{[#if visible]}Hello{[/if]}",
+      "data": {"visible": true},
+      "expected": "Hello"
+    },
+    {
+      "name": "if false hides content",
+      "template": "{[#if visible]}Hello{[/if]}",
+      "data": {"visible": false},
+      "expected": ""
+    },
+    {
+      "name": "if else - true branch",
+      "template": "{[#if visible]}Yes{[#else]}No{[/if]}",
+      "data": {"visible": true},
+      "expected": "Yes"
+    },
+    {
+      "name": "if else - false branch",
+      "template": "{[#if visible]}Yes{[#else]}No{[/if]}",
+      "data": {"visible": false},
+      "expected": "No"
+    },
+    {
+      "name": "nested if blocks",
+      "template": "{[#if a]}{[#if b]}both{[/if]}{[/if]}",
+      "data": {"a": true, "b": true},
+      "expected": "both"
+    },
+    {
+      "name": "if with path condition",
+      "template": "{[#if user.active]}Active{[/if]}",
+      "data": {"user": {"active": true}},
+      "expected": "Active"
+    },
+    {
+      "name": "if with variable in body",
+      "template": "{[#if show]}{[ message ]}{[/if]}",
+      "data": {"show": true, "message": "Hello"},
+      "expected": "Hello"
+    },
+    {
+      "name": "if else with variables",
+      "template": "{[#if show]}{[ yes ]}{[#else]}{[ no ]}{[/if]}",
+      "data": {"show": false, "yes": "YES", "no": "NO"},
+      "expected": "NO"
+    },
+    {
+      "name": "if with surrounding text",
+      "template": "Before{[#if show]}Inside{[/if]}After",
+      "data": {"show": true},
+      "expected": "BeforeInsideAfter"
+    },
+    {
+      "name": "if false with surrounding text",
+      "template": "Before{[#if show]}Inside{[/if]}After",
+      "data": {"show": false},
+      "expected": "BeforeAfter"
+    },
+    {
+      "name": "multiple if blocks",
+      "template": "{[#if a]}A{[/if]}{[#if b]}B{[/if]}",
+      "data": {"a": true, "b": true},
+      "expected": "AB"
+    },
+    {
+      "name": "if truthy non-empty string",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": "hello"},
+      "expected": "yes"
+    },
+    {
+      "name": "if truthy non-zero integer",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": 1},
+      "expected": "yes"
+    },
+    {
+      "name": "if truthy negative integer",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": -1},
+      "expected": "yes"
+    },
+    {
+      "name": "if truthy non-empty array",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": [1]},
+      "expected": "yes"
+    },
+    {
+      "name": "if truthy non-empty object",
+      "template": "{[#if value]}yes{[#else]}no{[/if]}",
+      "data": {"value": {"a": 1}},
+      "expected": "yes"
+    }
+  ]
+}
