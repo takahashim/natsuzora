@@ -1,0 +1,35 @@
+{
+  "description": "Comment syntax tests",
+  "tests": [
+    {
+      "name": "comment is ignored",
+      "template": "Hello{[% comment ]}World",
+      "data": {},
+      "expected": "HelloWorld"
+    },
+    {
+      "name": "comment with spaces around",
+      "template": "Hello {[% comment ]} World",
+      "data": {},
+      "expected": "Hello  World"
+    },
+    {
+      "name": "multi-line comment",
+      "template": "Hello{[% this is\na multi-line\ncomment ]}World",
+      "data": {},
+      "expected": "HelloWorld"
+    },
+    {
+      "name": "comment between variables",
+      "template": "{[ a ]}{[% ignored ]}{[ b ]}",
+      "data": {"a": "1", "b": "2"},
+      "expected": "12"
+    },
+    {
+      "name": "comment inside if block",
+      "template": "{[#if x]}{[% comment ]}yes{[/if]}",
+      "data": {"x": true},
+      "expected": "yes"
+    }
+  ]
+}
