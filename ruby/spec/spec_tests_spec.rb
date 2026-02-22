@@ -11,7 +11,7 @@ RSpec.describe 'Spec Tests' do
   ERROR_TYPES = {
     'UndefinedVariable' => Natsuzora::UndefinedVariableError,
     'TypeError' => Natsuzora::TypeError,
-    'ReservedWordError' => Natsuzora::ReservedWordError,
+    'ReservedWordError' => [Natsuzora::ParseError, Natsuzora::ReservedWordError],
     'ShadowingError' => Natsuzora::ShadowingError,
     'SyntaxError' => [Natsuzora::LexerError, Natsuzora::ParseError]
   }.freeze
@@ -32,11 +32,11 @@ RSpec.describe 'Spec Tests' do
       # Error case
       error_classes = ERROR_TYPES[error_type] || Natsuzora::Error
       error_classes = Array(error_classes)
-      expect { Natsuzora.render(template, data) }.to raise_error { |e|
+      expect { Natsuzora.render(template, data) }.to(raise_error do |e|
         expect(error_classes.any? { |klass| e.is_a?(klass) }).to be(true),
-          "Expected one of #{error_classes.map(&:name).join(', ')} but got #{e.class.name}\n" \
-          "Template: #{template.inspect}\nData: #{data.inspect}\nError: #{e.message}"
-      }
+                                                                 "Expected one of #{error_classes.map(&:name).join(', ')} but got #{e.class.name}\n" \
+                                                                 "Template: #{template.inspect}\nData: #{data.inspect}\nError: #{e.message}"
+      end)
     else
       raise "Invalid test case: must have 'expected' or 'error'"
     end

@@ -4,10 +4,13 @@ source 'https://rubygems.org'
 
 gemspec
 
-# For monorepo development, prefer the local lexer_kit checkout.
-# Outside this repo layout, resolve from RubyGems via gemspec dependency.
+# lexer_kit is needed for the :ruby backend (lexer/dsl.rb).
+# Removed from gemspec runtime dependency since :ffi backend doesn't need it.
+# For monorepo development, prefer the local checkout.
 if File.directory?(File.expand_path('../../lexer_kit', __dir__))
   gem 'lexer_kit', path: '../../lexer_kit'
+else
+  gem 'lexer_kit', '~> 0.5'
 end
 
 group :development, :test do
