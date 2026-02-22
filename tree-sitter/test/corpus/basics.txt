@@ -42,7 +42,7 @@ variable with required modifier
 ==================
 comments and delimiter escape
 ==================
-{[! block comment ]}
+{[% block comment ]}
 {[{]} literal
 ---
 (template

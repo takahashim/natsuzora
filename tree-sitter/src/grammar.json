@@ -993,6 +993,48 @@
       "type": "PATTERN",
       "value": "\\/[A-Za-z][A-Za-z0-9_]*(\\/[A-Za-z][A-Za-z0-9_]*)*"
     },
+    "comment": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "{[-"
+              },
+              {
+                "type": "STRING",
+                "value": "{["
+              }
+            ]
+          },
+          {
+            "type": "STRING",
+            "value": "%"
+          },
+          {
+            "type": "PATTERN",
+            "value": "([^\\]]|\\][^}])*"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "-]}"
+              },
+              {
+                "type": "STRING",
+                "value": "]}"
+              }
+            ]
+          }
+        ]
+      }
+    },
     "_ws": {
       "type": "PATTERN",
       "value": "[ \\t\\r\\n]+"
@@ -1008,12 +1050,7 @@
     ]
   ],
   "precedences": [],
-  "externals": [
-    {
-      "type": "SYMBOL",
-      "name": "comment"
-    }
-  ],
+  "externals": [],
   "inline": [],
   "supertypes": []
 }

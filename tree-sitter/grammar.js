@@ -5,17 +5,13 @@
  * - Variable modifiers: {[ name? ]} (nullable), {[ name! ]} (required)
  * - Unsecure output: {[!unsecure path ]} (inline form)
  * - Include: {[!include /path key=value ]} (! prefix instead of >)
- * - Comment: {[! ... ]} handled by external scanner to disambiguate from !include/!unsecure
+ * - Comment: {[% ... ]} uses % prefix (unambiguous, handled inline)
  */
 
 module.exports = grammar({
   name: 'natsuzora',
 
   extras: _ => [],
-
-  externals: $ => [
-    $.comment,
-  ],
 
   conflicts: $ => [
     [$.else_clause],
@@ -252,6 +248,16 @@ module.exports = grammar({
     // Include name: /path/to/partial
     // Each segment must start with a letter (not digit or underscore)
     include_name: _ => /\/[A-Za-z][A-Za-z0-9_]*(\/[A-Za-z][A-Za-z0-9_]*)*/,
+
+    // Comment: {[% ... ]} - % prefix is unambiguous, no external scanner needed
+    comment: _ => token(
+      seq(
+        choice('{[-', '{['),
+        '%',
+        /([^\]]|\][^}])*/,
+        choice('-]}', ']}'),
+      )
+    ),
 
     // Whitespace (inside tags)
     _ws: _ => /[ \t\r\n]+/,
