@@ -21,6 +21,7 @@
 (each_close "each" @keyword.repeat)
 (unsecure_open "unsecure" @keyword)
 (unsecure_close "unsecure" @keyword)
+(unsecure_output "unsecure" @keyword)
 
 ; Block markers
 (if_open "#" @punctuation.special)
@@ -33,8 +34,10 @@
 (each_close "/" @punctuation.special)
 (unsecure_close "/" @punctuation.special)
 
-; Include
-(include ">" @punctuation.special)
+; Include and unsecure output markers
+(include "!" @punctuation.special)
+(include "include" @keyword)
+(unsecure_output "!" @punctuation.special)
 (include_name) @string.special
 
 ; Include arguments
@@ -46,6 +49,9 @@
 (variable
   (path
     (identifier) @variable))
+
+; Variable modifiers
+(modifier) @operator
 
 (path
   "." @punctuation.delimiter)

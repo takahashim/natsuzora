@@ -14,6 +14,32 @@ Hello {[user.name]}!
   (text))
 
 ==================
+variable with nullable modifier
+==================
+{[ name? ]}
+---
+(template
+  (variable
+    (tag_open)
+    (path
+      (identifier))
+    (modifier)
+    (tag_close)))
+
+==================
+variable with required modifier
+==================
+{[ name! ]}
+---
+(template
+  (variable
+    (tag_open)
+    (path
+      (identifier))
+    (modifier)
+    (tag_close)))
+
+==================
 comments and delimiter escape
 ==================
 {[! block comment ]}
@@ -26,9 +52,34 @@ comments and delimiter escape
   (text))
 
 ==================
+unsecure output
+==================
+{[!unsecure html ]}
+---
+(template
+  (unsecure_output
+    (tag_open)
+    (path
+      (identifier))
+    (tag_close)))
+
+==================
+unsecure output with dotted path
+==================
+{[!unsecure user.html ]}
+---
+(template
+  (unsecure_output
+    (tag_open)
+    (path
+      (identifier)
+      (identifier))
+    (tag_close)))
+
+==================
 include with arguments
 ==================
-{[> /partials/card user=user profile=profile.item]}
+{[!include /partials/card user=user profile=profile.item]}
 ---
 (template
   (include
@@ -44,5 +95,16 @@ include with arguments
         (path
           (identifier)
           (identifier))))
+    (tag_close)))
+
+==================
+include without arguments
+==================
+{[!include /simple ]}
+---
+(template
+  (include
+    (tag_open)
+    (include_name)
     (tag_close)))
 

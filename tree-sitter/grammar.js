@@ -1,11 +1,21 @@
 /**
- * Tree-sitter grammar for Natsuzora template language v2.0
+ * Tree-sitter grammar for Natsuzora template language v4.0
+ *
+ * Changes from v2.0:
+ * - Variable modifiers: {[ name? ]} (nullable), {[ name! ]} (required)
+ * - Unsecure output: {[!unsecure path ]} (inline form)
+ * - Include: {[!include /path key=value ]} (! prefix instead of >)
+ * - Comment: {[! ... ]} handled by external scanner to disambiguate from !include/!unsecure
  */
 
 module.exports = grammar({
   name: 'natsuzora',
 
   extras: _ => [],
+
+  externals: $ => [
+    $.comment,
+  ],
 
   conflicts: $ => [
     [$.else_clause],
@@ -22,6 +32,7 @@ module.exports = grammar({
       $.unless_block,
       $.each_block,
       $.unsecure_block,
+      $.unsecure_output,
       $.include,
       $.variable,
       $.text,
@@ -38,16 +49,20 @@ module.exports = grammar({
       ']',            // Single ] (GLR prefers ]} as tag_close due to prec)
     ),
 
-    // Variable: {[ path ]}
+    // Variable: {[ path ]} or {[ path? ]} or {[ path! ]}
     variable: $ => seq(
       $.tag_open,
       optional($._ws),
       $.path,
+      optional($.modifier),
       optional($._ws),
       $.tag_close,
     ),
 
-    // If block: {{#if expr}} ... {{#else}} ... {{/if}}
+    // Variable modifier: ? (nullable) or ! (required)
+    modifier: _ => choice('?', '!'),
+
+    // If block: {[#if expr]} ... {[#else]} ... {[/if]}
     if_block: $ => seq(
       $.if_open,
       repeat($._node),
@@ -89,7 +104,7 @@ module.exports = grammar({
       $.tag_close,
     ),
 
-    // Unless block: {{#unless expr}} ... {{/unless}}
+    // Unless block: {[#unless expr]} ... {[/unless]}
     unless_block: $ => seq(
       $.unless_open,
       repeat($._node),
@@ -116,7 +131,7 @@ module.exports = grammar({
       $.tag_close,
     ),
 
-    // Each block: {{#each expr as item, index}} ... {{/each}}
+    // Each block: {[#each expr as item, index]} ... {[/each]}
     each_block: $ => seq(
       $.each_open,
       repeat($._node),
@@ -155,7 +170,7 @@ module.exports = grammar({
       $.tag_close,
     ),
 
-    // Unsecure block: {{#unsecure}} ... {{/unsecure}}
+    // Unsecure block: {[#unsecure]} ... {[/unsecure]}
     unsecure_block: $ => seq(
       $.unsecure_open,
       repeat($._node),
@@ -180,11 +195,25 @@ module.exports = grammar({
       $.tag_close,
     ),
 
-    // Include: {{> /path/to/partial key=value}}
+    // Unsecure output (inline): {[!unsecure path ]}
+    unsecure_output: $ => seq(
+      $.tag_open,
+      '!',
+      optional($._ws),
+      'unsecure',
+      $._ws,
+      $.path,
+      optional($._ws),
+      $.tag_close,
+    ),
+
+    // Include: {[!include /path/to/partial key=value]}
     include: $ => seq(
       $.tag_open,
-      '>',
+      '!',
       optional($._ws),
+      'include',
+      $._ws,
       $.include_name,
       optional($.include_args),
       optional($._ws),
@@ -204,20 +233,6 @@ module.exports = grammar({
       $.path,
     ),
 
-    comment: _ => token(seq(
-      '{[',
-      optional('-'),
-      '!',
-      repeat(choice(
-        /[^-\]]/,
-        seq('-', /[^]]/),
-        seq(']', /[^}]/),
-        seq('-', ']', /[^}]/),
-      )),
-      optional('-'),
-      ']}',
-    )),
-
     // Delimiter escape: {[{]} outputs literal {[
     delimiter_escape: _ => '{[{]}',
 
@@ -235,7 +250,8 @@ module.exports = grammar({
     identifier: _ => /[A-Za-z][A-Za-z0-9_]*/,
 
     // Include name: /path/to/partial
-    include_name: _ => /\/[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)*/,
+    // Each segment must start with a letter (not digit or underscore)
+    include_name: _ => /\/[A-Za-z][A-Za-z0-9_]*(\/[A-Za-z][A-Za-z0-9_]*)*/,
 
     // Whitespace (inside tags)
     _ws: _ => /[ \t\r\n]+/,

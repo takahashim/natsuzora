@@ -48,6 +48,10 @@
           "named": true
         },
         {
+          "type": "unsecure_output",
+          "named": true
+        },
+        {
           "type": "variable",
           "named": true
         }
@@ -164,6 +168,10 @@
           "named": true
         },
         {
+          "type": "unsecure_output",
+          "named": true
+        },
+        {
           "type": "variable",
           "named": true
         }
@@ -239,6 +247,10 @@
         },
         {
           "type": "unsecure_block",
+          "named": true
+        },
+        {
+          "type": "unsecure_output",
           "named": true
         },
         {
@@ -352,6 +364,11 @@
     }
   },
   {
+    "type": "modifier",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "path",
     "named": true,
     "fields": {},
@@ -404,6 +421,10 @@
         },
         {
           "type": "unsecure_block",
+          "named": true
+        },
+        {
+          "type": "unsecure_output",
           "named": true
         },
         {
@@ -464,6 +485,10 @@
         },
         {
           "type": "unsecure_block",
+          "named": true
+        },
+        {
+          "type": "unsecure_output",
           "named": true
         },
         {
@@ -564,6 +589,10 @@
           "named": true
         },
         {
+          "type": "unsecure_output",
+          "named": true
+        },
+        {
           "type": "variable",
           "named": true
         }
@@ -609,7 +638,7 @@
     }
   },
   {
-    "type": "variable",
+    "type": "unsecure_output",
     "named": true,
     "fields": {},
     "children": {
@@ -632,6 +661,37 @@
     }
   },
   {
+    "type": "variable",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "modifier",
+          "named": true
+        },
+        {
+          "type": "path",
+          "named": true
+        },
+        {
+          "type": "tag_close",
+          "named": true
+        },
+        {
+          "type": "tag_open",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "!",
+    "named": false
+  },
+  {
     "type": "#",
     "named": false
   },
@@ -652,7 +712,7 @@
     "named": false
   },
   {
-    "type": ">",
+    "type": "?",
     "named": false
   },
   {
@@ -685,6 +745,10 @@
   },
   {
     "type": "if",
+    "named": false
+  },
+  {
+    "type": "include",
     "named": false
   },
   {
