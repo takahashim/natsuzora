@@ -132,15 +132,32 @@ impl Value {
         }
     }
 
-    /// Get the type name for error messages
+    /// Stringify with required modifier (! modifier)
+    /// Null and empty string cause TypeError
+    pub fn stringify_required(&self) -> Result<String> {
+        if self.is_null() {
+            return Err(NatsuzoraError::TypeError {
+                message: "Cannot stringify null value with '!' modifier".to_string(),
+            });
+        }
+        if self.is_empty_string() {
+            return Err(NatsuzoraError::TypeError {
+                message: "Cannot stringify empty string with '!' modifier".to_string(),
+            });
+        }
+        self.stringify()
+    }
+
+    /// Get the type name for error messages (uses Ruby class names)
     pub fn type_name(&self) -> &'static str {
         match self {
-            Value::Null => "null",
-            Value::Bool(_) => "boolean",
-            Value::Integer(_) => "integer",
-            Value::String(_) => "string",
-            Value::Array(_) => "array",
-            Value::Object(_) => "object",
+            Value::Null => "NilClass",
+            Value::Bool(true) => "TrueClass",
+            Value::Bool(false) => "FalseClass",
+            Value::Integer(_) => "Integer",
+            Value::String(_) => "String",
+            Value::Array(_) => "Array",
+            Value::Object(_) => "Hash",
         }
     }
 }

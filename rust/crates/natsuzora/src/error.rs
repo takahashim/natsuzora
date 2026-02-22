@@ -14,21 +14,9 @@ pub enum NatsuzoraError {
         location: Location,
     },
 
-    #[error("Undefined variable '{name}' at line {}, column {}", location.line, location.column)]
+    #[error("{message}")]
     UndefinedVariable {
-        name: String,
-        location: Location,
-    },
-
-    #[error("Null value error for '{name}' at line {}, column {}", location.line, location.column)]
-    NullValueError {
-        name: String,
-        location: Location,
-    },
-
-    #[error("Empty string error for '{name}' at line {}, column {}", location.line, location.column)]
-    EmptyStringError {
-        name: String,
+        message: String,
         location: Location,
     },
 
@@ -38,8 +26,8 @@ pub enum NatsuzoraError {
     #[error("Include error: {message}")]
     IncludeError { message: String },
 
-    #[error("Shadowing error: cannot shadow existing variable '{name}'")]
-    ShadowingError { name: String },
+    #[error("Shadowing error: cannot shadow existing variable '{name}' (already defined in {origin})")]
+    ShadowingError { name: String, origin: String },
 
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),

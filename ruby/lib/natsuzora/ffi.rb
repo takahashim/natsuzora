@@ -33,7 +33,7 @@ module Natsuzora
         err_addr = err_buf[0, Fiddle::SIZEOF_VOIDP].unpack1(POINTER_PACK_FORMAT)
         err_ptr = Fiddle::Pointer.new(err_addr)
         begin
-          error_json = err_ptr.to_s
+          error_json = err_ptr.to_s.force_encoding(Encoding::UTF_8)
         ensure
           nz_string_free(err_ptr)
         end
@@ -52,8 +52,6 @@ module Natsuzora
     ERROR_TYPE_MAP = {
       'ParseError' => ParseError,
       'UndefinedVariable' => UndefinedVariableError,
-      'NullValueError' => RenderError,
-      'EmptyStringError' => RenderError,
       'TypeError' => TypeError,
       'IncludeError' => IncludeError,
       'ShadowingError' => ShadowingError,

@@ -80,7 +80,7 @@ fn error_type_matches(e: &natsuzora::NatsuzoraError, expected: &str) -> bool {
     match (e, expected) {
         // SyntaxError matches any parse/lexer error (implementation detail)
         (ParseError { .. }, "SyntaxError") => true,
-        (ParseError { message, .. }, "ParseError") => true,
+        (ParseError { .. }, "ParseError") => true,
         (ParseError { message, .. }, "LexerError") => {
             // LexerError maps to ParseError with specific patterns
             message.contains("syntax error") || message.contains("identifier")
@@ -90,8 +90,8 @@ fn error_type_matches(e: &natsuzora::NatsuzoraError, expected: &str) -> bool {
         }
         (UndefinedVariable { .. }, "UndefinedVariable") => true,
         (TypeError { .. }, "TypeError") => true,
-        (NullValueError { .. }, "NullValueError") => true,
-        (EmptyStringError { .. }, "EmptyStringError") => true,
+        (TypeError { .. }, "NullValueError") => true,
+        (TypeError { .. }, "EmptyStringError") => true,
         (ShadowingError { .. }, "ShadowingError") => true,
         (IncludeError { .. }, "IncludeError") => true,
         _ => false,

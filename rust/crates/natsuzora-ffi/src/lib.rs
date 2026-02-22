@@ -109,29 +109,17 @@ unsafe fn write_natsuzora_error(out: *mut *mut c_char, err: &NatsuzoraError) {
             Some(location.line),
             Some(location.column),
         ),
-        NatsuzoraError::UndefinedVariable { name, location } => (
+        NatsuzoraError::UndefinedVariable { message, location } => (
             "UndefinedVariable",
-            format!("Undefined variable '{name}'"),
-            Some(location.line),
-            Some(location.column),
-        ),
-        NatsuzoraError::NullValueError { name, location } => (
-            "NullValueError",
-            format!("Null value for '{name}'"),
-            Some(location.line),
-            Some(location.column),
-        ),
-        NatsuzoraError::EmptyStringError { name, location } => (
-            "EmptyStringError",
-            format!("Empty string for '{name}'"),
+            message.clone(),
             Some(location.line),
             Some(location.column),
         ),
         NatsuzoraError::TypeError { message } => ("TypeError", message.clone(), None, None),
         NatsuzoraError::IncludeError { message } => ("IncludeError", message.clone(), None, None),
-        NatsuzoraError::ShadowingError { name } => (
+        NatsuzoraError::ShadowingError { name, origin } => (
             "ShadowingError",
-            format!("Cannot shadow existing variable '{name}'"),
+            format!("Cannot shadow existing variable '{}' (already defined in {})", name, origin),
             None,
             None,
         ),
@@ -284,7 +272,7 @@ mod tests {
 
             let err_json = CStr::from_ptr(err_ptr).to_str().unwrap();
             let err: serde_json::Value = serde_json::from_str(err_json).unwrap();
-            assert_eq!(err["type"], "NullValueError");
+            assert_eq!(err["type"], "TypeError");
 
             nz_string_free(err_ptr);
         }

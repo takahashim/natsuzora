@@ -10,6 +10,8 @@ RSpec.describe 'Spec Tests' do
   # SyntaxError matches both LexerError and ParseError (implementation detail)
   ERROR_TYPES = {
     'UndefinedVariable' => Natsuzora::UndefinedVariableError,
+    'NullValueError' => Natsuzora::TypeError,
+    'EmptyStringError' => Natsuzora::TypeError,
     'TypeError' => Natsuzora::TypeError,
     'ReservedWordError' => [Natsuzora::ParseError, Natsuzora::ReservedWordError],
     'ShadowingError' => Natsuzora::ShadowingError,

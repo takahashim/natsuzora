@@ -33,7 +33,7 @@ impl Context {
         let name = path
             .first()
             .ok_or_else(|| NatsuzoraError::UndefinedVariable {
-                name: "<empty path>".to_string(),
+                message: "Undefined variable: <empty path>".to_string(),
                 location,
             })?;
 
@@ -76,7 +76,7 @@ impl Context {
         self.root
             .get(name)
             .ok_or_else(|| NatsuzoraError::UndefinedVariable {
-                name: name.to_string(),
+                message: format!("Undefined variable: {}", name),
                 location,
             })
     }
@@ -84,23 +84,27 @@ impl Context {
     /// Validate that bindings don't shadow existing names
     fn validate_no_shadowing(&self, bindings: &HashMap<String, Value>) -> Result<()> {
         for name in bindings.keys() {
-            if self.name_exists(name) {
+            if let Some(origin) = self.binding_origin(name) {
                 return Err(NatsuzoraError::ShadowingError {
                     name: name.to_string(),
+                    origin,
                 });
             }
         }
         Ok(())
     }
 
-    /// Check if a name exists in any scope
-    fn name_exists(&self, name: &str) -> bool {
+    /// Find the origin of a binding for shadowing error messages
+    fn binding_origin(&self, name: &str) -> Option<String> {
+        if self.root.contains_key(name) {
+            return Some("root data".to_string());
+        }
         for scope in &self.local_stack {
             if scope.contains_key(name) {
-                return true;
+                return Some("outer local scope".to_string());
             }
         }
-        self.root.contains_key(name)
+        None
     }
 
     /// Get the length of an array at a path (without holding a reference)
@@ -146,7 +150,7 @@ impl Context {
             Value::Object(obj) => obj
                 .get(key)
                 .ok_or_else(|| NatsuzoraError::UndefinedVariable {
-                    name: key.to_string(),
+                    message: format!("Undefined property: {}", key),
                     location,
                 }),
             _ => Err(NatsuzoraError::TypeError {

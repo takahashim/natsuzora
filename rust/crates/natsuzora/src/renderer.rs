@@ -117,58 +117,19 @@ impl<'a> Renderer<'a> {
 
     fn render_variable(&self, node: &VariableNode, context: &Context) -> Result<String> {
         let location = node.location;
-        let path_str = node.path.as_str();
         let value = context.resolve(node.path.segments(), location)?;
 
-        match node.modifier {
-            Modifier::None => {
-                // v4.0: null causes error without modifier
-                if value.is_null() {
-                    return Err(NatsuzoraError::NullValueError {
-                        name: path_str,
-                        location,
-                    });
-                }
-                let str_value = value.stringify()?;
-                Ok(html_escape::escape(&str_value))
-            }
-            Modifier::Nullable => {
-                // ? modifier: null outputs empty string
-                let str_value = value.stringify_nullable()?;
-                Ok(html_escape::escape(&str_value))
-            }
-            Modifier::Required => {
-                // ! modifier: null or empty string causes error
-                if value.is_null() {
-                    return Err(NatsuzoraError::NullValueError {
-                        name: path_str,
-                        location,
-                    });
-                }
-                if value.is_empty_string() {
-                    return Err(NatsuzoraError::EmptyStringError {
-                        name: path_str,
-                        location,
-                    });
-                }
-                let str_value = value.stringify()?;
-                Ok(html_escape::escape(&str_value))
-            }
-        }
+        let str_value = match node.modifier {
+            Modifier::None => value.stringify()?,
+            Modifier::Nullable => value.stringify_nullable()?,
+            Modifier::Required => value.stringify_required()?,
+        };
+        Ok(html_escape::escape(&str_value))
     }
 
     fn render_unsecure(&self, node: &UnsecureNode, context: &Context) -> Result<String> {
         let location = node.location;
-        let path_str = node.path.as_str();
         let value = context.resolve(node.path.segments(), location)?;
-
-        // Unsecure has no modifier, so null causes error (v4.0)
-        if value.is_null() {
-            return Err(NatsuzoraError::NullValueError {
-                name: path_str,
-                location,
-            });
-        }
         value.stringify()
     }
 
@@ -257,11 +218,17 @@ fn trim_trailing_whitespace(s: &str) -> String {
 }
 
 /// Trim leading whitespace and optional newline
+/// Matches Ruby: text.sub(/\A[ \t]*\n?/, '')
 fn trim_leading_whitespace(s: &str) -> &str {
     let bytes = s.as_bytes();
     let mut pos = 0;
 
-    // Skip optional newline first
+    // 1. Skip spaces/tabs first
+    while pos < bytes.len() && (bytes[pos] == b' ' || bytes[pos] == b'\t') {
+        pos += 1;
+    }
+
+    // 2. Then skip optional newline
     if pos < bytes.len() && bytes[pos] == b'\n' {
         pos += 1;
     } else if pos < bytes.len() && bytes[pos] == b'\r' {
@@ -271,12 +238,6 @@ fn trim_leading_whitespace(s: &str) -> &str {
         }
     }
 
-    // Then skip spaces/tabs
-    while pos < bytes.len() && (bytes[pos] == b' ' || bytes[pos] == b'\t') {
-        pos += 1;
-    }
-
-    // Return the remaining string
     &s[pos..]
 }
 
@@ -390,7 +351,7 @@ mod tests {
     #[test]
     fn test_null_without_modifier_error() {
         let result = render("{[ value ]}", json!({"value": null}));
-        assert!(matches!(result, Err(NatsuzoraError::NullValueError { .. })));
+        assert!(matches!(result, Err(NatsuzoraError::TypeError { .. })));
     }
 
     #[test]
@@ -402,16 +363,13 @@ mod tests {
     #[test]
     fn test_required_modifier_null_error() {
         let result = render("{[ value! ]}", json!({"value": null}));
-        assert!(matches!(result, Err(NatsuzoraError::NullValueError { .. })));
+        assert!(matches!(result, Err(NatsuzoraError::TypeError { .. })));
     }
 
     #[test]
     fn test_required_modifier_empty_string_error() {
         let result = render("{[ value! ]}", json!({"value": ""}));
-        assert!(matches!(
-            result,
-            Err(NatsuzoraError::EmptyStringError { .. })
-        ));
+        assert!(matches!(result, Err(NatsuzoraError::TypeError { .. })));
     }
 
     #[test]
@@ -434,7 +392,7 @@ mod tests {
 
     #[test]
     fn test_comment_ignored() {
-        let result = render("Hello{[! comment ]}World", json!({})).unwrap();
+        let result = render("Hello{[% comment ]}World", json!({})).unwrap();
         assert_eq!(result, "HelloWorld");
     }
 }
