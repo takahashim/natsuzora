@@ -585,23 +585,19 @@ fn parse_include(node: Node, source: &str) -> Result<IncludeNode, ParseError> {
     for child in node.named_children(&mut cursor) {
         match child.kind() {
             "include_name" => {
-                // Validate each identifier segment in the include name
-                let mut ident_cursor = child.walk();
-                for segment in child.children(&mut ident_cursor) {
-                    if segment.kind() == "identifier" {
-                        let seg_location = Location::from_node(&segment);
-                        let seg_name = segment.utf8_text(source.as_bytes())?;
-                        // Check for underscore prefix (reserved words are ok in include paths)
-                        if seg_name.starts_with('_') {
-                            return Err(ParseError::InvalidIdentifier {
-                                name: seg_name.to_string(),
-                                line: seg_location.line,
-                                column: seg_location.column,
-                            });
-                        }
+                let name_text = child.utf8_text(source.as_bytes())?;
+                let seg_location = Location::from_node(&child);
+                // Validate each segment in the include path
+                for seg_name in name_text.split('/').filter(|s| !s.is_empty()) {
+                    if seg_name.starts_with('_') {
+                        return Err(ParseError::InvalidIdentifier {
+                            name: seg_name.to_string(),
+                            line: seg_location.line,
+                            column: seg_location.column,
+                        });
                     }
                 }
-                name = Some(child.utf8_text(source.as_bytes())?.to_string());
+                name = Some(name_text.to_string());
             }
             "include_args" => {
                 let mut arg_cursor = child.walk();

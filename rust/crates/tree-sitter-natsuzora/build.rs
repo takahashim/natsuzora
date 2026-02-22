@@ -12,11 +12,23 @@ fn main() {
         .join("tree-sitter")
         .join("src");
 
-    cc::Build::new()
+    let mut build = cc::Build::new();
+    build
         .include(grammar_dir.join("tree_sitter"))
         .file(grammar_dir.join("parser.c"))
-        .warnings(false)
-        .compile("tree-sitter-natsuzora");
+        .warnings(false);
+
+    // Include external scanner if it exists
+    let scanner_path = grammar_dir.join("scanner.c");
+    if scanner_path.exists() {
+        build.file(&scanner_path);
+        println!(
+            "cargo:rerun-if-changed={}",
+            scanner_path.display()
+        );
+    }
+
+    build.compile("tree-sitter-natsuzora");
 
     println!(
         "cargo:rerun-if-changed={}",

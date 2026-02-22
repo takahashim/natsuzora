@@ -434,7 +434,7 @@ mod tests {
 
     #[test]
     fn test_comment_ignored() {
-        let result = render("Hello{[% comment ]}World", json!({})).unwrap();
+        let result = render("Hello{[! comment ]}World", json!({})).unwrap();
         assert_eq!(result, "HelloWorld");
     }
 }
