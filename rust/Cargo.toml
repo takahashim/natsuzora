@@ -3,6 +3,7 @@ members = [
     "crates/tree-sitter-natsuzora",
     "crates/natsuzora-ast",
     "crates/natsuzora",
+    "crates/natsuzora-ffi",
 ]
 resolver = "2"
 
