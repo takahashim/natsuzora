@@ -32,12 +32,6 @@
       "expected": "Value: 0"
     },
     {
-      "name": "null variable renders empty",
-      "template": "[{[ value ]}]",
-      "data": {"value": null},
-      "expected": "[]"
-    },
-    {
       "name": "dotted path",
       "template": "{[ user.name ]}",
       "data": {"user": {"name": "Bob"}},
@@ -108,6 +102,24 @@
       "template": "{[name]}",
       "data": {"name": "test"},
       "expected": "test"
+    },
+    {
+      "name": "whole number float treated as integer",
+      "template": "Value: {[ value ]}",
+      "data": {"value": 42.0},
+      "expected": "Value: 42"
+    },
+    {
+      "name": "negative whole number float treated as integer",
+      "template": "Value: {[ value ]}",
+      "data": {"value": -123.0},
+      "expected": "Value: -123"
+    },
+    {
+      "name": "zero float treated as integer",
+      "template": "Value: {[ value ]}",
+      "data": {"value": 0.0},
+      "expected": "Value: 0"
     }
   ]
 }

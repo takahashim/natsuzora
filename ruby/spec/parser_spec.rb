@@ -71,35 +71,27 @@ RSpec.describe Natsuzora::Parser do
     end
 
     context 'with each blocks' do
-      it 'parses each without index' do
+      it 'parses each block' do
         ast = parse('{[#each items as item]}{[ item ]}{[/each]}')
         node = ast.nodes.first
         expect(node).to be_a(Natsuzora::AST::EachBlock)
         expect(node.collection.path).to eq(['items'])
         expect(node.item_name).to eq('item')
-        expect(node.index_name).to be_nil
-      end
-
-      it 'parses each with index' do
-        ast = parse('{[#each items as item, i]}{[/each]}')
-        node = ast.nodes.first
-        expect(node.item_name).to eq('item')
-        expect(node.index_name).to eq('i')
       end
     end
 
-    context 'with unsecure blocks' do
-      it 'parses unsecure block' do
-        ast = parse('{[#unsecure]}<b>bold</b>{[/unsecure]}')
+    context 'with unsecure output' do
+      it 'parses unsecure output' do
+        ast = parse('{[!unsecure html ]}')
         node = ast.nodes.first
-        expect(node).to be_a(Natsuzora::AST::UnsecureBlock)
-        expect(node.nodes.first.content).to eq('<b>bold</b>')
+        expect(node).to be_a(Natsuzora::AST::UnsecureOutput)
+        expect(node.path.path).to eq(['html'])
       end
     end
 
     context 'with include' do
       it 'parses include without arguments' do
-        ast = parse('{[> /card]}')
+        ast = parse('{[!include /card ]}')
         node = ast.nodes.first
         expect(node).to be_a(Natsuzora::AST::Include)
         expect(node.name).to eq('/card')
@@ -107,14 +99,14 @@ RSpec.describe Natsuzora::Parser do
       end
 
       it 'parses include with arguments' do
-        ast = parse('{[> /card title=heading]}')
+        ast = parse('{[!include /card title=heading ]}')
         node = ast.nodes.first
         expect(node.args.keys).to eq(['title'])
         expect(node.args['title'].path).to eq(['heading'])
       end
 
       it 'parses include with multiple arguments' do
-        ast = parse('{[> /card title=a body=b]}')
+        ast = parse('{[!include /card title=a body=b ]}')
         node = ast.nodes.first
         expect(node.args.keys).to contain_exactly('title', 'body')
       end
@@ -149,26 +141,26 @@ RSpec.describe Natsuzora::Parser do
 
     context 'with invalid include names' do
       it 'rejects include name without leading slash' do
-        expect { parse('{[> card]}') }.to raise_error(Natsuzora::ParseError, /must start with/)
+        expect { parse('{[!include card ]}') }.to raise_error(Natsuzora::ParseError, /must start with/)
       end
 
       it 'rejects include name with ..' do
         # Lexer stops at '.' so this results in a parse error
-        expect { parse('{[> /../card]}') }.to raise_error(Natsuzora::ParseError)
+        expect { parse('{[!include /../card ]}') }.to raise_error(Natsuzora::ParseError)
       end
 
       it 'rejects include name with // at start' do
-        # {[> //card]} - first / is parsed, then /card is parsed as slash + ident
-        expect { parse('{[> //card]}') }.to raise_error(Natsuzora::ParseError)
+        # {[!include //card ]} - first / is parsed, then /card is parsed as slash + ident
+        expect { parse('{[!include //card ]}') }.to raise_error(Natsuzora::ParseError)
       end
 
       it 'rejects include name containing //' do
         # Lexer stops at // so the second / becomes a separate token, causing parse error
-        expect { parse('{[> /a//b]}') }.to raise_error(Natsuzora::ParseError)
+        expect { parse('{[!include /a//b ]}') }.to raise_error(Natsuzora::ParseError)
       end
 
       it 'rejects duplicate include arguments' do
-        expect { parse('{[> /card a=x a=y]}') }.to raise_error(Natsuzora::ParseError, /Duplicate/)
+        expect { parse('{[!include /card a=x a=y ]}') }.to raise_error(Natsuzora::ParseError, /Duplicate/)
       end
     end
 

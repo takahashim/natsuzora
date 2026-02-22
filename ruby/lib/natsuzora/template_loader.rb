@@ -20,6 +20,8 @@ module Natsuzora
     def with_include(name)
       @include_stack.push(name)
       yield
+    rescue StandardError => e
+      raise e.class, "#{e.message}\n  within include #{include_stack_trace}", e.backtrace
     ensure
       @include_stack.pop
     end
@@ -50,7 +52,15 @@ module Natsuzora
     def resolve_path(name)
       segments = name.split('/').reject(&:empty?)
       segments[-1] = "_#{segments[-1]}"
-      "#{File.join(@include_root, *segments)}.tmpl"
+      "#{File.join(@include_root, *segments)}.ntzr"
+    end
+
+    def include_stack_trace
+      parts = @include_stack.map do |name|
+        path = resolve_path(name)
+        "#{name} (#{path})"
+      end
+      (parts + ['current include']).join(' > ')
     end
 
     def validate_path_security!(path)

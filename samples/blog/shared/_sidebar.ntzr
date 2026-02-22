@@ -1,0 +1,33 @@
+<aside class="sidebar">
+  <section>
+    <h2>注目記事</h2>
+    {[#if featured]}
+      <article>
+        <h3>{[ featured.title ]}</h3>
+        <p>{[ featured.excerpt ]}</p>
+        <a href="{[ featured.url ]}">続きを読む</a>
+      </article>
+    {[/if]}
+  </section>
+
+  {[#if profile]}
+  <section>
+    <h2>著者プロフィール</h2>
+    <p>{[ profile.name ]}</p>
+    <a href="/profile">プロフィールを見る</a>
+  </section>
+  {[/if]}
+
+  <section>
+    <h2>カテゴリー</h2>
+    <ul>
+      {[#each categories as side_category]}
+      <li>
+        <a href="/categories/{[ side_category.slug ]}">
+          {[ side_category.name ]} ({[ side_category.count ]})
+        </a>
+      </li>
+      {[/each]}
+    </ul>
+  </section>
+</aside>

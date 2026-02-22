@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{[ profile.name ]} | {[ site.title ]}</title>
+</head>
+<body>
+  {[!include /header title=site.title nav=site.navigation ]}
+
+  <div class="layout">
+    <main class="content profile">
+      <section class="hero">
+        <img src="{[ profile.avatar_url ]}" alt="{[ profile.name ]}" width="120" />
+        <div>
+          <h1>{[ profile.name ]}</h1>
+          <p>{[ profile.role ]}</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>自己紹介</h2>
+        <p>{[ profile.bio ]}</p>
+      </section>
+
+      <section>
+        <h2>最近の投稿</h2>
+        <ul>
+          {[#each profile.recent_posts as post]}
+          <li>
+            <strong>{[ post.title ]}</strong>
+            <span>({[ post.published_at ]})</span>
+          </li>
+          {[/each]}
+        </ul>
+      </section>
+    </main>
+
+    {[!include /sidebar featured=page.featured categories=site.categories profile=profile ]}
+  </div>
+
+  {[!include /footer copyright=site.copyright ]}
+</body>
+</html>

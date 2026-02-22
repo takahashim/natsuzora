@@ -1,0 +1,68 @@
+{
+  "site": {
+    "title": "Natsuzora Tech Blog",
+    "description": "最新の開発ノートとデザイン知見を共有する架空のブログです。",
+    "navigation": [
+      { "label": "Home", "url": "/" },
+      { "label": "Profile", "url": "/profile" },
+      { "label": "Archive", "url": "/archive" }
+    ],
+    "categories": [
+      { "name": "Engineering", "slug": "engineering", "count": 24, "description": "Rust やテンプレート実装に関する記事をまとめています。" },
+      { "name": "Design", "slug": "design", "count": 12, "description": "UX リサーチやデザインシステムについての話題。" }
+    ],
+    "copyright": {
+      "year": "2024",
+      "owner": "Example Studio"
+    }
+  },
+  "page": {
+    "heading": "Latest Articles",
+    "introduction": "設計の裏側やリリースノートを中心に、毎週更新しています。",
+    "featured": {
+      "title": "Rustで作る高速テンプレートエンジン",
+      "excerpt": "Natsuzoraの内部構造と安全性を支える仕組みを紹介。",
+      "url": "/posts/rust-template-engine"
+    }
+  },
+  "profile": {
+    "name": "Maki",
+    "role": "Lead Engineer",
+    "bio": "Type-safe テンプレートとデザインシステムの研究に取り組んでいます。",
+    "avatar_url": "https://example.com/avatar.png",
+    "recent_posts": [
+      { "title": "UI コンポーネントをテンプレート化するベストプラクティス", "published_at": "2024-07-12", "url": "/posts/component-design-best-practices" },
+      { "title": "include を安全に扱うためのチェックリスト", "published_at": "2024-07-05", "url": "/posts/include-safety-checklist" }
+    ]
+  },
+  "posts": [
+    {
+      "slug": "component-design-best-practices",
+      "title": "UI コンポーネントをテンプレート化するベストプラクティス",
+      "published_at": "2024-07-12",
+      "author": { "name": "Maki" },
+      "excerpt": "再利用性とメンテナンス性を両立させるための設計指針をまとめました。",
+      "categories": ["Design", "Engineering"],
+      "tags": ["design-system", "templating"],
+      "url": "/posts/component-design-best-practices",
+      "body": [
+        { "paragraph": "テンプレート化された UI は保守性を大幅に高めます。", "quote": null },
+        { "paragraph": "Natsuzora では include と each を組み合わせて柔軟に構築できます。", "quote": null }
+      ]
+    },
+    {
+      "slug": "include-safety-checklist",
+      "title": "include を安全に扱うためのチェックリスト",
+      "published_at": "2024-07-05",
+      "author": { "name": "Kai" },
+      "excerpt": "部分テンプレートをシンプルに保ち、循環を避けるポイントを解説します。",
+      "categories": ["Engineering"],
+      "tags": ["include", "lint"],
+      "url": "/posts/include-safety-checklist",
+      "body": [
+        { "paragraph": "循環参照を検出するには include スタックを管理しましょう。", "quote": null },
+        { "paragraph": null, "quote": "ルール: include は常に純粋であるべき。" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+<footer class="site-footer">
+  <p>&copy; {[ copyright.year ]} {[ copyright.owner ]}. All rights reserved.</p>
+  <p>Powered by Natsuzora.</p>
+</footer>

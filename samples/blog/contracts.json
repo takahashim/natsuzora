@@ -1,0 +1,254 @@
+{
+  "kind": "object",
+  "required": [
+    "page",
+    "posts",
+    "profile",
+    "site"
+  ],
+  "properties": {
+    "page": {
+      "kind": "object",
+      "required": [
+        "featured",
+        "heading",
+        "introduction"
+      ],
+      "properties": {
+        "featured": {
+          "kind": "object",
+          "required": [
+            "excerpt",
+            "title",
+            "url"
+          ],
+          "properties": {
+            "excerpt": {
+              "kind": "scalar",
+              "string": true,
+              "integer": true,
+              "null": false,
+              "allow_empty": true
+            },
+            "title": {
+              "kind": "scalar",
+              "string": true,
+              "integer": true,
+              "null": false,
+              "allow_empty": true
+            },
+            "url": {
+              "kind": "scalar",
+              "string": true,
+              "integer": true,
+              "null": false,
+              "allow_empty": true
+            }
+          }
+        },
+        "heading": {
+          "kind": "scalar",
+          "string": true,
+          "integer": true,
+          "null": false,
+          "allow_empty": true
+        },
+        "introduction": {
+          "kind": "scalar",
+          "string": true,
+          "integer": true,
+          "null": false,
+          "allow_empty": true
+        }
+      }
+    },
+    "posts": {
+      "kind": "array",
+      "items": {
+        "kind": "object",
+        "required": [
+          "author",
+          "categories",
+          "excerpt",
+          "published_at",
+          "tags",
+          "title"
+        ],
+        "properties": {
+          "author": {
+            "kind": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "kind": "scalar",
+                "string": true,
+                "integer": true,
+                "null": false,
+                "allow_empty": true
+              }
+            }
+          },
+          "categories": {
+            "kind": "array",
+            "items": {
+              "kind": "any"
+            }
+          },
+          "excerpt": {
+            "kind": "scalar",
+            "string": true,
+            "integer": true,
+            "null": false,
+            "allow_empty": true
+          },
+          "published_at": {
+            "kind": "scalar",
+            "string": true,
+            "integer": true,
+            "null": false,
+            "allow_empty": true
+          },
+          "tags": {
+            "kind": "array",
+            "items": {
+              "kind": "any"
+            }
+          },
+          "title": {
+            "kind": "scalar",
+            "string": true,
+            "integer": true,
+            "null": false,
+            "allow_empty": true
+          }
+        }
+      }
+    },
+    "profile": {
+      "kind": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "kind": "scalar",
+          "string": true,
+          "integer": true,
+          "null": false,
+          "allow_empty": true
+        }
+      }
+    },
+    "site": {
+      "kind": "object",
+      "required": [
+        "categories",
+        "copyright",
+        "description",
+        "navigation",
+        "title"
+      ],
+      "properties": {
+        "categories": {
+          "kind": "array",
+          "items": {
+            "kind": "object",
+            "required": [
+              "count",
+              "name",
+              "slug"
+            ],
+            "properties": {
+              "count": {
+                "kind": "scalar",
+                "string": true,
+                "integer": true,
+                "null": false,
+                "allow_empty": true
+              },
+              "name": {
+                "kind": "scalar",
+                "string": true,
+                "integer": true,
+                "null": false,
+                "allow_empty": true
+              },
+              "slug": {
+                "kind": "scalar",
+                "string": true,
+                "integer": true,
+                "null": false,
+                "allow_empty": true
+              }
+            }
+          }
+        },
+        "copyright": {
+          "kind": "object",
+          "required": [
+            "owner",
+            "year"
+          ],
+          "properties": {
+            "owner": {
+              "kind": "scalar",
+              "string": true,
+              "integer": true,
+              "null": false,
+              "allow_empty": true
+            },
+            "year": {
+              "kind": "scalar",
+              "string": true,
+              "integer": true,
+              "null": false,
+              "allow_empty": true
+            }
+          }
+        },
+        "description": {
+          "kind": "scalar",
+          "string": true,
+          "integer": true,
+          "null": false,
+          "allow_empty": true
+        },
+        "navigation": {
+          "kind": "array",
+          "items": {
+            "kind": "object",
+            "required": [
+              "label",
+              "url"
+            ],
+            "properties": {
+              "label": {
+                "kind": "scalar",
+                "string": true,
+                "integer": true,
+                "null": false,
+                "allow_empty": true
+              },
+              "url": {
+                "kind": "scalar",
+                "string": true,
+                "integer": true,
+                "null": false,
+                "allow_empty": true
+              }
+            }
+          }
+        },
+        "title": {
+          "kind": "scalar",
+          "string": true,
+          "integer": true,
+          "null": false,
+          "allow_empty": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,132 @@
+# Natsuzora Blog Sample - Contracts
+# 各テンプレートが要求するデータ構造
+
+# ========================================
+# 共通型定義
+# ========================================
+
+type Navigation {
+  label: scalar
+  url: scalar
+}
+
+type Category {
+  count: scalar
+  name: scalar
+  slug: scalar
+}
+
+type Copyright {
+  owner: scalar
+  year: scalar
+}
+
+type Site {
+  categories: []Category
+  copyright: Copyright
+  description: scalar
+  navigation: []Navigation
+  title: scalar
+}
+
+type Featured {
+  excerpt: scalar
+  title: scalar
+  url: scalar
+}
+
+type Author {
+  name: scalar
+}
+
+type PostMeta {
+  categories: []scalar
+  tags: []scalar
+}
+
+# ========================================
+# index.ntzr のコントラクト
+# ========================================
+
+# page {
+#   featured: Featured
+#   heading: scalar
+#   introduction: scalar
+# }
+# posts: []{
+#   author: Author
+#   categories: []scalar
+#   excerpt: scalar
+#   published_at: scalar
+#   tags: []scalar
+#   title: scalar
+# }
+# profile {
+#   name: scalar
+# }
+# site: Site
+
+# ========================================
+# post.ntzr のコントラクト
+# ========================================
+
+# page {
+#   featured: Featured
+# }
+# post {
+#   author: Author
+#   body: []{
+#     paragraph: scalar
+#     quote: scalar
+#   }
+#   categories: []scalar
+#   published_at: scalar
+#   tags: []scalar
+#   title: scalar
+# }
+# profile {
+#   name: scalar
+# }
+# site: Site
+
+# ========================================
+# profile.ntzr のコントラクト
+# ========================================
+
+# page {
+#   featured: Featured
+# }
+# profile {
+#   avatar_url: scalar
+#   bio: scalar
+#   name: scalar
+#   recent_posts: []{
+#     published_at: scalar
+#     title: scalar
+#   }
+#   role: scalar
+# }
+# site: Site
+
+# ========================================
+# category.ntzr のコントラクト
+# ========================================
+
+# category {
+#   description: scalar
+#   name: scalar
+#   posts: []{
+#     author: Author
+#     excerpt: scalar
+#     published_at: scalar
+#     title: scalar
+#     url: scalar
+#   }
+# }
+# page {
+#   featured: Featured
+# }
+# profile {
+#   name: scalar
+# }
+# site: Site

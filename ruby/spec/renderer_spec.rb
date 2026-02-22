@@ -25,8 +25,31 @@ RSpec.describe Natsuzora::Renderer do
         expect(render('{[ num ]}', { num: -123 })).to eq('-123')
       end
 
-      it 'renders null as empty string' do
-        expect(render('{[ value ]}', { value: nil })).to eq('')
+      it 'raises error for null without modifier (v4.0)' do
+        expect { render('{[ value ]}', { value: nil }) }
+          .to raise_error(Natsuzora::TypeError, /null/)
+      end
+
+      it 'renders null as empty string with ? modifier' do
+        expect(render('{[ value? ]}', { value: nil })).to eq('')
+      end
+
+      it 'renders value with ? modifier' do
+        expect(render('{[ value? ]}', { value: 'test' })).to eq('test')
+      end
+
+      it 'renders value with ! modifier' do
+        expect(render('{[ value! ]}', { value: 'test' })).to eq('test')
+      end
+
+      it 'raises error for null with ! modifier' do
+        expect { render('{[ value! ]}', { value: nil }) }
+          .to raise_error(Natsuzora::TypeError, /null/)
+      end
+
+      it 'raises error for empty string with ! modifier' do
+        expect { render('{[ value! ]}', { value: '' }) }
+          .to raise_error(Natsuzora::TypeError, /empty/)
       end
 
       it 'renders nested path' do
@@ -167,11 +190,6 @@ RSpec.describe Natsuzora::Renderer do
         expect(result).to eq('abc')
       end
 
-      it 'provides index variable' do
-        result = render('{[#each items as item, i]}{[ i ]}{[/each]}', { items: %w[a b] })
-        expect(result).to eq('01')
-      end
-
       it 'renders empty for empty array' do
         result = render('{[#each items as item]}x{[/each]}', { items: [] })
         expect(result).to eq('')
@@ -189,13 +207,13 @@ RSpec.describe Natsuzora::Renderer do
       end
     end
 
-    context 'with unsecure blocks' do
-      it 'does not escape inside unsecure' do
-        expect(render('{[#unsecure]}{[ html ]}{[/unsecure]}', { html: '<b>' })).to eq('<b>')
+    context 'with unsecure output' do
+      it 'does not escape unsecure output' do
+        expect(render('{[!unsecure html ]}', { html: '<b>' })).to eq('<b>')
       end
 
-      it 'escapes outside unsecure' do
-        result = render('{[ a ]}{[#unsecure]}{[ b ]}{[/unsecure]}{[ c ]}', { a: '<', b: '<', c: '<' })
+      it 'escapes regular variables but not unsecure' do
+        result = render('{[ a ]}{[!unsecure b ]}{[ c ]}', { a: '<', b: '<', c: '<' })
         expect(result).to eq('&lt;<&lt;')
       end
     end
@@ -215,24 +233,24 @@ RSpec.describe Natsuzora::Renderer do
 
     context 'with comments' do
       it 'ignores comment in output' do
-        expect(render('Hello{[! comment ]}World', {})).to eq('HelloWorld')
+        expect(render('Hello{[% comment ]}World', {})).to eq('HelloWorld')
       end
 
       it 'ignores comment with spaces' do
-        expect(render('Hello {[! comment ]} World', {})).to eq('Hello  World')
+        expect(render('Hello {[% comment ]} World', {})).to eq('Hello  World')
       end
 
       it 'handles multi-line comments' do
-        template = "Hello{[! this is\na multi-line\ncomment ]}World"
+        template = "Hello{[% this is\na multi-line\ncomment ]}World"
         expect(render(template, {})).to eq('HelloWorld')
       end
 
       it 'handles comment between variables' do
-        expect(render('{[ a ]}{[! ignored ]}{[ b ]}', { a: '1', b: '2' })).to eq('12')
+        expect(render('{[ a ]}{[% ignored ]}{[ b ]}', { a: '1', b: '2' })).to eq('12')
       end
 
       it 'handles comment inside blocks' do
-        template = '{[#if x]}{[! comment ]}yes{[/if]}'
+        template = '{[#if x]}{[% comment ]}yes{[/if]}'
         expect(render(template, { x: true })).to eq('yes')
       end
     end

@@ -4,6 +4,9 @@ source 'https://rubygems.org'
 
 gemspec
 
+# LexerKit for fast lexical analysis
+gem 'lexer_kit', path: '../../lexer_kit'
+
 group :development, :test do
   gem 'rake', '~> 13.0'
   gem 'rspec', '~> 3.12'

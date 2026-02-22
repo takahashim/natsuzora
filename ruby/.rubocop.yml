@@ -20,7 +20,7 @@ Metrics/AbcSize:
   Max: 25
 
 Metrics/ClassLength:
-  Max: 300
+  Max: 400
 
 Metrics/CyclomaticComplexity:
   Max: 12
@@ -28,14 +28,18 @@ Metrics/CyclomaticComplexity:
 RSpec/ExampleLength:
   Max: 25
 
-RSpec/MultipleExpectations:
-  Max: 5
-
-RSpec/NestedGroups:
-  Max: 4
+##RSpec/MultipleExpectations:
+##  Max: 5
+##
+##RSpec/NestedGroups:
+##  Max: 4
 
 RSpec/SpecFilePathFormat:
   Enabled: false
 
 RSpec/FilePath:
   Enabled: false
+
+Capybara/RSpec/PredicateMatcher:
+  Enabled: false
+

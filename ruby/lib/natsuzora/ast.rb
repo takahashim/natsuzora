@@ -30,11 +30,13 @@ module Natsuzora
     end
 
     class Variable < Node
-      attr_reader :path
+      attr_reader :path, :modifier
 
-      def initialize(path, **)
+      # modifier: nil (default), :nullable (?), :required (!)
+      def initialize(path, modifier: nil, **)
         super(**)
         @path = path
+        @modifier = modifier
       end
     end
 
@@ -60,23 +62,22 @@ module Natsuzora
     end
 
     class EachBlock < Node
-      attr_reader :collection, :item_name, :index_name, :body_nodes
+      attr_reader :collection, :item_name, :body_nodes
 
-      def initialize(collection:, item_name:, body_nodes:, index_name: nil, **)
+      def initialize(collection:, item_name:, body_nodes:, **)
         super(**)
         @collection = collection
         @item_name = item_name
-        @index_name = index_name
         @body_nodes = body_nodes
       end
     end
 
-    class UnsecureBlock < Node
-      attr_reader :nodes
+    class UnsecureOutput < Node
+      attr_reader :path
 
-      def initialize(nodes, **)
+      def initialize(path:, **)
         super(**)
-        @nodes = nodes
+        @path = path
       end
     end
 

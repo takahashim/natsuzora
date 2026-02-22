@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{[ category.name ]} | {[ site.title ]}</title>
+</head>
+<body>
+  {[!include /header title=site.title nav=site.navigation ]}
+
+  <div class="layout">
+    <main class="content">
+      <h1>{[ category.name ]}</h1>
+      <p>{[ category.description ]}</p>
+
+      {[#each category.posts as post]}
+      <article class="post">
+        <header>
+          <h2>{[ post.title ]}</h2>
+          <p class="meta">{[ post.published_at ]} — {[ post.author.name ]}</p>
+        </header>
+        <p>{[ post.excerpt ]}</p>
+        <a href="{[ post.url ]}">続きを読む</a>
+      </article>
+      {[/each]}
+    </main>
+
+    {[!include /sidebar featured=page.featured categories=site.categories profile=profile ]}
+  </div>
+
+  {[!include /footer copyright=site.copyright ]}
+</body>
+</html>

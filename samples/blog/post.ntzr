@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{[ post.title ]} | {[ site.title ]}</title>
+</head>
+<body>
+  {[!include /header title=site.title nav=site.navigation ]}
+
+  <div class="layout">
+    <main class="content">
+      <article>
+        <header>
+          <h1>{[ post.title ]}</h1>
+          <p class="meta">
+            <span>{[ post.published_at ]}</span>
+            <span>— {[ post.author.name ]}</span>
+          </p>
+        </header>
+        {[#each post.body as block]}
+          {[#if block.paragraph]}
+            <p>{[ block.paragraph ]}</p>
+          {[/if]}
+          {[#if block.quote]}
+            <blockquote>{[ block.quote ]}</blockquote>
+          {[/if]}
+        {[/each]}
+
+        {[!include /post_meta categories=post.categories tags=post.tags ]}
+      </article>
+    </main>
+
+    {[!include /sidebar featured=page.featured categories=site.categories profile=profile ]}
+  </div>
+
+  {[!include /footer copyright=site.copyright ]}
+</body>
+</html>

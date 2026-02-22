@@ -1,0 +1,5 @@
+<nav>
+  <ul>
+{[#each items as item]}    {[!include /nav/item item=item ]}
+{[/each]}  </ul>
+</nav>

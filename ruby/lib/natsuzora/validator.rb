@@ -26,40 +26,28 @@ module Natsuzora
 
       # Validate an include name at parse time
       #
-      # Rules:
+      # Lexer ensures each segment follows Identifier rules (starts with letter).
+      # This validates additional constraints:
       # - Must start with '/'
       # - Must have at least one segment after '/'
-      # - Cannot contain '..' (path traversal)
-      # - Cannot contain '//' (double slash)
-      # - Cannot contain ':' (Windows drive letters)
       def validate_include_name_syntax!(name, line: nil, column: nil)
         unless name.start_with?('/')
           raise ParseError.new("Include name must start with '/'", line: line, column: column)
         end
 
-        if name == '/'
-          raise ParseError.new('Include name must have at least one segment', line: line, column: column)
-        end
+        return unless name == '/'
 
-        raise ParseError.new("Include name cannot contain '..'", line: line, column: column) if name.include?('..')
-
-        raise ParseError.new("Include name cannot contain '//'", line: line, column: column) if name.include?('//')
-
-        return unless name.include?(':')
-
-        raise ParseError.new("Include name cannot contain ':'", line: line, column: column)
+        raise ParseError.new('Include name must have at least one segment', line: line, column: column)
       end
 
       # Validate an include name at load time
       #
-      # Additional rules beyond parse-time validation:
-      # - Cannot contain '\' (Windows path separator)
+      # Defense in depth: re-check basic rules even though lexer enforces them
       def validate_include_name_runtime!(name)
         raise IncludeError, "Include name must start with '/': #{name}" unless name.start_with?('/')
 
-        raise IncludeError, "Invalid include name: #{name}" if name.include?('..') || name.include?('//')
-
-        return unless name.include?('\\') || name.include?(':')
+        # These should be impossible with the new lexer, but check anyway
+        return unless name.include?('..') || name.include?('//') || name.include?('\\') || name.include?(':')
 
         raise IncludeError, "Invalid include name: #{name}"
       end

@@ -4,7 +4,7 @@
   "tests": [
     {
       "name": "basic include",
-      "template": "{[> /simple]}",
+      "template": "{[!include /simple ]}",
       "partials": {
         "/simple": "Hello from partial"
       },
@@ -13,7 +13,7 @@
     },
     {
       "name": "include with nested path",
-      "template": "{[> /components/header]}",
+      "template": "{[!include /components/header ]}",
       "partials": {
         "/components/header": "Header Content"
       },
@@ -22,7 +22,7 @@
     },
     {
       "name": "include with argument",
-      "template": "{[> /greeting name=user]}",
+      "template": "{[!include /greeting name=user ]}",
       "partials": {
         "/greeting": "Hello, {[ name ]}!"
       },
@@ -31,7 +31,7 @@
     },
     {
       "name": "include with multiple arguments",
-      "template": "{[> /card title=cardTitle body=cardBody]}",
+      "template": "{[!include /card title=cardTitle body=cardBody ]}",
       "partials": {
         "/card": "[{[ title ]}] {[ body ]}"
       },
@@ -40,7 +40,7 @@
     },
     {
       "name": "include with path argument",
-      "template": "{[> /user name=user.name]}",
+      "template": "{[!include /user name=user.name ]}",
       "partials": {
         "/user": "User: {[ name ]}"
       },
@@ -49,7 +49,7 @@
     },
     {
       "name": "include in if block",
-      "template": "{[#if show]}{[> /content]}{[/if]}",
+      "template": "{[#if show]}{[!include /content ]}{[/if]}",
       "partials": {
         "/content": "Shown"
       },
@@ -58,7 +58,7 @@
     },
     {
       "name": "include in each block",
-      "template": "{[#each items as item]}{[> /item value=item]}{[/each]}",
+      "template": "{[#each items as item]}{[!include /item value=item ]}{[/each]}",
       "partials": {
         "/item": "[{[ value ]}]"
       },
@@ -67,7 +67,7 @@
     },
     {
       "name": "include allows shadowing",
-      "template": "{[> /shadow name=other]}",
+      "template": "{[!include /shadow name=other ]}",
       "partials": {
         "/shadow": "{[ name ]}"
       },
@@ -76,7 +76,7 @@
     },
     {
       "name": "include with variable in partial",
-      "template": "{[> /wrapper]}",
+      "template": "{[!include /wrapper ]}",
       "partials": {
         "/wrapper": "{[ globalVar ]}"
       },
@@ -85,13 +85,40 @@
     },
     {
       "name": "nested includes",
-      "template": "{[> /outer]}",
+      "template": "{[!include /outer ]}",
       "partials": {
-        "/outer": "Outer[{[> /inner]}]",
+        "/outer": "Outer[{[!include /inner ]}]",
         "/inner": "Inner"
       },
       "data": {},
       "expected": "Outer[Inner]"
+    },
+    {
+      "name": "include with whitespace control before",
+      "template": "line1\n  {[-!include /content ]}",
+      "partials": {
+        "/content": "partial"
+      },
+      "data": {},
+      "expected": "line1\npartial"
+    },
+    {
+      "name": "include with whitespace control after",
+      "template": "{[!include /content -]}\nnext",
+      "partials": {
+        "/content": "partial"
+      },
+      "data": {},
+      "expected": "partialnext"
+    },
+    {
+      "name": "include with whitespace control both",
+      "template": "before\n  {[-!include /content -]}\nafter",
+      "partials": {
+        "/content": "partial"
+      },
+      "data": {},
+      "expected": "before\npartialafter"
     }
   ]
 }

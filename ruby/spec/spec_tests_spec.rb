@@ -7,13 +7,13 @@ RSpec.describe 'Spec Tests' do
   SPEC_TESTS_DIR = File.expand_path('../../tests', __dir__)
 
   # Map error types from spec to Ruby exception classes
+  # SyntaxError matches both LexerError and ParseError (implementation detail)
   ERROR_TYPES = {
     'UndefinedVariable' => Natsuzora::UndefinedVariableError,
     'TypeError' => Natsuzora::TypeError,
     'ReservedWordError' => Natsuzora::ReservedWordError,
-    'ParseError' => Natsuzora::ParseError,
     'ShadowingError' => Natsuzora::ShadowingError,
-    'LexerError' => Natsuzora::LexerError
+    'SyntaxError' => [Natsuzora::LexerError, Natsuzora::ParseError]
   }.freeze
 
   def run_test_case(test_case)
@@ -25,14 +25,17 @@ RSpec.describe 'Spec Tests' do
     if expected
       # Success case
       result = Natsuzora.render(template, data)
-      expect(result).to eq(expected), -> {
+      expect(result).to eq(expected), lambda {
         "Template: #{template.inspect}\nData: #{data.inspect}\nExpected: #{expected.inspect}\nGot: #{result.inspect}"
       }
     elsif error_type
       # Error case
-      error_class = ERROR_TYPES[error_type] || Natsuzora::Error
-      expect { Natsuzora.render(template, data) }.to raise_error(error_class), -> {
-        "Expected #{error_type} but no error was raised\nTemplate: #{template.inspect}\nData: #{data.inspect}"
+      error_classes = ERROR_TYPES[error_type] || Natsuzora::Error
+      error_classes = Array(error_classes)
+      expect { Natsuzora.render(template, data) }.to raise_error { |e|
+        expect(error_classes.any? { |klass| e.is_a?(klass) }).to be(true),
+          "Expected one of #{error_classes.map(&:name).join(', ')} but got #{e.class.name}\n" \
+          "Template: #{template.inspect}\nData: #{data.inspect}\nError: #{e.message}"
       }
     else
       raise "Invalid test case: must have 'expected' or 'error'"

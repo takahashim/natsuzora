@@ -20,6 +20,24 @@
       "error": "UndefinedVariable"
     },
     {
+      "name": "stringify null without modifier",
+      "template": "{[ value ]}",
+      "data": {"value": null},
+      "error": "NullValueError"
+    },
+    {
+      "name": "required modifier with null",
+      "template": "{[ value! ]}",
+      "data": {"value": null},
+      "error": "NullValueError"
+    },
+    {
+      "name": "required modifier with empty string",
+      "template": "{[ value! ]}",
+      "data": {"value": ""},
+      "error": "EmptyStringError"
+    },
+    {
       "name": "stringify boolean true",
       "template": "{[ value ]}",
       "data": {"value": true},
@@ -122,16 +140,28 @@
       "error": "ReservedWordError"
     },
     {
+      "name": "reserved word in as variable",
+      "template": "{[ in ]}",
+      "data": {"in": "test"},
+      "error": "ReservedWordError"
+    },
+    {
+      "name": "reserved word of as variable",
+      "template": "{[ of ]}",
+      "data": {"of": "test"},
+      "error": "ReservedWordError"
+    },
+    {
       "name": "identifier starting with underscore",
       "template": "{[ _private ]}",
       "data": {"_private": "test"},
-      "error": "LexerError"
+      "error": "SyntaxError"
     },
     {
       "name": "each item name starting with underscore",
       "template": "{[#each items as _item]}{[ _item ]}{[/each]}",
       "data": {"items": [1]},
-      "error": "LexerError"
+      "error": "SyntaxError"
     },
     {
       "name": "shadowing error in each",
@@ -143,25 +173,43 @@
       "name": "whitespace after {[ before #",
       "template": "{[ #if x]}y{[/if]}",
       "data": {"x": true},
-      "error": "LexerError"
+      "error": "SyntaxError"
     },
     {
       "name": "whitespace after {[ before /",
       "template": "{[#if x]}y{[ /if]}",
       "data": {"x": true},
-      "error": "LexerError"
-    },
-    {
-      "name": "each item and index same name",
-      "template": "{[#each items as item, item]}{[ item ]}{[/each]}",
-      "data": {"items": [1]},
-      "error": "ParseError"
+      "error": "SyntaxError"
     },
     {
       "name": "include name with only slash",
-      "template": "{[> /]}",
+      "template": "{[!include / ]}",
       "data": {},
-      "error": "ParseError"
+      "error": "SyntaxError"
+    },
+    {
+      "name": "include segment starting with underscore",
+      "template": "{[!include /_partial ]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "include segment starting with digit",
+      "template": "{[!include /123 ]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "fractional float not supported",
+      "template": "{[ value ]}",
+      "data": {"value": 3.14},
+      "error": "TypeError"
+    },
+    {
+      "name": "fractional float in array not supported",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": [1, 2.5, 3]},
+      "error": "TypeError"
     }
   ]
 }

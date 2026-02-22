@@ -5,7 +5,6 @@ module Natsuzora
     def initialize(ast, template_loader: nil)
       @ast = ast
       @template_loader = template_loader
-      @escape_enabled = true
     end
 
     def render(data)
@@ -31,8 +30,8 @@ module Natsuzora
         render_unless(node)
       when AST::EachBlock
         render_each(node)
-      when AST::UnsecureBlock
-        render_unsecure(node)
+      when AST::UnsecureOutput
+        render_unsecure_output(node)
       when AST::Include
         render_include(node)
       else
@@ -46,8 +45,19 @@ module Natsuzora
 
     def render_variable(node)
       value = @context.resolve(node.path)
-      str = Value.stringify(value)
-      @escape_enabled ? HtmlEscape.escape(str) : str
+      str = stringify_with_modifier(value, node.modifier)
+      HtmlEscape.escape(str)
+    end
+
+    def stringify_with_modifier(value, modifier)
+      case modifier
+      when :nullable
+        Value.stringify_nullable(value)
+      when :required
+        Value.stringify_required(value)
+      else
+        Value.stringify(value)
+      end
     end
 
     def render_if(node)
@@ -74,9 +84,8 @@ module Natsuzora
       collection = @context.resolve(node.collection.path)
       Value.ensure_array!(collection)
 
-      collection.each_with_index.map do |item, index|
+      collection.map do |item|
         bindings = { node.item_name => item }
-        bindings[node.index_name] = index if node.index_name
 
         @context.with_scope(bindings) do
           render_nodes(node.body_nodes)
@@ -84,12 +93,9 @@ module Natsuzora
       end.join
     end
 
-    def render_unsecure(node)
-      prev_escape = @escape_enabled
-      @escape_enabled = false
-      result = render_nodes(node.nodes)
-      @escape_enabled = prev_escape
-      result
+    def render_unsecure_output(node)
+      value = @context.resolve(node.path.path)
+      Value.stringify(value) # No escaping
     end
 
     def render_include(node)

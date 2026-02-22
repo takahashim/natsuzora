@@ -1,0 +1,28 @@
+# profile.ntzr のコントラクト
+
+type Navigation { label: scalar, url: scalar }
+type Category { count: scalar, name: scalar, slug: scalar }
+type Copyright { owner: scalar, year: scalar }
+type Featured { excerpt: scalar, title: scalar, url: scalar }
+
+site {
+  categories: []Category
+  copyright: Copyright
+  navigation: []Navigation
+  title: scalar
+}
+
+page {
+  featured: Featured
+}
+
+profile {
+  avatar_url: scalar
+  bio: scalar
+  name: scalar
+  recent_posts: []{
+    published_at: scalar
+    title: scalar
+  }
+  role: scalar
+}

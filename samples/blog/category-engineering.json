@@ -1,0 +1,50 @@
+{
+  "site": {
+    "title": "Natsuzora Tech Blog",
+    "navigation": [
+      { "label": "Home", "url": "/" },
+      { "label": "Profile", "url": "/profile" },
+      { "label": "Archive", "url": "/archive" }
+    ],
+    "categories": [
+      { "name": "Engineering", "slug": "engineering", "count": 24 },
+      { "name": "Design", "slug": "design", "count": 12 }
+    ],
+    "copyright": {
+      "year": "2024",
+      "owner": "Example Studio"
+    }
+  },
+  "page": {
+    "featured": {
+      "title": "Rustで作る高速テンプレートエンジン",
+      "excerpt": "Natsuzoraの内部構造と安全性を支える仕組みを紹介。",
+      "url": "/posts/rust-template-engine"
+    }
+  },
+  "profile": {
+    "name": "Maki",
+    "role": "Lead Engineer"
+  },
+  "category": {
+    "name": "Engineering",
+    "slug": "engineering",
+    "description": "Rust やテンプレート実装に関する記事をまとめています。",
+    "posts": [
+      {
+        "title": "UI コンポーネントをテンプレート化するベストプラクティス",
+        "published_at": "2024-07-12",
+        "author": { "name": "Maki" },
+        "excerpt": "再利用性とメンテナンス性を両立させるための設計指針をまとめました。",
+        "url": "/posts/component-design-best-practices"
+      },
+      {
+        "title": "include を安全に扱うためのチェックリスト",
+        "published_at": "2024-07-05",
+        "author": { "name": "Kai" },
+        "excerpt": "部分テンプレートをシンプルに保ち、循環を避けるポイントを解説します。",
+        "url": "/posts/include-safety-checklist"
+      }
+    ]
+  }
+}

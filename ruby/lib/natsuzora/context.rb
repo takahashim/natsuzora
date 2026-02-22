@@ -57,14 +57,21 @@ module Natsuzora
     def validate_no_shadowing!(bindings)
       bindings.each_key do |name|
         name_str = name.to_s
-        next unless name_exists?(name_str)
+        origin = binding_origin(name_str)
+        next unless origin
 
-        raise ShadowingError, "Cannot shadow existing variable: #{name_str}"
+        raise ShadowingError,
+              "Cannot shadow existing variable '#{name_str}' (already defined in #{origin})"
       end
     end
 
-    def name_exists?(name)
-      @local_stack.any? { |scope| scope.key?(name) } || @root.key?(name)
+    def binding_origin(name)
+      return 'root data' if @root.key?(name)
+
+      @local_stack.reverse_each do |scope|
+        return 'outer local scope' if scope.key?(name)
+      end
+      nil
     end
 
     def access_property(value, key)
@@ -81,9 +88,27 @@ module Natsuzora
         data.transform_keys(&:to_s).transform_values { |v| normalize_data(v) }
       when Array
         data.map { |v| normalize_data(v) }
+      when Float
+        normalize_float(data)
       else
         data
       end
+    end
+
+    def normalize_float(value)
+      # Reject NaN and Infinity explicitly
+      raise TypeError, "Invalid number: #{value}" unless value.finite?
+
+      # Convert whole-number floats to integers (for JS compatibility)
+      if value == value.to_i
+        int_value = value.to_i
+        return int_value if int_value.between?(Value::INTEGER_MIN, Value::INTEGER_MAX)
+
+        raise TypeError, "Integer out of range: #{int_value}"
+
+      end
+
+      raise TypeError, "Floating point numbers are not supported: #{value}"
     end
   end
 end

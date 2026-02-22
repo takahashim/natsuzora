@@ -1,0 +1,18 @@
+<footer class="post-meta">
+  <div class="categories">
+    <strong>Categories:</strong>
+    <ul>
+      {[#each categories as category]}
+      <li>{[ category ]}</li>
+      {[/each]}
+    </ul>
+  </div>
+  <div class="tags">
+    <strong>Tags:</strong>
+    <ul>
+      {[#each tags as tag]}
+      <li>#{[ tag ]}</li>
+      {[/each]}
+    </ul>
+  </div>
+</footer>

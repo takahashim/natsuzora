@@ -1,0 +1,34 @@
+# post.ntzr のコントラクト
+
+type Navigation { label: scalar, url: scalar }
+type Category { count: scalar, name: scalar, slug: scalar }
+type Copyright { owner: scalar, year: scalar }
+type Author { name: scalar }
+type Featured { excerpt: scalar, title: scalar, url: scalar }
+
+site {
+  categories: []Category
+  copyright: Copyright
+  navigation: []Navigation
+  title: scalar
+}
+
+page {
+  featured: Featured
+}
+
+post {
+  author: Author
+  body: []{
+    paragraph: scalar
+    quote: scalar
+  }
+  categories: []scalar
+  published_at: scalar
+  tags: []scalar
+  title: scalar
+}
+
+profile {
+  name: scalar
+}

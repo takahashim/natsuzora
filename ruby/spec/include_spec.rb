@@ -8,7 +8,7 @@ RSpec.describe 'Include with real files' do
   let(:include_root) { File.join(templates_dir, 'shared') }
 
   def render_template(name, data)
-    source = File.read(File.join(templates_dir, "#{name}.tmpl"))
+    source = File.read(File.join(templates_dir, "#{name}.ntzr"))
     Natsuzora.render(source, data, include_root: include_root)
   end
 
@@ -28,7 +28,7 @@ RSpec.describe 'Include with real files' do
     end
 
     it 'includes a partial directly' do
-      result = render_source('{[> /greeting name=name]}', { name: 'Bob' })
+      result = render_source('{[!include /greeting name=name ]}', { name: 'Bob' })
       expect(result.strip).to eq('Hello, Bob!')
     end
   end
@@ -36,7 +36,7 @@ RSpec.describe 'Include with real files' do
   describe 'nested path includes' do
     it 'includes from nested directory' do
       result = render_source(
-        '{[> /components/card title=t body=b]}',
+        '{[!include /components/card title=t body=b ]}',
         { t: 'Title', b: 'Body text' }
       )
       expect(result).to include('<div class="card">')
@@ -46,7 +46,7 @@ RSpec.describe 'Include with real files' do
 
     it 'includes button component' do
       result = render_source(
-        '{[> /components/button className=cls label=lbl]}',
+        '{[!include /components/button className=cls label=lbl ]}',
         { cls: 'btn-primary', lbl: 'Click me' }
       )
       expect(result.strip).to eq('<button class="btn-primary">Click me</button>')
@@ -56,11 +56,11 @@ RSpec.describe 'Include with real files' do
   describe 'include with each loop' do
     it 'renders multiple cards' do
       result = render_template('card_list', {
-        cards: [
-          { title: 'Card 1', body: 'Body 1' },
-          { title: 'Card 2', body: 'Body 2' }
-        ]
-      })
+                                 cards: [
+                                   { title: 'Card 1', body: 'Body 1' },
+                                   { title: 'Card 2', body: 'Body 2' }
+                                 ]
+                               })
       expect(result).to include('<h2>Card 1</h2>')
       expect(result).to include('<h2>Card 2</h2>')
       expect(result).to include('<p>Body 1</p>')
@@ -73,12 +73,12 @@ RSpec.describe 'Include with real files' do
     # /nav/menu includes /nav/item
     it 'renders navigation menu with items' do
       result = render_template('nav_only', {
-        navItems: [
-          { label: 'Home', url: '/', active: true },
-          { label: 'About', url: '/about', active: false },
-          { label: 'Contact', url: '/contact', active: false }
-        ]
-      })
+                                 navItems: [
+                                   { label: 'Home', url: '/', active: true },
+                                   { label: 'About', url: '/about', active: false },
+                                   { label: 'Contact', url: '/contact', active: false }
+                                 ]
+                               })
 
       expect(result).to include('<nav>')
       expect(result).to include('<ul>')
@@ -95,22 +95,22 @@ RSpec.describe 'Include with real files' do
     # /nav/menu includes /nav/item
     it 'renders full page layout with deep nesting' do
       result = render_template('full_page', {
-        site: {
-          title: 'My Site',
-          year: 2024,
-          nav: [
-            { label: 'Home', url: '/', active: true },
-            { label: 'Blog', url: '/blog', active: false }
-          ]
-        },
-        page: {
-          title: 'Welcome',
-          cards: [
-            { title: 'Feature 1', body: 'Description 1' },
-            { title: 'Feature 2', body: 'Description 2' }
-          ]
-        }
-      })
+                                 site: {
+                                   title: 'My Site',
+                                   year: 2024,
+                                   nav: [
+                                     { label: 'Home', url: '/', active: true },
+                                     { label: 'Blog', url: '/blog', active: false }
+                                   ]
+                                 },
+                                 page: {
+                                   title: 'Welcome',
+                                   cards: [
+                                     { title: 'Feature 1', body: 'Description 1' },
+                                     { title: 'Feature 2', body: 'Description 2' }
+                                   ]
+                                 }
+                               })
 
       # Check HTML structure
       expect(result).to include('<!DOCTYPE html>')
@@ -137,16 +137,16 @@ RSpec.describe 'Include with real files' do
 
     it 'renders page without cards when empty array provided' do
       result = render_template('full_page', {
-        site: {
-          title: 'My Site',
-          year: 2024,
-          nav: []
-        },
-        page: {
-          title: 'Empty Page',
-          cards: []
-        }
-      })
+                                 site: {
+                                   title: 'My Site',
+                                   year: 2024,
+                                   nav: []
+                                 },
+                                 page: {
+                                   title: 'Empty Page',
+                                   cards: []
+                                 }
+                               })
 
       expect(result).to include('<title>Empty Page - My Site</title>')
       expect(result).not_to include('<div class="cards">')
@@ -157,7 +157,7 @@ RSpec.describe 'Include with real files' do
     it 'allows shadowing in include scope' do
       # Create a template that shadows a variable name
       result = render_source(
-        '{[ name ]} -> {[> /greeting name=other]} -> {[ name ]}',
+        '{[ name ]} -> {[!include /greeting name=other ]} -> {[ name ]}',
         { name: 'Original', other: 'Shadowed' }
       )
       expect(result.strip).to eq("Original -> Hello, Shadowed!\n -> Original")
@@ -167,7 +167,7 @@ RSpec.describe 'Include with real files' do
   describe 'include with path arguments' do
     it 'passes nested path as argument' do
       result = render_source(
-        '{[> /greeting name=user.profile.displayName]}',
+        '{[!include /greeting name=user.profile.displayName ]}',
         { user: { profile: { displayName: 'Charlie' } } }
       )
       expect(result.strip).to eq('Hello, Charlie!')
@@ -177,13 +177,13 @@ RSpec.describe 'Include with real files' do
   describe 'include inside conditional' do
     it 'conditionally includes partial' do
       result = render_source(
-        '{[#if showGreeting]}{[> /greeting name=name]}{[/if]}',
+        '{[#if showGreeting]}{[!include /greeting name=name ]}{[/if]}',
         { showGreeting: true, name: 'Dave' }
       )
       expect(result.strip).to eq('Hello, Dave!')
 
       result = render_source(
-        '{[#if showGreeting]}{[> /greeting name=name]}{[/if]}',
+        '{[#if showGreeting]}{[!include /greeting name=name ]}{[/if]}',
         { showGreeting: false, name: 'Dave' }
       )
       expect(result).to eq('')
@@ -192,23 +192,23 @@ RSpec.describe 'Include with real files' do
 
   describe 'error cases' do
     it 'raises error for missing partial' do
-      expect {
-        render_source('{[> /nonexistent]}', {})
-      }.to raise_error(Natsuzora::IncludeError, /not found/)
+      expect do
+        render_source('{[!include /nonexistent ]}', {})
+      end.to raise_error(Natsuzora::IncludeError, /not found/)
     end
 
     it 'raises error for invalid include name with double dot' do
-      # Note: '..' in path causes parse error because '.' is not valid in include names
-      expect {
-        render_source('{[> /path/../traversal]}', {})
-      }.to raise_error(Natsuzora::ParseError)
+      # NOTE: '..' in path causes parse error because '.' is not valid in include names
+      expect do
+        render_source('{[!include /path/../traversal ]}', {})
+      end.to raise_error(Natsuzora::ParseError)
     end
 
     it 'raises error for include name with double slash' do
-      # Note: '//' causes parse error at lexer level because second '/' is not followed by valid char
-      expect {
-        render_source('{[> /path//double]}', {})
-      }.to raise_error(Natsuzora::ParseError)
+      # NOTE: '//' causes parse error at lexer level because second '/' is not followed by valid char
+      expect do
+        render_source('{[!include /path//double ]}', {})
+      end.to raise_error(Natsuzora::ParseError)
     end
   end
 end

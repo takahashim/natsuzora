@@ -1,0 +1,12 @@
+<header class="site-header">
+  <div class="branding">
+    <h1>{[ title ]}</h1>
+  </div>
+  <nav class="site-nav">
+    <ul>
+      {[#each nav as item]}
+      <li><a href="{[ item.url ]}">{[ item.label ]}</a></li>
+      {[/each]}
+    </ul>
+  </nav>
+</header>

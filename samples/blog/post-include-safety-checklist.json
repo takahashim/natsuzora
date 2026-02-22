@@ -1,0 +1,43 @@
+{
+  "site": {
+    "title": "Natsuzora Tech Blog",
+    "navigation": [
+      { "label": "Home", "url": "/" },
+      { "label": "Profile", "url": "/profile" },
+      { "label": "Archive", "url": "/archive" }
+    ],
+    "categories": [
+      { "name": "Engineering", "slug": "engineering", "count": 24 },
+      { "name": "Design", "slug": "design", "count": 12 }
+    ],
+    "copyright": {
+      "year": "2024",
+      "owner": "Example Studio"
+    }
+  },
+  "page": {
+    "featured": {
+      "title": "Rustで作る高速テンプレートエンジン",
+      "excerpt": "Natsuzoraの内部構造と安全性を支える仕組みを紹介。",
+      "url": "/posts/rust-template-engine"
+    }
+  },
+  "profile": {
+    "name": "Kai",
+    "role": "Template Engineer",
+    "recent_posts": [
+      { "title": "include を安全に扱うためのチェックリスト", "published_at": "2024-07-05" }
+    ]
+  },
+  "post": {
+    "title": "include を安全に扱うためのチェックリスト",
+    "published_at": "2024-07-05",
+    "author": { "name": "Kai" },
+    "categories": ["Engineering"],
+    "tags": ["include", "lint"],
+    "body": [
+      { "paragraph": "循環参照を検出するには include スタックを管理しましょう。", "quote": null },
+      { "paragraph": null, "quote": "ルール: include は常に純粋であるべき。" }
+    ]
+  }
+}

@@ -20,12 +20,6 @@
       "expected": ""
     },
     {
-      "name": "each with index",
-      "template": "{[#each items as item, idx]}{[ idx ]}:{[ item ]},{[/each]}",
-      "data": {"items": ["a", "b"]},
-      "expected": "0:a,1:b,"
-    },
-    {
       "name": "each with object items",
       "template": "{[#each users as user]}{[ user.name ]}{[/each]}",
       "data": {"users": [{"name": "Alice"}, {"name": "Bob"}]},
@@ -62,20 +56,14 @@
       "expected": "ab"
     },
     {
-      "name": "each index starts at zero",
-      "template": "{[#each items as item, i]}{[ i ]}{[/each]}",
-      "data": {"items": ["a", "b", "c"]},
-      "expected": "012"
-    },
-    {
       "name": "each with single item",
       "template": "{[#each items as item]}{[ item ]}{[/each]}",
       "data": {"items": ["only"]},
       "expected": "only"
     },
     {
-      "name": "each with null items in array",
-      "template": "{[#each items as item]}[{[ item ]}]{[/each]}",
+      "name": "each with null items in array using nullable modifier",
+      "template": "{[#each items as item]}[{[ item? ]}]{[/each]}",
       "data": {"items": ["a", null, "b"]},
       "expected": "[a][][b]"
     }

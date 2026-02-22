@@ -1,5 +1,5 @@
 {
-  "description": "Stringify tests - only string, integer, and null can be stringified",
+  "description": "Stringify tests - string and integer can be stringified, null requires ? modifier",
   "tests": [
     {
       "name": "stringify string",
@@ -32,10 +32,46 @@
       "expected": "[0]"
     },
     {
-      "name": "stringify null",
-      "template": "[{[ value ]}]",
+      "name": "nullable modifier with null",
+      "template": "[{[ value? ]}]",
       "data": {"value": null},
       "expected": "[]"
+    },
+    {
+      "name": "nullable modifier with empty string",
+      "template": "[{[ value? ]}]",
+      "data": {"value": ""},
+      "expected": "[]"
+    },
+    {
+      "name": "nullable modifier with value",
+      "template": "[{[ value? ]}]",
+      "data": {"value": "hello"},
+      "expected": "[hello]"
+    },
+    {
+      "name": "required modifier with value",
+      "template": "[{[ value! ]}]",
+      "data": {"value": "hello"},
+      "expected": "[hello]"
+    },
+    {
+      "name": "required modifier with zero",
+      "template": "[{[ value! ]}]",
+      "data": {"value": 0},
+      "expected": "[0]"
+    },
+    {
+      "name": "nullable modifier on nested path",
+      "template": "[{[ user.name? ]}]",
+      "data": {"user": {"name": null}},
+      "expected": "[]"
+    },
+    {
+      "name": "required modifier on nested path",
+      "template": "[{[ user.name! ]}]",
+      "data": {"user": {"name": "Alice"}},
+      "expected": "[Alice]"
     },
     {
       "name": "stringify max safe integer",

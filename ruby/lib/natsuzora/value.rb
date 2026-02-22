@@ -6,6 +6,7 @@ module Natsuzora
     INTEGER_MAX = 9_007_199_254_740_991
 
     class << self
+      # Stringify value (v4.0: null is an error)
       def stringify(value)
         case value
         when String
@@ -14,7 +15,7 @@ module Natsuzora
           validate_integer_range!(value)
           value.to_s
         when NilClass
-          ''
+          raise TypeError, "Cannot stringify null value without '?' modifier"
         when TrueClass, FalseClass
           raise TypeError, 'Cannot stringify boolean value'
         when Array
@@ -24,6 +25,21 @@ module Natsuzora
         else
           raise TypeError, "Cannot stringify value of type #{value.class}"
         end
+      end
+
+      # Stringify with nullable modifier (null -> empty string)
+      def stringify_nullable(value)
+        return '' if value.nil?
+
+        stringify(value)
+      end
+
+      # Stringify with required modifier (null and empty string are errors)
+      def stringify_required(value)
+        raise TypeError, "Cannot stringify null value with '!' modifier" if value.nil?
+        raise TypeError, "Cannot stringify empty string with '!' modifier" if value == ''
+
+        stringify(value)
       end
 
       def truthy?(value)
