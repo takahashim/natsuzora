@@ -1,7 +1,7 @@
 # CLAUDE.md
 ## プロジェクト概要
 
-Natsuzoraは「表示専用」のミニテンプレート言語で、Rust・Ruby・TypeScriptの3実装を持つモノレポ。静的HTML生成とRailsプレビュー共有テンプレートに使用される。
+Natsuzoraは「表示専用」のミニテンプレート言語で、Rust・Rubyの2実装を持つモノレポ。静的HTML生成とRailsプレビュー共有テンプレートに使用される。
 
 ## ディレクトリ構成
 
@@ -11,7 +11,6 @@ natsuzora/
 ├── tests/          # 共有テストケース（*.json）
 ├── rust/           # Rust実装
 ├── ruby/           # Ruby実装
-├── typescript/     # TypeScript実装
 └── tree-sitter/    # Tree-sitter文法（シンタックスハイライト用）
 ```
 
@@ -34,22 +33,6 @@ bundle install       # 依存関係インストール
 bundle exec rspec    # テスト実行
 bundle exec rubocop  # Lint
 ```
-
-### TypeScript
-
-```bash
-cd typescript
-npx tsx tests/run_tests.ts      # 共有テストケース実行
-npx tsx tests/value_test.ts     # value モジュールテスト
-npx tsx tests/lexer_test.ts     # lexer モジュールテスト
-npx tsx tests/parser_test.ts    # parser モジュールテスト
-npx tsx tests/context_test.ts   # context モジュールテスト
-```
-
-TypeScript実装の特徴：
-- **ランタイム互換**: Deno, Node.js, Bun すべてで動作
-- **依存関係なし**: npm/JSR の外部パッケージに依存しない
-- **テストフレームワーク**: 独自実装（`tests/test_utils.ts`）、Deno.test スタイルの `t.step` サポート
 
 ### Tree-sitter
 
@@ -82,7 +65,6 @@ Lexer → Token[] → Parser → AST::Template → Renderer → String
 | Context | スコープスタック管理、名前解決、シャドーイング検出 |
 | Renderer | AST評価、HTMLエスケープ適用 |
 | TemplateLoader | パーシャル読込、循環検出、パストラバーサル防止 |
-| Platform (TypeScript) | Deno/Node.js/Bun 互換レイヤー（ファイルI/O、パス操作） |
 
 ## 言語仕様の要点
 
@@ -122,5 +104,5 @@ Lexer → Token[] → Parser → AST::Template → Renderer → String
 
 1. 仕様変更は `spec/spec.md` を先に更新
 2. `tests/` に対応するテストケースを追加
-3. 全実装（Rust, Ruby, TypeScript）を更新し、テストがパスすることを確認
+3. 全実装（Rust, Ruby）を更新し、テストがパスすることを確認
 4. BNF（`spec/bnf.md`）も必要に応じて更新

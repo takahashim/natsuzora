@@ -153,6 +153,11 @@ fn test_unsecure() {
     run_test_suite("unsecure.json", &[]);
 }
 
+#[test]
+fn test_comment() {
+    run_test_suite("comment.json", &[]);
+}
+
 // Include tests are skipped - they require fixture files
 // #[test]
 // fn test_include() {

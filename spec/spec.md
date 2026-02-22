@@ -4,7 +4,7 @@
 
 - Version: 4.0
 - Status: 確定
-- 対象実装: Rust / Ruby / TypeScript（共通仕様）
+- 対象実装: Rust / Ruby （共通仕様）
 - ファイル拡張子: `.ntzr`
 
 ## 1. 概要と設計理念
