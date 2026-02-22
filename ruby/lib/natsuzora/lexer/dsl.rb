@@ -47,8 +47,6 @@ module Natsuzora
 
             # Identifiers
             token :IDENT, /[A-Za-z][A-Za-z0-9_]*/
-
-            error :INVALID
           end
         end.compile
       end

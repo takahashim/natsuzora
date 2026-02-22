@@ -4,8 +4,11 @@ source 'https://rubygems.org'
 
 gemspec
 
-# LexerKit for fast lexical analysis
-gem 'lexer_kit', path: '../../lexer_kit'
+# For monorepo development, prefer the local lexer_kit checkout.
+# Outside this repo layout, resolve from RubyGems via gemspec dependency.
+if File.directory?(File.expand_path('../../lexer_kit', __dir__))
+  gem 'lexer_kit', path: '../../lexer_kit'
+end
 
 group :development, :test do
   gem 'rake', '~> 13.0'

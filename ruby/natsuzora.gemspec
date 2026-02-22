@@ -22,6 +22,9 @@ Gem::Specification.new do |spec|
   spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/CHANGELOG.md"
   spec.metadata['rubygems_mfa_required'] = 'true'
 
+  # Required at runtime by lib/natsuzora/lexer/dsl.rb
+  spec.add_dependency 'lexer_kit', '~> 0.5'
+
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").reject do |f|
       (File.expand_path(f) == __FILE__) ||
