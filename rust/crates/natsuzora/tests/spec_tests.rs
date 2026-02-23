@@ -115,9 +115,7 @@ fn error_type_matches(e: &natsuzora::NatsuzoraError, expected: &str) -> bool {
             // LexerError maps to ParseError with specific patterns
             message.contains("syntax error") || message.contains("identifier")
         }
-        (ParseError { message, .. }, "ReservedWordError") => {
-            message.contains("reserved word")
-        }
+        (ParseError { message, .. }, "ReservedWordError") => message.contains("reserved word"),
         (UndefinedVariable { .. }, "UndefinedVariable") => true,
         (TypeError { .. }, "TypeError") => true,
         (TypeError { .. }, "NullValueError") => true,
@@ -142,10 +140,7 @@ fn run_test_suite(filename: &str, skip_tests: &[&str]) {
         passed += 1;
     }
 
-    eprintln!(
-        "{}: {} tests passed, {} skipped",
-        filename, passed, skipped
-    );
+    eprintln!("{}: {} tests passed, {} skipped", filename, passed, skipped);
 }
 
 #[test]

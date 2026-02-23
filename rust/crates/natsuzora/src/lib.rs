@@ -53,11 +53,10 @@ impl Natsuzora {
     /// assert_eq!(result, "Hello, Alice!");
     /// ```
     pub fn parse(source: &str) -> Result<Self> {
-        let template =
-            natsuzora_ast::parse(source).map_err(|e| NatsuzoraError::ParseError {
-                message: e.to_string(),
-                location: Location::default(),
-            })?;
+        let template = natsuzora_ast::parse(source).map_err(|e| NatsuzoraError::ParseError {
+            message: e.to_string(),
+            location: Location::default(),
+        })?;
         Ok(Self {
             template,
             include_root: None,
@@ -75,11 +74,10 @@ impl Natsuzora {
     /// ).unwrap();
     /// ```
     pub fn parse_with_includes(source: &str, include_root: impl AsRef<Path>) -> Result<Self> {
-        let template =
-            natsuzora_ast::parse(source).map_err(|e| NatsuzoraError::ParseError {
-                message: e.to_string(),
-                location: Location::default(),
-            })?;
+        let template = natsuzora_ast::parse(source).map_err(|e| NatsuzoraError::ParseError {
+            message: e.to_string(),
+            location: Location::default(),
+        })?;
         Ok(Self {
             template,
             include_root: Some(include_root.as_ref().to_path_buf()),

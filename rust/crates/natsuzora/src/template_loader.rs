@@ -54,17 +54,20 @@ impl IncludePathResolver {
 
     fn canonicalize_candidate(&self, path: &Path) -> Result<PathBuf> {
         if path.exists() {
-            return path.canonicalize().map_err(|e| NatsuzoraError::IncludeError {
-                message: format!("Failed to resolve include path: {}", e),
-            });
+            return path
+                .canonicalize()
+                .map_err(|e| NatsuzoraError::IncludeError {
+                    message: format!("Failed to resolve include path: {}", e),
+                });
         }
 
         let (existing_parent, missing_segments) = split_existing_parent(path);
-        let mut resolved = existing_parent
-            .canonicalize()
-            .map_err(|e| NatsuzoraError::IncludeError {
-                message: format!("Failed to resolve include path: {}", e),
-            })?;
+        let mut resolved =
+            existing_parent
+                .canonicalize()
+                .map_err(|e| NatsuzoraError::IncludeError {
+                    message: format!("Failed to resolve include path: {}", e),
+                })?;
         for segment in missing_segments {
             resolved.push(segment);
         }

@@ -9,16 +9,10 @@ pub use natsuzora_ast::Location;
 #[derive(Error, Debug)]
 pub enum NatsuzoraError {
     #[error("Parse error at line {}, column {}: {message}", location.line, location.column)]
-    ParseError {
-        message: String,
-        location: Location,
-    },
+    ParseError { message: String, location: Location },
 
     #[error("{message}")]
-    UndefinedVariable {
-        message: String,
-        location: Location,
-    },
+    UndefinedVariable { message: String, location: Location },
 
     #[error("Type error: {message}")]
     TypeError { message: String },
@@ -26,7 +20,9 @@ pub enum NatsuzoraError {
     #[error("Include error: {message}")]
     IncludeError { message: String },
 
-    #[error("Shadowing error: cannot shadow existing variable '{name}' (already defined in {origin})")]
+    #[error(
+        "Shadowing error: cannot shadow existing variable '{name}' (already defined in {origin})"
+    )]
     ShadowingError { name: String, origin: String },
 
     #[error("IO error: {0}")]

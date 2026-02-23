@@ -129,8 +129,7 @@ impl<'a> Lexer<'a> {
                 if self.looking_at(b"!unsecure") && !self.is_ident_continue_at(self.pos + 9) {
                     tokens.push(Token::new(TokenType::BangUnsecure, "!unsecure", loc));
                     self.advance_n(9);
-                } else if self.looking_at(b"!include") && !self.is_ident_continue_at(self.pos + 8)
-                {
+                } else if self.looking_at(b"!include") && !self.is_ident_continue_at(self.pos + 8) {
                     tokens.push(Token::new(TokenType::BangInclude, "!include", loc));
                     self.advance_n(8);
                 } else {
@@ -168,8 +167,7 @@ impl<'a> Lexer<'a> {
                         _ => break,
                     }
                 }
-                let ws_text =
-                    std::str::from_utf8(&self.source[start..self.pos]).unwrap_or(" ");
+                let ws_text = std::str::from_utf8(&self.source[start..self.pos]).unwrap_or(" ");
                 tokens.push(Token::new(TokenType::Whitespace, ws_text, loc));
             }
 
@@ -179,8 +177,7 @@ impl<'a> Lexer<'a> {
                 while self.pos < self.source.len() && self.is_ident_continue_at(self.pos) {
                     self.advance_one();
                 }
-                let ident =
-                    std::str::from_utf8(&self.source[start..self.pos]).unwrap_or("");
+                let ident = std::str::from_utf8(&self.source[start..self.pos]).unwrap_or("");
                 let token_type = match ident {
                     "if" => TokenType::KwIf,
                     "unless" => TokenType::KwUnless,

@@ -203,7 +203,9 @@ mod tests {
     fn test_stringify_nullable() {
         assert_eq!(Value::Null.stringify_nullable().unwrap(), "");
         assert_eq!(
-            Value::String("hello".to_string()).stringify_nullable().unwrap(),
+            Value::String("hello".to_string())
+                .stringify_nullable()
+                .unwrap(),
             "hello"
         );
     }

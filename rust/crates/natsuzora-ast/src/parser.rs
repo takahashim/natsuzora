@@ -130,9 +130,7 @@ impl Parser {
             TokenType::KwIf => self.parse_if_block(),
             TokenType::KwUnless => self.parse_unless_block(),
             TokenType::KwEach => self.parse_each_block(),
-            TokenType::KwElse => {
-                self.unexpected_token(Some("Unexpected 'else' without 'if'"))
-            }
+            TokenType::KwElse => self.unexpected_token(Some("Unexpected 'else' without 'if'")),
             _ => self.unexpected_token(None),
         }
     }
@@ -492,9 +490,7 @@ impl Parser {
     }
 
     fn current_location(&self) -> Location {
-        self.current_token()
-            .map(|t| t.location)
-            .unwrap_or_default()
+        self.current_token().map(|t| t.location).unwrap_or_default()
     }
 
     fn advance(&mut self) {

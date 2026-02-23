@@ -273,7 +273,11 @@ fn include_missing_partial_error() {
     let result = render_source("{[!include /nonexistent ]}", json!({}));
     assert!(matches!(result, Err(NatsuzoraError::IncludeError { .. })));
     if let Err(NatsuzoraError::IncludeError { message }) = result {
-        assert!(message.contains("not found"), "Expected 'not found' in: {}", message);
+        assert!(
+            message.contains("not found"),
+            "Expected 'not found' in: {}",
+            message
+        );
     }
 }
 
