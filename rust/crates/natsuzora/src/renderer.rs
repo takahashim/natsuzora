@@ -1,4 +1,7 @@
 //! Renderer for evaluating Natsuzora AST.
+//!
+//! Since TokenProcessor handles whitespace control before parsing,
+//! the renderer simply evaluates the AST without any whitespace trimming logic.
 
 use crate::context::Context;
 use crate::error::{NatsuzoraError, Result};
@@ -7,7 +10,7 @@ use crate::template_loader::TemplateLoader;
 use crate::value::Value;
 use natsuzora_ast::{
     AstNode, EachBlock, IfBlock, IncludeNode, Modifier, Template, UnlessBlock, UnsecureNode,
-    VariableNode, WhitespaceControl,
+    VariableNode,
 };
 use std::collections::HashMap;
 
@@ -30,90 +33,20 @@ impl<'a> Renderer<'a> {
 
     fn render_nodes(&mut self, nodes: &[AstNode], context: &mut Context) -> Result<String> {
         let mut output = String::new();
-        let mut pending_trim = false;
 
-        for node in nodes.iter() {
-            // Handle whitespace trimming from previous tag's -]}
-            if pending_trim {
-                if let AstNode::Text(text) = node {
-                    let trimmed = trim_leading_whitespace(&text.content);
-                    output.push_str(trimmed);
-                    pending_trim = false;
-                    continue;
-                }
-                pending_trim = false;
-            }
-
-            let (rendered, ws) = self.render_node_with_ws(node, context)?;
-
-            // Handle {[- trim before
-            if ws.trim_before && !output.is_empty() {
-                output = trim_trailing_whitespace(&output);
-            }
-
-            output.push_str(&rendered);
-
-            // Handle -]} trim after
-            if ws.trim_after {
-                pending_trim = true;
+        for node in nodes {
+            match node {
+                AstNode::Text(n) => output.push_str(&n.content),
+                AstNode::Variable(n) => output.push_str(&self.render_variable(n, context)?),
+                AstNode::Unsecure(n) => output.push_str(&self.render_unsecure(n, context)?),
+                AstNode::If(n) => output.push_str(&self.render_if(n, context)?),
+                AstNode::Unless(n) => output.push_str(&self.render_unless(n, context)?),
+                AstNode::Each(n) => output.push_str(&self.render_each(n, context)?),
+                AstNode::Include(n) => output.push_str(&self.render_include(n, context)?),
             }
         }
 
         Ok(output)
-    }
-
-    fn render_node_with_ws(
-        &mut self,
-        node: &AstNode,
-        context: &mut Context,
-    ) -> Result<(String, WhitespaceControl)> {
-        match node {
-            AstNode::Text(n) => Ok((n.content.clone(), WhitespaceControl::default())),
-            AstNode::Variable(n) => {
-                let rendered = self.render_variable(n, context)?;
-                Ok((rendered, n.whitespace))
-            }
-            AstNode::Unsecure(n) => {
-                let rendered = self.render_unsecure(n, context)?;
-                Ok((rendered, n.whitespace))
-            }
-            AstNode::Comment(n) => Ok((String::new(), n.whitespace)),
-            AstNode::If(n) => {
-                let rendered = self.render_if(n, context)?;
-                // Return the open tag's whitespace for trim_before, close tag for trim_after
-                Ok((
-                    rendered,
-                    WhitespaceControl {
-                        trim_before: n.whitespace_open.trim_before,
-                        trim_after: n.whitespace_close.trim_after,
-                    },
-                ))
-            }
-            AstNode::Unless(n) => {
-                let rendered = self.render_unless(n, context)?;
-                Ok((
-                    rendered,
-                    WhitespaceControl {
-                        trim_before: n.whitespace_open.trim_before,
-                        trim_after: n.whitespace_close.trim_after,
-                    },
-                ))
-            }
-            AstNode::Each(n) => {
-                let rendered = self.render_each(n, context)?;
-                Ok((
-                    rendered,
-                    WhitespaceControl {
-                        trim_before: n.whitespace_open.trim_before,
-                        trim_after: n.whitespace_close.trim_after,
-                    },
-                ))
-            }
-            AstNode::Include(n) => {
-                let rendered = self.render_include(n, context)?;
-                Ok((rendered, n.whitespace))
-            }
-        }
     }
 
     fn render_variable(&self, node: &VariableNode, context: &Context) -> Result<String> {
@@ -139,33 +72,9 @@ impl<'a> Renderer<'a> {
         let value = context.resolve(node.condition.segments(), location)?;
 
         if value.is_truthy() {
-            let mut output = self.render_nodes(&node.then_branch, context)?;
-            // open.trim_after → trim leading whitespace of body
-            if node.whitespace_open.trim_after {
-                output = trim_leading_whitespace(&output).to_string();
-            }
-            // else.trim_before or close.trim_before → trim trailing whitespace of body
-            let trim_end = node
-                .whitespace_else
-                .as_ref()
-                .map_or(node.whitespace_close.trim_before, |ws| ws.trim_before);
-            if trim_end && !output.is_empty() {
-                output = trim_trailing_whitespace(&output);
-            }
-            Ok(output)
+            self.render_nodes(&node.then_branch, context)
         } else if let Some(else_branch) = &node.else_branch {
-            let mut output = self.render_nodes(else_branch, context)?;
-            // else.trim_after → trim leading whitespace of else body
-            if let Some(ws_else) = &node.whitespace_else {
-                if ws_else.trim_after {
-                    output = trim_leading_whitespace(&output).to_string();
-                }
-            }
-            // close.trim_before → trim trailing whitespace of else body
-            if node.whitespace_close.trim_before && !output.is_empty() {
-                output = trim_trailing_whitespace(&output);
-            }
-            Ok(output)
+            self.render_nodes(else_branch, context)
         } else {
             Ok(String::new())
         }
@@ -178,16 +87,7 @@ impl<'a> Renderer<'a> {
         if value.is_truthy() {
             Ok(String::new())
         } else {
-            let mut output = self.render_nodes(&node.body, context)?;
-            // open.trim_after → trim leading whitespace of body
-            if node.whitespace_open.trim_after {
-                output = trim_leading_whitespace(&output).to_string();
-            }
-            // close.trim_before → trim trailing whitespace of body
-            if node.whitespace_close.trim_before && !output.is_empty() {
-                output = trim_trailing_whitespace(&output);
-            }
-            Ok(output)
+            self.render_nodes(&node.body, context)
         }
     }
 
@@ -203,17 +103,8 @@ impl<'a> Renderer<'a> {
             bindings.insert(node.item_ident.clone(), item);
 
             context.push_scope(bindings)?;
-            let mut iteration = self.render_nodes(&node.body, context)?;
+            let iteration = self.render_nodes(&node.body, context)?;
             context.pop_scope();
-
-            // open.trim_after → trim leading whitespace of each iteration
-            if node.whitespace_open.trim_after {
-                iteration = trim_leading_whitespace(&iteration).to_string();
-            }
-            // close.trim_before → trim trailing whitespace of each iteration
-            if node.whitespace_close.trim_before && !iteration.is_empty() {
-                iteration = trim_trailing_whitespace(&iteration);
-            }
 
             output.push_str(&iteration);
         }
@@ -252,38 +143,6 @@ impl<'a> Renderer<'a> {
 
         result
     }
-}
-
-/// Trim trailing whitespace (spaces and tabs) on the current line.
-/// For {[- (left trim): removes whitespace from start of line to tag start.
-/// Preserves the newline character before the whitespace.
-fn trim_trailing_whitespace(s: &str) -> String {
-    s.trim_end_matches(|c: char| c == ' ' || c == '\t')
-        .to_string()
-}
-
-/// Trim leading whitespace and optional newline
-/// Matches Ruby: text.sub(/\A[ \t]*\n?/, '')
-fn trim_leading_whitespace(s: &str) -> &str {
-    let bytes = s.as_bytes();
-    let mut pos = 0;
-
-    // 1. Skip spaces/tabs first
-    while pos < bytes.len() && (bytes[pos] == b' ' || bytes[pos] == b'\t') {
-        pos += 1;
-    }
-
-    // 2. Then skip optional newline
-    if pos < bytes.len() && bytes[pos] == b'\n' {
-        pos += 1;
-    } else if pos < bytes.len() && bytes[pos] == b'\r' {
-        pos += 1;
-        if pos < bytes.len() && bytes[pos] == b'\n' {
-            pos += 1;
-        }
-    }
-
-    &s[pos..]
 }
 
 #[cfg(test)]
@@ -392,7 +251,6 @@ mod tests {
         assert_eq!(result, "Alice");
     }
 
-    // v4.0 Modifier tests
     #[test]
     fn test_null_without_modifier_error() {
         let result = render("{[ value ]}", json!({"value": null}));

@@ -3,12 +3,10 @@ name = "natsuzora-ast"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "AST facade for Natsuzora templates built on the tree-sitter grammar"
+description = "Hand-written lexer, token processor, and parser for Natsuzora templates"
 license.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
 thiserror.workspace = true
-tree-sitter = "0.20"
-tree-sitter-natsuzora = { path = "../tree-sitter-natsuzora" }

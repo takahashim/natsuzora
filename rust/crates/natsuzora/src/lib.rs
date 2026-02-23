@@ -27,7 +27,7 @@ pub mod template_loader;
 pub mod value;
 
 pub use error::{NatsuzoraError, Result};
-pub use natsuzora_ast::{IncludeLoader, LoaderError, Location, Modifier, Template};
+pub use natsuzora_ast::{IncludeLoader, LoaderError, Location, Modifier, ParseError, Template};
 pub use renderer::Renderer;
 pub use template_loader::TemplateLoader;
 pub use value::Value;
@@ -238,7 +238,6 @@ mod tests {
             ]
         });
         let result = render(template, data).unwrap();
-        eprintln!("RESULT: {:?}", result);
-        // Just log the output for now
+        assert_eq!(result, "start\nA:x\nB:y\nend");
     }
 }
