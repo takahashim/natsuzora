@@ -158,6 +158,11 @@ fn test_comment() {
     run_test_suite("comment.json", &[]);
 }
 
+#[test]
+fn test_whitespace_control() {
+    run_test_suite("whitespace_control.json", &[]);
+}
+
 // Include tests are skipped - they require fixture files
 // #[test]
 // fn test_include() {

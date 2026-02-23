@@ -1,0 +1,89 @@
+{
+  "description": "Whitespace control tests for variables, blocks, and comments",
+  "tests": [
+    {
+      "name": "variable trim before",
+      "template": "line1\n  {[- name ]}",
+      "data": {"name": "A"},
+      "expected": "line1\nA"
+    },
+    {
+      "name": "variable trim after",
+      "template": "{[ name -]}\nnext",
+      "data": {"name": "A"},
+      "expected": "Anext"
+    },
+    {
+      "name": "variable trim both",
+      "template": "before\n  {[- name -]}\nafter",
+      "data": {"name": "A"},
+      "expected": "before\nAafter"
+    },
+    {
+      "name": "if block trim open after",
+      "template": "{[#if x -]}\nyes{[/if]}",
+      "data": {"x": true},
+      "expected": "yes"
+    },
+    {
+      "name": "if block trim close before",
+      "template": "{[#if x]}yes\n{[-/if]}",
+      "data": {"x": true},
+      "expected": "yes\n"
+    },
+    {
+      "name": "if block trim both inner",
+      "template": "{[#if x -]}\nyes\n{[-/if]}",
+      "data": {"x": true},
+      "expected": "yes\n"
+    },
+    {
+      "name": "if block trim all",
+      "template": "before\n{[-#if x -]}\nyes\n{[-/if -]}\nafter",
+      "data": {"x": true},
+      "expected": "before\nyes\nafter"
+    },
+    {
+      "name": "if block false trim all",
+      "template": "before\n{[-#if x -]}\nyes\n{[-/if -]}\nafter",
+      "data": {"x": false},
+      "expected": "before\nafter"
+    },
+    {
+      "name": "if else trim all true",
+      "template": "A\n{[-#if x -]}\nyes\n{[-#else -]}\nno\n{[-/if -]}\nB",
+      "data": {"x": true},
+      "expected": "A\nyes\nB"
+    },
+    {
+      "name": "if else trim all false",
+      "template": "A\n{[-#if x -]}\nyes\n{[-#else -]}\nno\n{[-/if -]}\nB",
+      "data": {"x": false},
+      "expected": "A\nno\nB"
+    },
+    {
+      "name": "unless block trim all",
+      "template": "before\n{[-#unless x -]}\nshown\n{[-/unless -]}\nafter",
+      "data": {"x": false},
+      "expected": "before\nshown\nafter"
+    },
+    {
+      "name": "each block trim all",
+      "template": "<ul>\n{[-#each items as item -]}\n<li>{[ item ]}</li>\n{[-/each -]}\n</ul>",
+      "data": {"items": ["a", "b"]},
+      "expected": "<ul>\n<li>a</li>\n<li>b</li>\n</ul>"
+    },
+    {
+      "name": "each block with indent cleanup",
+      "template": "<ul>\n  {[-#each items as item -]}\n  <li>{[ item ]}</li>\n  {[-/each -]}\n</ul>",
+      "data": {"items": ["a", "b"]},
+      "expected": "<ul>\n  <li>a</li>\n  <li>b</li>\n</ul>"
+    },
+    {
+      "name": "comment with whitespace control",
+      "template": "before\n  {[-% comment -]}\nafter",
+      "data": {},
+      "expected": "before\nafter"
+    }
+  ]
+}

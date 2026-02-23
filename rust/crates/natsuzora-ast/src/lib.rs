@@ -80,6 +80,7 @@ pub enum AstNode {
     Text(TextNode),
     Variable(VariableNode),
     Unsecure(UnsecureNode),
+    Comment(CommentNode),
     If(IfBlock),
     Unless(UnlessBlock),
     Each(EachBlock),
@@ -92,6 +93,7 @@ impl AstNode {
             AstNode::Text(n) => n.location,
             AstNode::Variable(n) => n.location,
             AstNode::Unsecure(n) => n.location,
+            AstNode::Comment(n) => n.location,
             AstNode::If(n) => n.location,
             AstNode::Unless(n) => n.location,
             AstNode::Each(n) => n.location,
@@ -124,6 +126,13 @@ pub struct UnsecureNode {
     pub location: Location,
 }
 
+/// Comment node: {[% ... ]} - carries whitespace control only, renders to empty.
+#[derive(Debug, Clone)]
+pub struct CommentNode {
+    pub whitespace: WhitespaceControl,
+    pub location: Location,
+}
+
 /// Conditional block: {[#if condition]} ... {[#else]} ... {[/if]}
 #[derive(Debug, Clone)]
 pub struct IfBlock {
@@ -131,6 +140,7 @@ pub struct IfBlock {
     pub then_branch: Vec<AstNode>,
     pub else_branch: Option<Vec<AstNode>>,
     pub whitespace_open: WhitespaceControl,
+    pub whitespace_else: Option<WhitespaceControl>,
     pub whitespace_close: WhitespaceControl,
     pub location: Location,
 }
@@ -359,7 +369,18 @@ fn parse_node(node: Node, source: &str) -> Result<Option<AstNode>, ParseError> {
         "unless_block" => Some(AstNode::Unless(parse_unless_block(node, source)?)),
         "each_block" => Some(AstNode::Each(parse_each_block(node, source)?)),
         "include" => Some(AstNode::Include(parse_include(node, source)?)),
-        "comment" => None,
+        "comment" => {
+            let text = node.utf8_text(source.as_bytes())?;
+            let trim_before = text.starts_with("{[-");
+            let trim_after = text.ends_with("-]}");
+            Some(AstNode::Comment(CommentNode {
+                whitespace: WhitespaceControl {
+                    trim_before,
+                    trim_after,
+                },
+                location,
+            }))
+        }
         other => {
             return Err(ParseError::UnexpectedNode {
                 kind: other.to_string(),
@@ -416,6 +437,7 @@ fn parse_if_block(node: Node, source: &str) -> Result<IfBlock, ParseError> {
     let mut then_branch = Vec::new();
     let mut else_branch = None;
     let mut whitespace_open = WhitespaceControl::default();
+    let mut whitespace_else = None;
     let mut whitespace_close = WhitespaceControl::default();
 
     for child in node.named_children(&mut cursor) {
@@ -431,7 +453,9 @@ fn parse_if_block(node: Node, source: &str) -> Result<IfBlock, ParseError> {
                 whitespace_open = parse_whitespace_control(child, source)?;
             }
             "else_clause" => {
-                else_branch = Some(parse_else_clause(child, source)?);
+                let (ws_else, nodes) = parse_else_clause(child, source)?;
+                whitespace_else = Some(ws_else);
+                else_branch = Some(nodes);
             }
             "if_close" => {
                 whitespace_close = parse_whitespace_control(child, source)?;
@@ -453,23 +477,29 @@ fn parse_if_block(node: Node, source: &str) -> Result<IfBlock, ParseError> {
         then_branch,
         else_branch,
         whitespace_open,
+        whitespace_else,
         whitespace_close,
         location,
     })
 }
 
-fn parse_else_clause(node: Node, source: &str) -> Result<Vec<AstNode>, ParseError> {
+fn parse_else_clause(
+    node: Node,
+    source: &str,
+) -> Result<(WhitespaceControl, Vec<AstNode>), ParseError> {
     let mut cursor = node.walk();
     let mut nodes = Vec::new();
+    let mut ws = WhitespaceControl::default();
     for child in node.named_children(&mut cursor) {
         if child.kind() == "else_open" {
+            ws = parse_whitespace_control(child, source)?;
             continue;
         }
         if let Some(node) = parse_node(child, source)? {
             nodes.push(node);
         }
     }
-    Ok(nodes)
+    Ok((ws, nodes))
 }
 
 fn parse_unless_block(node: Node, source: &str) -> Result<UnlessBlock, ParseError> {

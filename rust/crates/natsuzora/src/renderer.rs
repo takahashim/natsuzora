@@ -77,6 +77,7 @@ impl<'a> Renderer<'a> {
                 let rendered = self.render_unsecure(n, context)?;
                 Ok((rendered, n.whitespace))
             }
+            AstNode::Comment(n) => Ok((String::new(), n.whitespace)),
             AstNode::If(n) => {
                 let rendered = self.render_if(n, context)?;
                 // Return the open tag's whitespace for trim_before, close tag for trim_after
@@ -138,9 +139,33 @@ impl<'a> Renderer<'a> {
         let value = context.resolve(node.condition.segments(), location)?;
 
         if value.is_truthy() {
-            self.render_nodes(&node.then_branch, context)
+            let mut output = self.render_nodes(&node.then_branch, context)?;
+            // open.trim_after → trim leading whitespace of body
+            if node.whitespace_open.trim_after {
+                output = trim_leading_whitespace(&output).to_string();
+            }
+            // else.trim_before or close.trim_before → trim trailing whitespace of body
+            let trim_end = node
+                .whitespace_else
+                .as_ref()
+                .map_or(node.whitespace_close.trim_before, |ws| ws.trim_before);
+            if trim_end && !output.is_empty() {
+                output = trim_trailing_whitespace(&output);
+            }
+            Ok(output)
         } else if let Some(else_branch) = &node.else_branch {
-            self.render_nodes(else_branch, context)
+            let mut output = self.render_nodes(else_branch, context)?;
+            // else.trim_after → trim leading whitespace of else body
+            if let Some(ws_else) = &node.whitespace_else {
+                if ws_else.trim_after {
+                    output = trim_leading_whitespace(&output).to_string();
+                }
+            }
+            // close.trim_before → trim trailing whitespace of else body
+            if node.whitespace_close.trim_before && !output.is_empty() {
+                output = trim_trailing_whitespace(&output);
+            }
+            Ok(output)
         } else {
             Ok(String::new())
         }
@@ -153,7 +178,16 @@ impl<'a> Renderer<'a> {
         if value.is_truthy() {
             Ok(String::new())
         } else {
-            self.render_nodes(&node.body, context)
+            let mut output = self.render_nodes(&node.body, context)?;
+            // open.trim_after → trim leading whitespace of body
+            if node.whitespace_open.trim_after {
+                output = trim_leading_whitespace(&output).to_string();
+            }
+            // close.trim_before → trim trailing whitespace of body
+            if node.whitespace_close.trim_before && !output.is_empty() {
+                output = trim_trailing_whitespace(&output);
+            }
+            Ok(output)
         }
     }
 
@@ -169,8 +203,19 @@ impl<'a> Renderer<'a> {
             bindings.insert(node.item_ident.clone(), item);
 
             context.push_scope(bindings)?;
-            output.push_str(&self.render_nodes(&node.body, context)?);
+            let mut iteration = self.render_nodes(&node.body, context)?;
             context.pop_scope();
+
+            // open.trim_after → trim leading whitespace of each iteration
+            if node.whitespace_open.trim_after {
+                iteration = trim_leading_whitespace(&iteration).to_string();
+            }
+            // close.trim_before → trim trailing whitespace of each iteration
+            if node.whitespace_close.trim_before && !iteration.is_empty() {
+                iteration = trim_trailing_whitespace(&iteration);
+            }
+
+            output.push_str(&iteration);
         }
 
         Ok(output)
