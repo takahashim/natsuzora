@@ -1,3 +1,0 @@
-<div class="card-list">
-{[#each cards as card]}  {[!include /components/card title=card.title body=card.body ]}
-{[/each]}</div>

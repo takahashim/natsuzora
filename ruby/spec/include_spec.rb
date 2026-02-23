@@ -3,7 +3,8 @@
 require 'spec_helper'
 
 RSpec.describe 'Include with real files' do
-  let(:fixtures_dir) { File.expand_path('fixtures', __dir__) }
+  # Use shared fixtures from tests/fixtures/
+  let(:fixtures_dir) { File.expand_path('../../tests/fixtures', __dir__) }
   let(:templates_dir) { File.join(fixtures_dir, 'templates') }
   let(:include_root) { File.join(templates_dir, 'shared') }
 
@@ -155,7 +156,6 @@ RSpec.describe 'Include with real files' do
 
   describe 'include argument shadowing' do
     it 'allows shadowing in include scope' do
-      # Create a template that shadows a variable name
       result = render_source(
         '{[ name ]} -> {[!include /greeting name=other ]} -> {[ name ]}',
         { name: 'Original', other: 'Shadowed' }
@@ -198,14 +198,12 @@ RSpec.describe 'Include with real files' do
     end
 
     it 'raises error for invalid include name with double dot' do
-      # NOTE: '..' in path causes parse error because '.' is not valid in include names
       expect do
         render_source('{[!include /path/../traversal ]}', {})
       end.to raise_error(Natsuzora::ParseError)
     end
 
     it 'raises error for include name with double slash' do
-      # NOTE: '//' causes parse error at lexer level because second '/' is not followed by valid char
       expect do
         render_source('{[!include /path//double ]}', {})
       end.to raise_error(Natsuzora::ParseError)
