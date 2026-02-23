@@ -40,8 +40,8 @@ fn get_tests_dir() -> PathBuf {
 
 fn load_test_suite(filename: &str) -> TestSuite {
     let path = get_tests_dir().join(filename);
-    let content = fs::read_to_string(&path).expect(&format!("Failed to read {}", path.display()));
-    serde_json::from_str(&content).expect(&format!("Failed to parse {}", filename))
+    let content = fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read {}", path.display()));
+    serde_json::from_str(&content).unwrap_or_else(|_| panic!("Failed to parse {filename}"))
 }
 
 fn setup_partials(partials: &HashMap<String, String>) -> tempfile::TempDir {
@@ -51,7 +51,7 @@ fn setup_partials(partials: &HashMap<String, String>) -> tempfile::TempDir {
         let mut path = dir.path().to_path_buf();
         for (i, seg) in segments.iter().enumerate() {
             if i == segments.len() - 1 {
-                path.push(format!("_{}", seg));
+                path.push(format!("_{seg}"));
             } else {
                 path.push(seg);
             }
@@ -92,7 +92,7 @@ fn run_test_case(case: &TestCase) {
                 case.name, error_type, output
             ),
             Err(e) => {
-                let error_name = format!("{:?}", e);
+                let error_name = format!("{e:?}");
                 assert!(
                     error_name.contains(error_type) || error_type_matches(&e, error_type),
                     "Test '{}' expected error type '{}', got '{:?}'",
@@ -140,7 +140,7 @@ fn run_test_suite(filename: &str, skip_tests: &[&str]) {
         passed += 1;
     }
 
-    eprintln!("{}: {} tests passed, {} skipped", filename, passed, skipped);
+    eprintln!("{filename}: {passed} tests passed, {skipped} skipped");
 }
 
 #[test]

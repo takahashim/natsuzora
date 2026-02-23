@@ -90,7 +90,7 @@ impl Natsuzora {
         let mut loader = self
             .include_root
             .as_ref()
-            .map(|p| TemplateLoader::new(p))
+            .map(TemplateLoader::new)
             .transpose()?;
         let mut renderer = Renderer::new(loader.as_mut());
         renderer.render(&self.template, value)

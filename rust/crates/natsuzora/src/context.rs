@@ -76,7 +76,7 @@ impl Context {
         self.root
             .get(name)
             .ok_or_else(|| NatsuzoraError::UndefinedVariable {
-                message: format!("Undefined variable: {}", name),
+                message: format!("Undefined variable: {name}"),
                 location,
             })
     }
@@ -131,7 +131,7 @@ impl Context {
                 .get(index)
                 .cloned()
                 .ok_or_else(|| NatsuzoraError::TypeError {
-                    message: format!("Array index {} out of bounds", index),
+                    message: format!("Array index {index} out of bounds"),
                 }),
             _ => Err(NatsuzoraError::TypeError {
                 message: format!("Expected array, got {}", value.type_name()),
@@ -150,11 +150,11 @@ impl Context {
             Value::Object(obj) => obj
                 .get(key)
                 .ok_or_else(|| NatsuzoraError::UndefinedVariable {
-                    message: format!("Undefined property: {}", key),
+                    message: format!("Undefined property: {key}"),
                     location,
                 }),
             _ => Err(NatsuzoraError::TypeError {
-                message: format!("Cannot access property '{}' on non-object", key),
+                message: format!("Cannot access property '{key}' on non-object"),
             }),
         }
     }

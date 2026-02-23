@@ -510,7 +510,7 @@ impl Parser {
                 column: t.location.column,
             }),
             None => Err(ParseError::UnexpectedToken {
-                message: format!("Expected {:?}, got end of input", expected),
+                message: format!("Expected {expected:?}, got end of input"),
                 line: 0,
                 column: 0,
             }),

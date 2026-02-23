@@ -17,7 +17,7 @@ impl IncludePathResolver {
                 .as_ref()
                 .canonicalize()
                 .map_err(|e| NatsuzoraError::IncludeError {
-                    message: format!("Invalid include root: {}", e),
+                    message: format!("Invalid include root: {e}"),
                 })?;
         Ok(Self { include_root })
     }
@@ -30,7 +30,7 @@ impl IncludePathResolver {
             .collect();
 
         if let Some(last) = segments.last_mut() {
-            *last = format!("_{}", last);
+            *last = format!("_{last}");
         }
 
         let mut path = self.include_root.clone();
@@ -57,7 +57,7 @@ impl IncludePathResolver {
             return path
                 .canonicalize()
                 .map_err(|e| NatsuzoraError::IncludeError {
-                    message: format!("Failed to resolve include path: {}", e),
+                    message: format!("Failed to resolve include path: {e}"),
                 });
         }
 
@@ -66,7 +66,7 @@ impl IncludePathResolver {
             existing_parent
                 .canonicalize()
                 .map_err(|e| NatsuzoraError::IncludeError {
-                    message: format!("Failed to resolve include path: {}", e),
+                    message: format!("Failed to resolve include path: {e}"),
                 })?;
         for segment in missing_segments {
             resolved.push(segment);
@@ -126,7 +126,7 @@ impl TemplateLoader {
 
         if self.include_stack.contains(&name.to_string()) {
             return Err(NatsuzoraError::IncludeError {
-                message: format!("Circular include detected: {}", name),
+                message: format!("Circular include detected: {name}"),
             });
         }
 
@@ -161,7 +161,7 @@ impl TemplateLoader {
 
         let source = fs::read_to_string(&path)?;
         natsuzora_ast::parse(&source).map_err(|e| NatsuzoraError::IncludeError {
-            message: format!("Failed to parse include '{}': {}", name, e),
+            message: format!("Failed to parse include '{name}': {e}"),
         })
     }
 }
@@ -176,20 +176,20 @@ impl IncludeLoader for TemplateLoader {
 fn validate_include_name(name: &str) -> Result<()> {
     if !name.starts_with('/') {
         return Err(NatsuzoraError::IncludeError {
-            message: format!("Include name must start with '/': {}", name),
+            message: format!("Include name must start with '/': {name}"),
         });
     }
 
     if name.contains("..") || name.contains("//") || name.contains('\\') || name.contains(':') {
         return Err(NatsuzoraError::IncludeError {
-            message: format!("Invalid include name (path traversal): {}", name),
+            message: format!("Invalid include name (path traversal): {name}"),
         });
     }
 
     for segment in name.split('/').filter(|s| !s.is_empty()) {
         if !is_valid_segment(segment) {
             return Err(NatsuzoraError::IncludeError {
-                message: format!("Invalid include segment '{}' in '{}'", segment, name),
+                message: format!("Invalid include segment '{segment}' in '{name}'"),
             });
         }
     }

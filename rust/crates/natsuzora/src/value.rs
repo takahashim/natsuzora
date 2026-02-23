@@ -27,9 +27,9 @@ impl Value {
             JsonValue::Bool(b) => Ok(Value::Bool(b)),
             JsonValue::Number(n) => {
                 if let Some(i) = n.as_i64() {
-                    if i < INTEGER_MIN || i > INTEGER_MAX {
+                    if !(INTEGER_MIN..=INTEGER_MAX).contains(&i) {
                         return Err(NatsuzoraError::TypeError {
-                            message: format!("Integer out of range: {}", i),
+                            message: format!("Integer out of range: {i}"),
                         });
                     }
                     Ok(Value::Integer(i))
@@ -39,7 +39,7 @@ impl Value {
                         Ok(Value::Integer(f as i64))
                     } else {
                         Err(NatsuzoraError::TypeError {
-                            message: format!("Floating point numbers are not supported: {}", f),
+                            message: format!("Floating point numbers are not supported: {f}"),
                         })
                     }
                 } else {
@@ -84,7 +84,7 @@ impl Value {
             Value::Integer(n) => {
                 if *n < INTEGER_MIN || *n > INTEGER_MAX {
                     return Err(NatsuzoraError::TypeError {
-                        message: format!("Integer out of range: {}", n),
+                        message: format!("Integer out of range: {n}"),
                     });
                 }
                 Ok(n.to_string())
