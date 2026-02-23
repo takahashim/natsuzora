@@ -16,7 +16,7 @@ module Natsuzora
 
     def parse_nodes(stop_types: [:EOF])
       nodes = []
-      nodes << parse_node until stop_types.include?(current_type) || block_close?
+      nodes << parse_node until stop_types.include?(current_type)
       nodes
     end
 

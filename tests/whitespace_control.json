@@ -20,6 +20,18 @@
       "expected": "before\nAafter"
     },
     {
+      "name": "variable left trim no-op when non-whitespace before tag",
+      "template": "line  {[- name ]}",
+      "data": {"name": "A"},
+      "expected": "line  A"
+    },
+    {
+      "name": "variable right trim no-op when non-whitespace on same line",
+      "template": "{[ name -]}  next",
+      "data": {"name": "A"},
+      "expected": "A  next"
+    },
+    {
       "name": "if block trim open after",
       "template": "{[#if x -]}\nyes{[/if]}",
       "data": {"x": true},

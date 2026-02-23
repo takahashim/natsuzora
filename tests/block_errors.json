@@ -53,7 +53,7 @@
       "name": "extra close tag at top level",
       "template": "{[/if]}",
       "data": {},
-      "expected": ""
+      "error": "SyntaxError"
     },
     {
       "name": "unclosed tag delimiter",

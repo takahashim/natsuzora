@@ -4,6 +4,7 @@ module Natsuzora
   class TemplateLoader
     def initialize(include_root)
       @include_root = include_root ? File.expand_path(include_root) : nil
+      @include_root_realpath = nil
       @cache = {}
       @include_stack = []
     end
@@ -64,10 +65,47 @@ module Natsuzora
     end
 
     def validate_path_security!(path)
-      expanded = File.expand_path(path)
-      return if expanded.start_with?(@include_root)
+      expanded = realpath_for_security(path)
+      root = include_root_realpath
+      return if path_within_root?(expanded, root)
 
       raise IncludeError, "Path traversal detected: #{path}"
+    end
+
+    def include_root_realpath
+      return @include_root_realpath if @include_root_realpath
+
+      @include_root_realpath = File.realpath(@include_root)
+    rescue Errno::ENOENT, Errno::EACCES => e
+      raise IncludeError, "Invalid include root: #{e.message}"
+    end
+
+    def path_within_root?(path, root)
+      return true if path == root
+
+      root_prefix = root.end_with?(File::SEPARATOR) ? root : "#{root}#{File::SEPARATOR}"
+      path.start_with?(root_prefix)
+    end
+
+    def realpath_for_security(path)
+      expanded = File.expand_path(path)
+      return File.realpath(expanded) if File.exist?(expanded)
+
+      existing_path = expanded
+      tail_segments = []
+
+      until File.exist?(existing_path)
+        tail_segments.unshift(File.basename(existing_path))
+        parent = File.dirname(existing_path)
+        break if parent == existing_path
+
+        existing_path = parent
+      end
+
+      resolved_existing = File.realpath(existing_path)
+      File.join(resolved_existing, *tail_segments)
+    rescue Errno::ENOENT, Errno::EACCES => e
+      raise IncludeError, "Failed to resolve include path: #{e.message}"
     end
   end
 end

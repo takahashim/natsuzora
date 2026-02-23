@@ -32,7 +32,7 @@ impl Parser {
 
     fn parse_nodes(&mut self) -> Result<Vec<AstNode>, ParseError> {
         let mut nodes = Vec::new();
-        while self.current_type() != TokenType::Eof && !self.is_block_close(None) {
+        while self.current_type() != TokenType::Eof {
             nodes.push(self.parse_node()?);
         }
         Ok(nodes)

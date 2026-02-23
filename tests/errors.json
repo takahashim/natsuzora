@@ -210,6 +210,18 @@
       "template": "{[#each items as item]}{[ item ]}{[/each]}",
       "data": {"items": [1, 2.5, 3]},
       "error": "TypeError"
+    },
+    {
+      "name": "out of range positive integer in if condition",
+      "template": "{[#if value]}ok{[/if]}",
+      "data": {"value": 9007199254740992},
+      "error": "TypeError"
+    },
+    {
+      "name": "out of range negative integer in if condition",
+      "template": "{[#if value]}ok{[/if]}",
+      "data": {"value": -9007199254740992},
+      "error": "TypeError"
     }
   ]
 }

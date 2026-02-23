@@ -15,26 +15,40 @@ module Natsuzora
         @strip_next_text = false
         @in_comment = false
         @comment_start_token = nil
+        @in_tag = false
+        @tag_token_count = 0
       end
 
       def process
-        @tokens.each do |token|
+        @tokens.each_with_index do |token, index|
+          next_token = @tokens[index + 1]
+
           if @in_comment
-            handle_comment_content(token)
+            handle_comment_content(token, next_token: next_token)
             next
           end
 
           case token.type
           when :PERCENT
+            start_tag_if_needed
             start_comment(token)
+            @tag_token_count += 1
           when :DASH
-            handle_dash
+            start_tag_if_needed
+            handle_dash(next_token: next_token)
+            @tag_token_count += 1
           when :CLOSE
             handle_close(token)
+            @in_tag = false
+            @tag_token_count = 0
           when :TEXT
             handle_text(token)
+            @in_tag = false
+            @tag_token_count = 0
           else
+            start_tag_if_needed
             @result << token
+            @tag_token_count += 1
           end
         end
 
@@ -44,16 +58,28 @@ module Natsuzora
 
       private
 
-      def handle_dash
-        # Strip trailing whitespace from previous TEXT
-        strip_trailing_from_last_text
-        # Set flag to strip next TEXT (after CLOSE)
-        @strip_next_text = true
+      def start_tag_if_needed
+        return if @in_tag
+
+        @in_tag = true
+        @tag_token_count = 0
+      end
+
+      def handle_dash(next_token:)
+        strip_trailing_from_last_text_if_blank_line if left_trim_dash?
+        @strip_next_text = true if right_trim_dash?(next_token)
+      end
+
+      def left_trim_dash?
+        @tag_token_count.zero?
+      end
+
+      def right_trim_dash?(next_token)
+        next_token&.type == :CLOSE
       end
 
       def handle_close(token)
         @result << token
-        # @strip_next_text remains set for the next TEXT token
       end
 
       def handle_text(token)
@@ -61,28 +87,47 @@ module Natsuzora
 
         if @strip_next_text
           @strip_next_text = false
-          text_value = strip_leading_whitespace_and_newline(text_value)
+          text_value = strip_leading_whitespace_if_blank_line(text_value)
         end
 
-        # Only add non-empty text tokens
         return if text_value.empty?
 
         @result << Token.new(:TEXT, text_value, line: token.line, column: token.column)
       end
 
-      def strip_trailing_from_last_text
+      def strip_trailing_from_last_text_if_blank_line
         return if @result.empty?
 
         last_idx = @result.rindex { |t| t.type == :TEXT }
         return unless last_idx
 
         last_text = @result[last_idx]
-        stripped = last_text.value.sub(/[ \t]*\z/, '')
+        value = last_text.value
+        line_start = [value.rindex("\n"), value.rindex("\r")].compact.max
+        line_start = line_start ? line_start + 1 : 0
+        trailing_segment = value[line_start..] || ''
+        return unless trailing_segment.match?(/\A[ \t]*\z/)
+
+        stripped = value[0...line_start]
         @result[last_idx] = Token.new(:TEXT, stripped, line: last_text.line, column: last_text.column)
       end
 
-      def strip_leading_whitespace_and_newline(text)
-        text.sub(/\A[ \t]*\n?/, '')
+      def strip_leading_whitespace_if_blank_line(text)
+        idx = 0
+        bytes = text.bytes
+
+        idx += 1 while idx < bytes.length && (bytes[idx] == 0x20 || bytes[idx] == 0x09)
+        return '' if idx >= bytes.length
+
+        case bytes[idx]
+        when 0x0A # \n
+          text[(idx + 1)..] || ''
+        when 0x0D # \r
+          advance = (bytes[idx + 1] == 0x0A ? 2 : 1)
+          text[(idx + advance)..] || ''
+        else
+          text
+        end
       end
 
       def start_comment(token)
@@ -90,13 +135,16 @@ module Natsuzora
         @comment_start_token = token
       end
 
-      def handle_comment_content(token)
+      def handle_comment_content(token, next_token:)
+        @strip_next_text = true if token.type == :DASH && right_trim_dash?(next_token)
+
         case token.type
         when :CLOSE
           @in_comment = false
           @comment_start_token = nil
+          @in_tag = false
+          @tag_token_count = 0
         end
-        # All tokens inside comment are ignored (not added to result)
       end
 
       def check_unclosed_comment

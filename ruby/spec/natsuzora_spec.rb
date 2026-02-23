@@ -16,6 +16,14 @@ RSpec.describe Natsuzora do
     ensure
       ENV['NATSUZORA_BACKEND'] = original
     end
+
+    it 'raises TypeError when root data is an array' do
+      expect { described_class.render('Hello', []) }.to raise_error(Natsuzora::TypeError)
+    end
+
+    it 'raises TypeError when root data is a string' do
+      expect { described_class.render('Hello', 'not an object') }.to raise_error(Natsuzora::TypeError)
+    end
   end
 
   describe '.parse' do
