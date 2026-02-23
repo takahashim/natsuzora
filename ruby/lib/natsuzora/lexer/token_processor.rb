@@ -2,87 +2,55 @@
 
 module Natsuzora
   class Lexer
-    # Processes tokens to handle whitespace control and comments
+    # Processes tokens to handle whitespace control and comments.
     #
     # Responsibilities:
-    # - Consume DASH tokens and strip adjacent TEXT whitespace
-    # - Consume comment tokens (PERCENT to CLOSE)
+    # - Consume DASH tokens and apply trim rules
+    # - Consume comment tags entirely
     # - Detect unclosed comments
     class TokenProcessor
       def initialize(tokens)
         @tokens = tokens
         @result = []
         @strip_next_text = false
-        @in_comment = false
-        @comment_start_token = nil
-        @in_tag = false
-        @tag_token_count = 0
       end
 
       def process
-        @tokens.each_with_index do |token, index|
-          next_token = @tokens[index + 1]
+        idx = 0
 
-          if @in_comment
-            handle_comment_content(token, next_token: next_token)
-            next
-          end
+        while idx < @tokens.length
+          token = @tokens[idx]
 
-          case token.type
-          when :PERCENT
-            start_tag_if_needed
-            start_comment(token)
-            @tag_token_count += 1
-          when :DASH
-            start_tag_if_needed
-            handle_dash(next_token: next_token)
-            @tag_token_count += 1
-          when :CLOSE
-            handle_close(token)
-            @in_tag = false
-            @tag_token_count = 0
-          when :TEXT
-            handle_text(token)
-            @in_tag = false
-            @tag_token_count = 0
+          if token.type == :TEXT
+            append_text(token)
+            idx += 1
           else
-            start_tag_if_needed
-            @result << token
-            @tag_token_count += 1
+            idx = process_tag(idx)
           end
         end
 
-        check_unclosed_comment
         @result
       end
 
       private
 
-      def start_tag_if_needed
-        return if @in_tag
+      def process_tag(start_idx)
+        close_idx = find_close_index(start_idx)
+        tag_tokens = close_idx ? @tokens[start_idx..close_idx] : @tokens[start_idx..]
 
-        @in_tag = true
-        @tag_token_count = 0
+        apply_left_trim(tag_tokens)
+        apply_right_trim(tag_tokens)
+
+        if comment_tag?(tag_tokens)
+          raise_unclosed_comment!(tag_tokens) unless close_idx
+          return close_idx + 1
+        end
+
+        emit_tag_tokens(tag_tokens)
+        close_idx ? close_idx + 1 : @tokens.length
       end
 
-      def handle_dash(next_token:)
-        strip_trailing_from_last_text_if_blank_line if left_trim_dash?
-        @strip_next_text = true if right_trim_dash?(next_token)
-      end
-
-      def left_trim_dash?
-        @tag_token_count.zero?
-      end
-
-      def right_trim_dash?(next_token)
-        next_token&.type == :CLOSE
-      end
-
-      def handle_close(token)
-        @result << token
-      end
-
-      def handle_text(token)
+      def append_text(token)
         text_value = token.value
 
         if @strip_next_text
@@ -95,66 +63,109 @@ module Natsuzora
         @result << Token.new(:TEXT, text_value, line: token.line, column: token.column)
       end
 
-      def strip_trailing_from_last_text_if_blank_line
-        return if @result.empty?
+      def find_close_index(start_idx)
+        idx = start_idx
+        while idx < @tokens.length
+          return idx if @tokens[idx].type == :CLOSE
 
-        last_idx = @result.rindex { |t| t.type == :TEXT }
+          idx += 1
+        end
+        nil
+      end
+
+      def apply_left_trim(tag_tokens)
+        strip_trailing_from_last_text_if_blank_line if left_trim?(tag_tokens)
+      end
+
+      def apply_right_trim(tag_tokens)
+        @strip_next_text = true if right_trim?(tag_tokens)
+      end
+
+      def left_trim?(tag_tokens)
+        tag_begins_with_dash?(tag_tokens)
+      end
+
+      def right_trim?(tag_tokens)
+        close_idx = tag_close_index(tag_tokens)
+        close_idx && close_idx.positive? && tag_tokens[close_idx - 1].type == :DASH
+      end
+
+      def tag_begins_with_dash?(tag_tokens)
+        tag_tokens.first&.type == :DASH
+      end
+
+      def tag_close_index(tag_tokens)
+        tag_tokens.index { |token| token.type == :CLOSE }
+      end
+
+      def comment_tag?(tag_tokens)
+        first = tag_tokens.first
+        return false unless first
+
+        return true if first.type == :PERCENT
+
+        first.type == :DASH && tag_tokens[1]&.type == :PERCENT
+      end
+
+      def emit_tag_tokens(tag_tokens)
+        tag_tokens.each do |token|
+          next if token.type == :DASH
+
+          @result << token
+        end
+      end
+
+      def strip_trailing_from_last_text_if_blank_line
+        last_idx = @result.rindex { |token| token.type == :TEXT }
         return unless last_idx
 
         last_text = @result[last_idx]
         value = last_text.value
-        line_start = [value.rindex("\n"), value.rindex("\r")].compact.max
-        line_start = line_start ? line_start + 1 : 0
+        line_start = same_line_start_offset(value)
         trailing_segment = value[line_start..] || ''
-        return unless trailing_segment.match?(/\A[ \t]*\z/)
+        return unless horizontal_whitespace_only?(trailing_segment)
 
         stripped = value[0...line_start]
         @result[last_idx] = Token.new(:TEXT, stripped, line: last_text.line, column: last_text.column)
       end
 
       def strip_leading_whitespace_if_blank_line(text)
-        idx = 0
         bytes = text.bytes
-
-        idx += 1 while idx < bytes.length && (bytes[idx] == 0x20 || bytes[idx] == 0x09)
+        idx = skip_leading_horizontal_whitespace(bytes)
         return '' if idx >= bytes.length
 
-        case bytes[idx]
-        when 0x0A # \n
-          text[(idx + 1)..] || ''
-        when 0x0D # \r
-          advance = (bytes[idx + 1] == 0x0A ? 2 : 1)
-          text[(idx + advance)..] || ''
-        else
-          text
-        end
+        newline_advance = leading_newline_advance(bytes, idx)
+        return text unless newline_advance
+
+        text[(idx + newline_advance)..] || ''
       end
 
-      def start_comment(token)
-        @in_comment = true
-        @comment_start_token = token
+      def same_line_start_offset(value)
+        line_break_idx = [value.rindex("\n"), value.rindex("\r")].compact.max
+        line_break_idx ? line_break_idx + 1 : 0
       end
 
-      def handle_comment_content(token, next_token:)
-        @strip_next_text = true if token.type == :DASH && right_trim_dash?(next_token)
-
-        case token.type
-        when :CLOSE
-          @in_comment = false
-          @comment_start_token = nil
-          @in_tag = false
-          @tag_token_count = 0
-        end
+      def horizontal_whitespace_only?(segment)
+        segment.match?(/\A[ \t]*\z/)
       end
 
-      def check_unclosed_comment
-        return unless @in_comment
+      def skip_leading_horizontal_whitespace(bytes)
+        idx = 0
+        idx += 1 while idx < bytes.length && (bytes[idx] == 0x20 || bytes[idx] == 0x09)
+        idx
+      end
 
-        raise LexerError.new(
-          'Unclosed comment',
-          line: @comment_start_token.line,
-          column: @comment_start_token.column
-        )
+      def leading_newline_advance(bytes, idx)
+        return 1 if bytes[idx] == 0x0A # \n
+
+        return nil unless bytes[idx] == 0x0D # \r
+
+        bytes[idx + 1] == 0x0A ? 2 : 1
+      end
+
+      def raise_unclosed_comment!(tag_tokens)
+        comment_token = tag_tokens.find { |token| token.type == :PERCENT } || tag_tokens.first
+        raise LexerError.new('Unclosed comment', line: comment_token.line, column: comment_token.column)
       end
     end
   end

@@ -6,16 +6,12 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Template loader for handling include directives
-pub struct TemplateLoader {
+struct IncludePathResolver {
     include_root: PathBuf,
-    cache: HashMap<String, Template>,
-    include_stack: Vec<String>,
 }
 
-impl TemplateLoader {
-    /// Create a new template loader with the given include root directory
-    pub fn new(include_root: impl AsRef<Path>) -> Result<Self> {
+impl IncludePathResolver {
+    fn new(include_root: impl AsRef<Path>) -> Result<Self> {
         let include_root =
             include_root
                 .as_ref()
@@ -23,9 +19,99 @@ impl TemplateLoader {
                 .map_err(|e| NatsuzoraError::IncludeError {
                     message: format!("Invalid include root: {}", e),
                 })?;
+        Ok(Self { include_root })
+    }
 
+    fn resolve_template_path(&self, name: &str) -> PathBuf {
+        let mut segments: Vec<String> = name
+            .split('/')
+            .filter(|segment| !segment.is_empty())
+            .map(|segment| segment.to_string())
+            .collect();
+
+        if let Some(last) = segments.last_mut() {
+            *last = format!("_{}", last);
+        }
+
+        let mut path = self.include_root.clone();
+        for segment in &segments {
+            path.push(segment);
+        }
+        path.set_extension("ntzr");
+        path
+    }
+
+    fn ensure_within_root(&self, path: &Path) -> Result<()> {
+        let candidate = self.canonicalize_candidate(path)?;
+        if self.within_root(&candidate) {
+            return Ok(());
+        }
+
+        Err(NatsuzoraError::IncludeError {
+            message: format!("Path traversal detected: {}", path.display()),
+        })
+    }
+
+    fn canonicalize_candidate(&self, path: &Path) -> Result<PathBuf> {
+        if path.exists() {
+            return path.canonicalize().map_err(|e| NatsuzoraError::IncludeError {
+                message: format!("Failed to resolve include path: {}", e),
+            });
+        }
+
+        let (existing_parent, missing_segments) = split_existing_parent(path);
+        let mut resolved = existing_parent
+            .canonicalize()
+            .map_err(|e| NatsuzoraError::IncludeError {
+                message: format!("Failed to resolve include path: {}", e),
+            })?;
+        for segment in missing_segments {
+            resolved.push(segment);
+        }
+        Ok(resolved)
+    }
+
+    fn within_root(&self, path: &Path) -> bool {
+        path == self.include_root || path.starts_with(&self.include_root)
+    }
+}
+
+fn split_existing_parent(path: &Path) -> (PathBuf, Vec<String>) {
+    let mut cursor = path.to_path_buf();
+    let mut missing_segments = Vec::new();
+
+    while !cursor.exists() {
+        let Some(name) = cursor.file_name().and_then(|s| s.to_str()) else {
+            break;
+        };
+        missing_segments.push(name.to_string());
+
+        let Some(parent) = cursor.parent() else {
+            break;
+        };
+
+        if parent == cursor {
+            break;
+        }
+        cursor = parent.to_path_buf();
+    }
+
+    missing_segments.reverse();
+    (cursor, missing_segments)
+}
+
+/// Template loader for handling include directives
+pub struct TemplateLoader {
+    path_resolver: IncludePathResolver,
+    cache: HashMap<String, Template>,
+    include_stack: Vec<String>,
+}
+
+impl TemplateLoader {
+    /// Create a new template loader with the given include root directory
+    pub fn new(include_root: impl AsRef<Path>) -> Result<Self> {
         Ok(Self {
-            include_root,
+            path_resolver: IncludePathResolver::new(include_root)?,
             cache: HashMap::new(),
             include_stack: Vec::new(),
         })
@@ -61,10 +147,10 @@ impl TemplateLoader {
     }
 
     fn load_and_parse(&self, name: &str) -> Result<Template> {
-        let path = self.resolve_path(name)?;
-        self.validate_path_security(&path)?;
+        let path = self.path_resolver.resolve_template_path(name);
+        self.path_resolver.ensure_within_root(&path)?;
 
-        if !path.exists() {
+        if !path.is_file() {
             return Err(NatsuzoraError::IncludeError {
                 message: format!("Include file not found: {} ({})", name, path.display()),
             });
@@ -74,38 +160,6 @@ impl TemplateLoader {
         natsuzora_ast::parse(&source).map_err(|e| NatsuzoraError::IncludeError {
             message: format!("Failed to parse include '{}': {}", name, e),
         })
-    }
-
-    fn resolve_path(&self, name: &str) -> Result<PathBuf> {
-        let mut segments: Vec<String> = name
-            .split('/')
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string())
-            .collect();
-
-        if let Some(last) = segments.last_mut() {
-            *last = format!("_{}", last);
-        }
-
-        let mut path = self.include_root.clone();
-        for segment in &segments {
-            path.push(segment);
-        }
-        path.set_extension("ntzr");
-
-        Ok(path)
-    }
-
-    fn validate_path_security(&self, path: &Path) -> Result<()> {
-        let expanded = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
-
-        if !expanded.starts_with(&self.include_root) {
-            return Err(NatsuzoraError::IncludeError {
-                message: format!("Path traversal detected: {}", path.display()),
-            });
-        }
-
-        Ok(())
     }
 }
 
@@ -117,21 +171,18 @@ impl IncludeLoader for TemplateLoader {
 
 /// Validate include name at runtime
 fn validate_include_name(name: &str) -> Result<()> {
-    // Must start with /
     if !name.starts_with('/') {
         return Err(NatsuzoraError::IncludeError {
             message: format!("Include name must start with '/': {}", name),
         });
     }
 
-    // Check for path traversal patterns
     if name.contains("..") || name.contains("//") || name.contains('\\') || name.contains(':') {
         return Err(NatsuzoraError::IncludeError {
             message: format!("Invalid include name (path traversal): {}", name),
         });
     }
 
-    // Validate each segment
     for segment in name.split('/').filter(|s| !s.is_empty()) {
         if !is_valid_segment(segment) {
             return Err(NatsuzoraError::IncludeError {
@@ -143,7 +194,6 @@ fn validate_include_name(name: &str) -> Result<()> {
     Ok(())
 }
 
-/// Check if a segment is a valid identifier
 fn is_valid_segment(segment: &str) -> bool {
     let mut chars = segment.chars();
     match chars.next() {
@@ -176,12 +226,13 @@ mod tests {
     #[test]
     fn test_circular_include_detection() {
         let mut loader = TemplateLoader {
-            include_root: env::current_dir().unwrap(),
+            path_resolver: IncludePathResolver {
+                include_root: env::current_dir().unwrap(),
+            },
             cache: HashMap::new(),
             include_stack: vec!["/a".to_string()],
         };
 
-        // Simulating circular: /a is already in stack
         let result = loader.load("/a");
         assert!(matches!(result, Err(NatsuzoraError::IncludeError { .. })));
     }

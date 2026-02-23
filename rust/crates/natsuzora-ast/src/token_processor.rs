@@ -1,9 +1,9 @@
 //! Token processor for whitespace control and comment handling.
 //!
-//! Mirrors Ruby's `TokenProcessor` exactly:
-//! - DASH tokens strip adjacent TEXT whitespace
-//! - PERCENT...CLOSE sequences are consumed (comments)
-//! - Unclosed comments are detected
+//! Responsibilities:
+//! - Consume DASH tokens and apply trim rules
+//! - Consume comment tags entirely
+//! - Detect unclosed comments
 
 use crate::token::{Token, TokenType};
 use crate::ParseError;
@@ -18,11 +18,6 @@ struct TokenProcessor {
     tokens: Vec<Token>,
     result: Vec<Token>,
     strip_next_text: bool,
-    in_comment: bool,
-    comment_start_line: usize,
-    comment_start_col: usize,
-    in_tag: bool,
-    tag_token_count: usize,
 }
 
 impl TokenProcessor {
@@ -31,99 +26,53 @@ impl TokenProcessor {
             tokens,
             result: Vec::new(),
             strip_next_text: false,
-            in_comment: false,
-            comment_start_line: 0,
-            comment_start_col: 0,
-            in_tag: false,
-            tag_token_count: 0,
         }
     }
 
     fn process(&mut self) -> Result<Vec<Token>, ParseError> {
-        // Take ownership of tokens to iterate
-        let tokens = std::mem::take(&mut self.tokens);
-
         let mut idx = 0;
-        while idx < tokens.len() {
-            let token = &tokens[idx];
-            let next_token = tokens.get(idx + 1);
 
-            if self.in_comment {
-                self.handle_comment_content(token, next_token);
+        while idx < self.tokens.len() {
+            let token = &self.tokens[idx];
+
+            if token.token_type == TokenType::Text {
+                self.append_text(token.clone());
                 idx += 1;
-                continue;
+            } else {
+                idx = self.process_tag(idx)?;
             }
-
-            match token.token_type {
-                TokenType::Percent => {
-                    self.start_tag_if_needed();
-                    self.start_comment(token);
-                    self.tag_token_count += 1;
-                }
-                TokenType::Dash => {
-                    self.start_tag_if_needed();
-                    self.handle_dash(next_token);
-                    self.tag_token_count += 1;
-                }
-                TokenType::Close => {
-                    self.handle_close(token.clone());
-                    self.in_tag = false;
-                    self.tag_token_count = 0;
-                }
-                TokenType::Text => {
-                    self.handle_text(token.clone());
-                    self.in_tag = false;
-                    self.tag_token_count = 0;
-                }
-                _ => {
-                    self.start_tag_if_needed();
-                    self.result.push(token.clone());
-                    self.tag_token_count += 1;
-                }
-            }
-
-            idx += 1;
-        }
-
-        if self.in_comment {
-            return Err(ParseError::UnclosedComment {
-                line: self.comment_start_line,
-                column: self.comment_start_col,
-            });
         }
 
         Ok(std::mem::take(&mut self.result))
     }
 
-    fn start_tag_if_needed(&mut self) {
-        if !self.in_tag {
-            self.in_tag = true;
-            self.tag_token_count = 0;
+    fn process_tag(&mut self, start_idx: usize) -> Result<usize, ParseError> {
+        let close_idx = self.find_close_index(start_idx);
+        let end_idx = close_idx.unwrap_or(self.tokens.len() - 1);
+        let tag_tokens: Vec<Token> = self.tokens[start_idx..=end_idx].to_vec();
+
+        self.apply_left_trim(&tag_tokens);
+        self.apply_right_trim(&tag_tokens);
+
+        if comment_tag(&tag_tokens) {
+            if close_idx.is_none() {
+                let comment = tag_tokens
+                    .iter()
+                    .find(|token| token.token_type == TokenType::Percent)
+                    .unwrap_or(&tag_tokens[0]);
+                return Err(ParseError::UnclosedComment {
+                    line: comment.location.line,
+                    column: comment.location.column,
+                });
+            }
+            return Ok(end_idx + 1);
         }
+
+        self.emit_tag_tokens(&tag_tokens);
+        Ok(end_idx + 1)
     }
 
-    fn handle_dash(&mut self, next_token: Option<&Token>) {
-        if self.left_trim_dash() {
-            self.strip_trailing_from_last_text_if_blank_line();
-        }
-        if self.right_trim_dash(next_token) {
-            self.strip_next_text = true;
-        }
-    }
-
-    fn left_trim_dash(&self) -> bool {
-        self.tag_token_count == 0
-    }
-
-    fn right_trim_dash(&self, next_token: Option<&Token>) -> bool {
-        matches!(next_token, Some(t) if t.token_type == TokenType::Close)
-    }
-
-    fn handle_close(&mut self, token: Token) {
-        self.result.push(token);
-    }
-
-    fn handle_text(&mut self, token: Token) {
+    fn append_text(&mut self, token: Token) {
         let mut text_value = token.value.clone();
 
         if self.strip_next_text {
@@ -131,97 +80,156 @@ impl TokenProcessor {
             text_value = strip_leading_whitespace_if_blank_line(&text_value);
         }
 
-        // Only add non-empty text tokens
         if text_value.is_empty() {
             return;
         }
 
-        self.result.push(Token::new(
-            TokenType::Text,
-            text_value,
-            token.location,
-        ));
+        self.result
+            .push(Token::new(TokenType::Text, text_value, token.location));
+    }
+
+    fn find_close_index(&self, start_idx: usize) -> Option<usize> {
+        let mut idx = start_idx;
+        while idx < self.tokens.len() {
+            if self.tokens[idx].token_type == TokenType::Close {
+                return Some(idx);
+            }
+            idx += 1;
+        }
+        None
+    }
+
+    fn apply_left_trim(&mut self, tag_tokens: &[Token]) {
+        if left_trim(tag_tokens) {
+            self.strip_trailing_from_last_text_if_blank_line();
+        }
+    }
+
+    fn apply_right_trim(&mut self, tag_tokens: &[Token]) {
+        if right_trim(tag_tokens) {
+            self.strip_next_text = true;
+        }
+    }
+
+    fn emit_tag_tokens(&mut self, tag_tokens: &[Token]) {
+        for token in tag_tokens {
+            if token.token_type == TokenType::Dash {
+                continue;
+            }
+            self.result.push(token.clone());
+        }
     }
 
     fn strip_trailing_from_last_text_if_blank_line(&mut self) {
-        if self.result.is_empty() {
-            return;
-        }
-
-        // Find the last TEXT token
         let last_idx = self
             .result
             .iter()
-            .rposition(|t| t.token_type == TokenType::Text);
-        if let Some(idx) = last_idx {
-            let last_text = &self.result[idx];
-            let value = &last_text.value;
-            let line_start = match (value.rfind('\n'), value.rfind('\r')) {
-                (Some(nl), Some(cr)) => nl.max(cr) + 1,
-                (Some(nl), None) => nl + 1,
-                (None, Some(cr)) => cr + 1,
-                (None, None) => 0,
-            };
-            let trailing_segment = &value[line_start..];
-            if !trailing_segment.chars().all(|c| c == ' ' || c == '\t') {
-                return;
-            }
+            .rposition(|token| token.token_type == TokenType::Text);
+        let Some(last_idx) = last_idx else {
+            return;
+        };
 
-            let stripped = value[..line_start].to_string();
-            self.result[idx] = Token::new(
-                TokenType::Text,
-                stripped,
-                last_text.location,
-            );
-        }
-    }
-
-    fn start_comment(&mut self, token: &Token) {
-        self.in_comment = true;
-        self.comment_start_line = token.location.line;
-        self.comment_start_col = token.location.column;
-    }
-
-    fn handle_comment_content(&mut self, token: &Token, next_token: Option<&Token>) {
-        if token.token_type == TokenType::Dash && self.right_trim_dash(next_token) {
-            self.strip_next_text = true;
+        let last_text = &self.result[last_idx];
+        let value = &last_text.value;
+        let line_start = same_line_start_offset(value);
+        let trailing_segment = &value[line_start..];
+        if !horizontal_whitespace_only(trailing_segment) {
+            return;
         }
 
-        if token.token_type == TokenType::Close {
-            self.in_comment = false;
-            self.in_tag = false;
-            self.tag_token_count = 0;
-        }
-        // All tokens inside comment are ignored
+        self.result[last_idx] = Token::new(
+            TokenType::Text,
+            value[..line_start].to_string(),
+            last_text.location,
+        );
     }
+}
+
+fn left_trim(tag_tokens: &[Token]) -> bool {
+    tag_begins_with_dash(tag_tokens)
+}
+
+fn right_trim(tag_tokens: &[Token]) -> bool {
+    let Some(close_idx) = tag_close_index(tag_tokens) else {
+        return false;
+    };
+    close_idx > 0 && tag_tokens[close_idx - 1].token_type == TokenType::Dash
+}
+
+fn tag_begins_with_dash(tag_tokens: &[Token]) -> bool {
+    matches!(tag_tokens.first(), Some(token) if token.token_type == TokenType::Dash)
+}
+
+fn tag_close_index(tag_tokens: &[Token]) -> Option<usize> {
+    tag_tokens
+        .iter()
+        .position(|token| token.token_type == TokenType::Close)
+}
+
+fn comment_tag(tag_tokens: &[Token]) -> bool {
+    let Some(first) = tag_tokens.first() else {
+        return false;
+    };
+
+    if first.token_type == TokenType::Percent {
+        return true;
+    }
+
+    first.token_type == TokenType::Dash
+        && tag_tokens
+            .get(1)
+            .is_some_and(|token| token.token_type == TokenType::Percent)
 }
 
 /// Strip leading whitespace/newline only when tag-right side is blank until line end.
 fn strip_leading_whitespace_if_blank_line(text: &str) -> String {
     let bytes = text.as_bytes();
-    let mut pos = 0;
-
-    // Skip spaces/tabs
-    while pos < bytes.len() && (bytes[pos] == b' ' || bytes[pos] == b'\t') {
-        pos += 1;
-    }
+    let pos = skip_leading_horizontal_whitespace(bytes);
 
     if pos >= bytes.len() {
         return String::new();
     }
 
-    if pos < bytes.len() && bytes[pos] == b'\n' {
-        pos += 1;
-    } else if pos < bytes.len() && bytes[pos] == b'\r' {
-        pos += 1;
-        if pos < bytes.len() && bytes[pos] == b'\n' {
-            pos += 1;
-        }
-    } else {
+    let Some(advance) = leading_newline_advance(bytes, pos) else {
         return text.to_string();
-    }
+    };
 
-    text[pos..].to_string()
+    text[(pos + advance)..].to_string()
+}
+
+fn same_line_start_offset(value: &str) -> usize {
+    match (value.rfind('\n'), value.rfind('\r')) {
+        (Some(nl), Some(cr)) => nl.max(cr) + 1,
+        (Some(nl), None) => nl + 1,
+        (None, Some(cr)) => cr + 1,
+        (None, None) => 0,
+    }
+}
+
+fn horizontal_whitespace_only(segment: &str) -> bool {
+    segment.chars().all(|c| c == ' ' || c == '\t')
+}
+
+fn skip_leading_horizontal_whitespace(bytes: &[u8]) -> usize {
+    let mut idx = 0;
+    while idx < bytes.len() && (bytes[idx] == b' ' || bytes[idx] == b'\t') {
+        idx += 1;
+    }
+    idx
+}
+
+fn leading_newline_advance(bytes: &[u8], pos: usize) -> Option<usize> {
+    if bytes[pos] == b'\n' {
+        return Some(1);
+    }
+    if bytes[pos] != b'\r' {
+        return None;
+    }
+    if pos + 1 < bytes.len() && bytes[pos + 1] == b'\n' {
+        Some(2)
+    } else {
+        Some(1)
+    }
 }
 
 #[cfg(test)]
@@ -262,11 +270,10 @@ mod tests {
             text_token("world"),
         ];
         let result = process(tokens).unwrap();
-        // PERCENT...CLOSE is consumed, leaving hello + world
         let texts: Vec<&str> = result
             .iter()
-            .filter(|t| t.token_type == TokenType::Text)
-            .map(|t| t.value.as_str())
+            .filter(|token| token.token_type == TokenType::Text)
+            .map(|token| token.value.as_str())
             .collect();
         assert_eq!(texts, vec!["hello", "world"]);
     }
@@ -290,7 +297,10 @@ mod tests {
             tag_token(TokenType::Close, "]}"),
         ];
         let result = process(tokens).unwrap();
-        let first_text = result.iter().find(|t| t.token_type == TokenType::Text).unwrap();
+        let first_text = result
+            .iter()
+            .find(|token| token.token_type == TokenType::Text)
+            .unwrap();
         assert_eq!(first_text.value, "hello\n");
     }
 
@@ -303,7 +313,10 @@ mod tests {
             tag_token(TokenType::Close, "]}"),
         ];
         let result = process(tokens).unwrap();
-        let first_text = result.iter().find(|t| t.token_type == TokenType::Text).unwrap();
+        let first_text = result
+            .iter()
+            .find(|token| token.token_type == TokenType::Text)
+            .unwrap();
         assert_eq!(first_text.value, "hello  ");
     }
 
@@ -319,7 +332,7 @@ mod tests {
         let last_text = result
             .iter()
             .rev()
-            .find(|t| t.token_type == TokenType::Text)
+            .find(|token| token.token_type == TokenType::Text)
             .unwrap();
         assert_eq!(last_text.value, "hello");
     }
@@ -336,7 +349,7 @@ mod tests {
         let last_text = result
             .iter()
             .rev()
-            .find(|t| t.token_type == TokenType::Text)
+            .find(|token| token.token_type == TokenType::Text)
             .unwrap();
         assert_eq!(last_text.value, "  hello");
     }
