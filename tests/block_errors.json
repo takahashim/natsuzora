@@ -1,0 +1,143 @@
+{
+  "description": "Block structure error tests - mismatched tags, unclosed blocks, invalid syntax",
+  "tests": [
+    {
+      "name": "unclosed if block",
+      "template": "{[#if x]}hello",
+      "data": {"x": true},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "unclosed unless block",
+      "template": "{[#unless x]}hello",
+      "data": {"x": false},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "unclosed each block",
+      "template": "{[#each items as item]}{[ item ]}",
+      "data": {"items": ["a"]},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "if closed with /each",
+      "template": "{[#if x]}hello{[/each]}",
+      "data": {"x": true},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "if closed with /unless",
+      "template": "{[#if x]}hello{[/unless]}",
+      "data": {"x": true},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "each closed with /if",
+      "template": "{[#each items as item]}{[ item ]}{[/if]}",
+      "data": {"items": ["a"]},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "unless closed with /if",
+      "template": "{[#unless x]}hello{[/if]}",
+      "data": {"x": false},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "else without if",
+      "template": "{[#else]}hello{[/if]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "extra close tag at top level",
+      "template": "{[/if]}",
+      "data": {},
+      "expected": ""
+    },
+    {
+      "name": "unclosed tag delimiter",
+      "template": "{[ name",
+      "data": {"name": "test"},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "unclosed comment",
+      "template": "{[% this comment never ends",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "empty tag",
+      "template": "{[]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "hash without keyword",
+      "template": "{[# ]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "each without as",
+      "template": "{[#each items]}{[/each]}",
+      "data": {"items": []},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "each without item name",
+      "template": "{[#each items as]}{[/each]}",
+      "data": {"items": []},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "if without condition",
+      "template": "{[#if]}{[/if]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "unless without condition",
+      "template": "{[#unless]}{[/unless]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "whitespace before hash",
+      "template": "{[ #if x]}hello{[/if]}",
+      "data": {"x": true},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "whitespace before slash",
+      "template": "{[#if x]}hello{[ /if]}",
+      "data": {"x": true},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "whitespace before bang unsecure",
+      "template": "{[ !unsecure x]}",
+      "data": {"x": "hello"},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "whitespace before bang include",
+      "template": "{[ !include /test ]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "double dot in path",
+      "template": "{[ a..b ]}",
+      "data": {"a": {"b": "x"}},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "path starting with dot",
+      "template": "{[ .name ]}",
+      "data": {"name": "test"},
+      "error": "SyntaxError"
+    }
+  ]
+}

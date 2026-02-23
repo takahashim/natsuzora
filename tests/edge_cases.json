@@ -1,0 +1,203 @@
+{
+  "description": "Edge case tests - empty constructs, boundary conditions, unusual combinations",
+  "tests": [
+    {
+      "name": "empty template",
+      "template": "",
+      "data": {},
+      "expected": ""
+    },
+    {
+      "name": "whitespace only template",
+      "template": "   ",
+      "data": {},
+      "expected": "   "
+    },
+    {
+      "name": "newline only template",
+      "template": "\n",
+      "data": {},
+      "expected": "\n"
+    },
+    {
+      "name": "empty if body true",
+      "template": "a{[#if x]}{[/if]}b",
+      "data": {"x": true},
+      "expected": "ab"
+    },
+    {
+      "name": "empty if body false",
+      "template": "a{[#if x]}{[/if]}b",
+      "data": {"x": false},
+      "expected": "ab"
+    },
+    {
+      "name": "empty else body",
+      "template": "a{[#if x]}yes{[#else]}{[/if]}b",
+      "data": {"x": false},
+      "expected": "ab"
+    },
+    {
+      "name": "empty each body",
+      "template": "a{[#each items as item]}{[/each]}b",
+      "data": {"items": ["x", "y"]},
+      "expected": "ab"
+    },
+    {
+      "name": "empty unless body",
+      "template": "a{[#unless x]}{[/unless]}b",
+      "data": {"x": false},
+      "expected": "ab"
+    },
+    {
+      "name": "consecutive variables no space",
+      "template": "{[ a ]}{[ b ]}{[ c ]}",
+      "data": {"a": "X", "b": "Y", "c": "Z"},
+      "expected": "XYZ"
+    },
+    {
+      "name": "consecutive tags with text",
+      "template": "{[ a ]}-{[ b ]}-{[ c ]}",
+      "data": {"a": "1", "b": "2", "c": "3"},
+      "expected": "1-2-3"
+    },
+    {
+      "name": "variable with minimal whitespace",
+      "template": "{[name]}",
+      "data": {"name": "test"},
+      "expected": "test"
+    },
+    {
+      "name": "variable with extra whitespace",
+      "template": "{[   name   ]}",
+      "data": {"name": "test"},
+      "expected": "test"
+    },
+    {
+      "name": "deeply nested if blocks",
+      "template": "{[#if a]}{[#if b]}{[#if c]}deep{[/if]}{[/if]}{[/if]}",
+      "data": {"a": true, "b": true, "c": true},
+      "expected": "deep"
+    },
+    {
+      "name": "deeply nested if blocks middle false",
+      "template": "{[#if a]}{[#if b]}{[#if c]}deep{[/if]}{[/if]}{[/if]}",
+      "data": {"a": true, "b": false, "c": true},
+      "expected": ""
+    },
+    {
+      "name": "each with single item",
+      "template": "{[#each items as item]}{[ item ]}{[/each]}",
+      "data": {"items": ["only"]},
+      "expected": "only"
+    },
+    {
+      "name": "each with empty array",
+      "template": "before{[#each items as item]}{[ item ]}{[/each]}after",
+      "data": {"items": []},
+      "expected": "beforeafter"
+    },
+    {
+      "name": "nested each blocks",
+      "template": "{[#each rows as row]}{[#each row.cells as cell]}{[ cell ]}{[/each]}|{[/each]}",
+      "data": {"rows": [{"cells": ["a", "b"]}, {"cells": ["c", "d"]}]},
+      "expected": "ab|cd|"
+    },
+    {
+      "name": "if inside each with else",
+      "template": "{[#each items as item]}{[#if item.ok]}Y{[#else]}N{[/if]}{[/each]}",
+      "data": {"items": [{"ok": true}, {"ok": false}, {"ok": true}]},
+      "expected": "YNY"
+    },
+    {
+      "name": "multiple blocks in sequence",
+      "template": "{[#if a]}A{[/if]}{[#if b]}B{[/if]}{[#if c]}C{[/if]}",
+      "data": {"a": true, "b": false, "c": true},
+      "expected": "AC"
+    },
+    {
+      "name": "text with special characters no escaping needed",
+      "template": "Hello & welcome to <world>",
+      "data": {},
+      "expected": "Hello & welcome to <world>"
+    },
+    {
+      "name": "multiline text preserved",
+      "template": "line1\nline2\nline3",
+      "data": {},
+      "expected": "line1\nline2\nline3"
+    },
+    {
+      "name": "tab characters in text",
+      "template": "col1\tcol2\tcol3",
+      "data": {},
+      "expected": "col1\tcol2\tcol3"
+    },
+    {
+      "name": "comment between text",
+      "template": "hello{[% comment ]}world",
+      "data": {},
+      "expected": "helloworld"
+    },
+    {
+      "name": "multiple comments",
+      "template": "a{[% x ]}b{[% y ]}c",
+      "data": {},
+      "expected": "abc"
+    },
+    {
+      "name": "comment inside if block",
+      "template": "{[#if x]}{[% hidden ]}visible{[/if]}",
+      "data": {"x": true},
+      "expected": "visible"
+    },
+    {
+      "name": "variable containing html entities",
+      "template": "{[ content ]}",
+      "data": {"content": "<div class=\"test\">&amp;</div>"},
+      "expected": "&lt;div class=&quot;test&quot;&gt;&amp;amp;&lt;/div&gt;"
+    },
+    {
+      "name": "unsecure with html content",
+      "template": "{[!unsecure content ]}",
+      "data": {"content": "<b>bold</b>"},
+      "expected": "<b>bold</b>"
+    },
+    {
+      "name": "deep path access",
+      "template": "{[ a.b.c.d.e ]}",
+      "data": {"a": {"b": {"c": {"d": {"e": "deep"}}}}},
+      "expected": "deep"
+    },
+    {
+      "name": "each then access outer variable",
+      "template": "{[#each items as item]}{[ item ]}{[ sep ]}{[/each]}",
+      "data": {"items": ["a", "b"], "sep": ","},
+      "expected": "a,b,"
+    },
+    {
+      "name": "nullable in if body",
+      "template": "{[#if show]}{[ value? ]}{[/if]}",
+      "data": {"show": true, "value": null},
+      "expected": ""
+    },
+    {
+      "name": "required modifier with valid value",
+      "template": "{[ name! ]}",
+      "data": {"name": "Alice"},
+      "expected": "Alice"
+    },
+    {
+      "name": "shadowing error in each",
+      "template": "{[#each items as items]}x{[/each]}",
+      "data": {"items": ["a"]},
+      "error": "ShadowingError"
+    },
+    {
+      "name": "shadowing error nested each",
+      "template": "{[#each rows as row]}{[#each row.cells as row]}x{[/each]}{[/each]}",
+      "data": {"rows": [{"cells": ["a"]}]},
+      "error": "ShadowingError"
+    }
+  ]
+}

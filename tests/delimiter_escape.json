@@ -1,0 +1,77 @@
+{
+  "description": "Delimiter escape sequence tests - {[{]} produces literal {[",
+  "tests": [
+    {
+      "name": "basic delimiter escape",
+      "template": "{[{]}",
+      "data": {},
+      "expected": "{["
+    },
+    {
+      "name": "escape in text",
+      "template": "Use {[{]} to start a tag",
+      "data": {},
+      "expected": "Use {[ to start a tag"
+    },
+    {
+      "name": "escape at start",
+      "template": "{[{]}hello",
+      "data": {},
+      "expected": "{[hello"
+    },
+    {
+      "name": "escape at end",
+      "template": "hello{[{]}",
+      "data": {},
+      "expected": "hello{["
+    },
+    {
+      "name": "multiple escapes",
+      "template": "{[{]} and {[{]}",
+      "data": {},
+      "expected": "{[ and {["
+    },
+    {
+      "name": "consecutive escapes",
+      "template": "{[{]}{[{]}",
+      "data": {},
+      "expected": "{[{["
+    },
+    {
+      "name": "escape with variable",
+      "template": "Syntax: {[{]} name ]} outputs {[ name ]}",
+      "data": {"name": "Alice"},
+      "expected": "Syntax: {[ name ]} outputs Alice"
+    },
+    {
+      "name": "escape before tag",
+      "template": "{[{]}{[ name ]}",
+      "data": {"name": "test"},
+      "expected": "{[test"
+    },
+    {
+      "name": "escape after tag",
+      "template": "{[ name ]}{[{]}",
+      "data": {"name": "test"},
+      "expected": "test{["
+    },
+    {
+      "name": "escape between tags",
+      "template": "{[ a ]}{[{]}{[ b ]}",
+      "data": {"a": "X", "b": "Y"},
+      "expected": "X{[Y"
+    },
+    {
+      "name": "escape inside if block",
+      "template": "{[#if show]}{[{]}{[/if]}",
+      "data": {"show": true},
+      "expected": "{["
+    },
+    {
+      "name": "escape inside each block",
+      "template": "{[#each items as item]}{[{]}{[ item ]}{[/each]}",
+      "data": {"items": ["a", "b"]},
+      "expected": "{[a{[b"
+    }
+  ]
+}

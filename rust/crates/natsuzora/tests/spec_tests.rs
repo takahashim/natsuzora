@@ -1,12 +1,14 @@
 //! Integration tests using shared test cases from tests/*.json
 
-use natsuzora::render;
+use natsuzora::{render, render_with_includes};
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
 struct TestSuite {
+    #[allow(dead_code)]
     description: String,
     tests: Vec<TestCase>,
 }
@@ -20,6 +22,8 @@ struct TestCase {
     expected: Option<String>,
     #[serde(default)]
     error: Option<String>,
+    #[serde(default)]
+    partials: Option<HashMap<String, String>>,
 }
 
 fn get_tests_dir() -> PathBuf {
@@ -40,8 +44,34 @@ fn load_test_suite(filename: &str) -> TestSuite {
     serde_json::from_str(&content).expect(&format!("Failed to parse {}", filename))
 }
 
+fn setup_partials(partials: &HashMap<String, String>) -> tempfile::TempDir {
+    let dir = tempfile::tempdir().expect("Failed to create temp dir");
+    for (name, content) in partials {
+        let segments: Vec<&str> = name.split('/').filter(|s| !s.is_empty()).collect();
+        let mut path = dir.path().to_path_buf();
+        for (i, seg) in segments.iter().enumerate() {
+            if i == segments.len() - 1 {
+                path.push(format!("_{}", seg));
+            } else {
+                path.push(seg);
+            }
+        }
+        path.set_extension("ntzr");
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).expect("Failed to create partial dir");
+        }
+        fs::write(&path, content).expect("Failed to write partial");
+    }
+    dir
+}
+
 fn run_test_case(case: &TestCase) {
-    let result = render(&case.template, case.data.clone());
+    let result = if let Some(partials) = &case.partials {
+        let dir = setup_partials(partials);
+        render_with_includes(&case.template, case.data.clone(), dir.path())
+    } else {
+        render(&case.template, case.data.clone())
+    };
 
     if let Some(expected) = &case.expected {
         match result {
@@ -163,8 +193,27 @@ fn test_whitespace_control() {
     run_test_suite("whitespace_control.json", &[]);
 }
 
-// Include tests are skipped - they require fixture files
-// #[test]
-// fn test_include() {
-//     run_test_suite("include.json", &[]);
-// }
+#[test]
+fn test_include() {
+    run_test_suite("include.json", &[]);
+}
+
+#[test]
+fn test_delimiter_escape() {
+    run_test_suite("delimiter_escape.json", &[]);
+}
+
+#[test]
+fn test_unless_block() {
+    run_test_suite("unless_block.json", &[]);
+}
+
+#[test]
+fn test_block_errors() {
+    run_test_suite("block_errors.json", &[]);
+}
+
+#[test]
+fn test_edge_cases() {
+    run_test_suite("edge_cases.json", &[]);
+}

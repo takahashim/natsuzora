@@ -1,0 +1,113 @@
+{
+  "description": "Unless block tests",
+  "tests": [
+    {
+      "name": "unless false shows body",
+      "template": "{[#unless hidden]}visible{[/unless]}",
+      "data": {"hidden": false},
+      "expected": "visible"
+    },
+    {
+      "name": "unless true hides body",
+      "template": "{[#unless visible]}hidden{[/unless]}",
+      "data": {"visible": true},
+      "expected": ""
+    },
+    {
+      "name": "unless null shows body",
+      "template": "{[#unless value]}shown{[/unless]}",
+      "data": {"value": null},
+      "expected": "shown"
+    },
+    {
+      "name": "unless zero shows body",
+      "template": "{[#unless count]}no items{[/unless]}",
+      "data": {"count": 0},
+      "expected": "no items"
+    },
+    {
+      "name": "unless empty string shows body",
+      "template": "{[#unless name]}anonymous{[/unless]}",
+      "data": {"name": ""},
+      "expected": "anonymous"
+    },
+    {
+      "name": "unless empty array shows body",
+      "template": "{[#unless items]}no items{[/unless]}",
+      "data": {"items": []},
+      "expected": "no items"
+    },
+    {
+      "name": "unless empty object shows body",
+      "template": "{[#unless meta]}no metadata{[/unless]}",
+      "data": {"meta": {}},
+      "expected": "no metadata"
+    },
+    {
+      "name": "unless non-empty string hides body",
+      "template": "{[#unless name]}anonymous{[/unless]}",
+      "data": {"name": "Alice"},
+      "expected": ""
+    },
+    {
+      "name": "unless positive integer hides body",
+      "template": "{[#unless count]}zero{[/unless]}",
+      "data": {"count": 5},
+      "expected": ""
+    },
+    {
+      "name": "unless with variable in body",
+      "template": "{[#unless hidden]}{[ message ]}{[/unless]}",
+      "data": {"hidden": false, "message": "Hello"},
+      "expected": "Hello"
+    },
+    {
+      "name": "unless with path condition",
+      "template": "{[#unless user.banned]}{[ user.name ]}{[/unless]}",
+      "data": {"user": {"banned": false, "name": "Alice"}},
+      "expected": "Alice"
+    },
+    {
+      "name": "unless with surrounding text",
+      "template": "before{[#unless x]}inside{[/unless]}after",
+      "data": {"x": false},
+      "expected": "beforeinsideafter"
+    },
+    {
+      "name": "unless true with surrounding text",
+      "template": "before{[#unless x]}inside{[/unless]}after",
+      "data": {"x": true},
+      "expected": "beforeafter"
+    },
+    {
+      "name": "nested unless blocks",
+      "template": "{[#unless a]}{[#unless b]}both false{[/unless]}{[/unless]}",
+      "data": {"a": false, "b": false},
+      "expected": "both false"
+    },
+    {
+      "name": "nested unless outer true",
+      "template": "{[#unless a]}{[#unless b]}inner{[/unless]}{[/unless]}",
+      "data": {"a": true, "b": false},
+      "expected": ""
+    },
+    {
+      "name": "unless with if inside",
+      "template": "{[#unless hidden]}{[#if important]}!{[/if]}{[ msg ]}{[/unless]}",
+      "data": {"hidden": false, "important": true, "msg": "alert"},
+      "expected": "!alert"
+    },
+    {
+      "name": "unless inside each",
+      "template": "{[#each items as item]}{[#unless item.done]}{[ item.name ]}{[/unless]}{[/each]}",
+      "data": {"items": [{"name": "a", "done": false}, {"name": "b", "done": true}, {"name": "c", "done": false}]},
+      "expected": "ac"
+    },
+    {
+      "name": "unless with empty body",
+      "template": "a{[#unless x]}{[/unless]}b",
+      "data": {"x": false},
+      "expected": "ab"
+    }
+  ]
+}
