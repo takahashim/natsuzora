@@ -7,8 +7,6 @@ module Natsuzora
     def initialize(source, include_root: nil)
       @source = source
       @include_root = include_root
-
-      Natsuzora.send(:require_ruby!)
       @ast = parse_ruby(source)
     end
 

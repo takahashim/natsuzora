@@ -7,10 +7,6 @@ end
 
 require 'natsuzora'
 
-# Eagerly load the Ruby backend modules so specs that reference
-# internal classes (Lexer, Parser, Renderer) can find them.
-Natsuzora.send(:require_ruby!)
-
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
