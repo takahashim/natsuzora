@@ -11,13 +11,9 @@ module Natsuzora
       # - Cannot start with '_' (reserved for internal use)
       # - Cannot contain '@' (reserved for future use)
       def validate_identifier!(name, line: nil, column: nil)
-        if Token::RESERVED_WORDS.include?(name)
-          raise ReservedWordError.new("'#{name}' is a reserved word", line: line, column: column)
-        end
+        raise ReservedWordError.new("'#{name}' is a reserved word", line: line, column: column) if Token::RESERVED_WORDS.include?(name)
 
-        if name.start_with?('_')
-          raise ParseError.new("Identifier cannot start with '_': #{name}", line: line, column: column)
-        end
+        raise ParseError.new("Identifier cannot start with '_': #{name}", line: line, column: column) if name.start_with?('_')
 
         return unless name.include?('@')
 
@@ -31,9 +27,7 @@ module Natsuzora
       # - Must start with '/'
       # - Must have at least one segment after '/'
       def validate_include_name_syntax!(name, line: nil, column: nil)
-        unless name.start_with?('/')
-          raise ParseError.new("Include name must start with '/'", line: line, column: column)
-        end
+        raise ParseError.new("Include name must start with '/'", line: line, column: column) unless name.start_with?('/')
 
         return unless name == '/'
 

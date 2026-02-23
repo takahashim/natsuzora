@@ -87,7 +87,7 @@ module Natsuzora
 
       def right_trim?(tag_tokens)
         close_idx = tag_close_index(tag_tokens)
-        close_idx && close_idx.positive? && tag_tokens[close_idx - 1].type == :DASH
+        close_idx&.positive? && tag_tokens[close_idx - 1].type == :DASH
       end
 
       def tag_begins_with_dash?(tag_tokens)

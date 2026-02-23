@@ -7,9 +7,9 @@ gemspec
 gem 'lexer_kit', '~> 0.5'
 
 group :development, :test do
-  gem 'rake', '~> 13.0'
-  gem 'rspec', '~> 3.12'
-  gem 'rubocop', '~> 1.50'
-  gem 'rubocop-rspec', '~> 2.22'
-  gem 'simplecov', '~> 0.22', require: false
+  gem 'rake'
+  gem 'rspec'
+  gem 'rubocop'
+  gem 'rubocop-rspec'
+  gem 'simplecov', require: false
 end

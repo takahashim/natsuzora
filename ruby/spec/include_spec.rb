@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe 'Include with real files' do
+RSpec.describe 'Include with real files' do # rubocop:disable RSpec/DescribeClass
   # Use shared fixtures from tests/fixtures/
   let(:fixtures_dir) { File.expand_path('../../tests/fixtures', __dir__) }
   let(:templates_dir) { File.join(fixtures_dir, 'templates') }
@@ -94,24 +94,26 @@ RSpec.describe 'Include with real files' do
     # /layout/page includes /layout/header, /layout/footer, /components/card
     # /layout/header includes /nav/menu
     # /nav/menu includes /nav/item
-    it 'renders full page layout with deep nesting' do
-      result = render_template('full_page', {
-                                 site: {
-                                   title: 'My Site',
-                                   year: 2024,
-                                   nav: [
-                                     { label: 'Home', url: '/', active: true },
-                                     { label: 'Blog', url: '/blog', active: false }
-                                   ]
-                                 },
-                                 page: {
-                                   title: 'Welcome',
-                                   cards: [
-                                     { title: 'Feature 1', body: 'Description 1' },
-                                     { title: 'Feature 2', body: 'Description 2' }
-                                   ]
-                                 }
-                               })
+    it 'renders full page layout with deep nesting' do # rubocop:disable RSpec/ExampleLength
+      result = render_template(
+        'full_page', {
+          site: {
+            title: 'My Site',
+            year: 2024,
+            nav: [
+              { label: 'Home', url: '/', active: true },
+              { label: 'Blog', url: '/blog', active: false }
+            ]
+          },
+          page: {
+            title: 'Welcome',
+            cards: [
+              { title: 'Feature 1', body: 'Description 1' },
+              { title: 'Feature 2', body: 'Description 2' }
+            ]
+          }
+        }
+      )
 
       # Check HTML structure
       expect(result).to include('<!DOCTYPE html>')
