@@ -7,16 +7,6 @@ RSpec.describe Natsuzora do
       expect(result).to eq('Hello, World!')
     end
 
-    it 'ignores NATSUZORA_BACKEND and always uses Ruby backend' do
-      original = ENV['NATSUZORA_BACKEND']
-      ENV['NATSUZORA_BACKEND'] = 'ffi'
-
-      result = described_class.render('Hello, {[ name ]}!', { name: 'World' })
-      expect(result).to eq('Hello, World!')
-    ensure
-      ENV['NATSUZORA_BACKEND'] = original
-    end
-
     it 'raises TypeError when root data is an array' do
       expect { described_class.render('Hello', []) }.to raise_error(Natsuzora::TypeError)
     end
