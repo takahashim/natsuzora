@@ -29,4 +29,6 @@ Gem::Specification.new do |spec|
     end
   end
   spec.require_paths = ['lib']
+
+  spec.add_dependency('lexer_kit', '>= 0.5.0')
 end

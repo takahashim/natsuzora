@@ -4,13 +4,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-# lexer_kit is needed for the lexer DSL implementation.
-# For monorepo development, prefer the local checkout.
-if File.directory?(File.expand_path('../../lexer_kit', __dir__))
-  gem 'lexer_kit', path: '../../lexer_kit'
-else
-  gem 'lexer_kit', '~> 0.5'
-end
+gem 'lexer_kit', '~> 0.5'
 
 group :development, :test do
   gem 'rake', '~> 13.0'
