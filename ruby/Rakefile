@@ -8,15 +8,3 @@ RSpec::Core::RakeTask.new(:spec)
 RuboCop::RakeTask.new
 
 task default: %i[spec rubocop]
-
-desc 'Build natsuzora Rust FFI shared library'
-task :build_ffi do
-  rust_dir = File.expand_path('../rust', __dir__)
-  sh "cargo build --release --manifest-path #{rust_dir}/Cargo.toml -p natsuzora-ffi"
-
-  ext_dir = File.join(__dir__, 'ext')
-  FileUtils.mkdir_p(ext_dir)
-
-  lib_name = RUBY_PLATFORM.include?('darwin') ? 'libnatsuzora_ffi.dylib' : 'libnatsuzora_ffi.so'
-  FileUtils.cp(File.join(rust_dir, 'target', 'release', lib_name), File.join(ext_dir, lib_name))
-end

@@ -6,6 +6,16 @@ RSpec.describe Natsuzora do
       result = described_class.render('Hello, {[ name ]}!', { name: 'World' })
       expect(result).to eq('Hello, World!')
     end
+
+    it 'ignores NATSUZORA_BACKEND and always uses Ruby backend' do
+      original = ENV['NATSUZORA_BACKEND']
+      ENV['NATSUZORA_BACKEND'] = 'ffi'
+
+      result = described_class.render('Hello, {[ name ]}!', { name: 'World' })
+      expect(result).to eq('Hello, World!')
+    ensure
+      ENV['NATSUZORA_BACKEND'] = original
+    end
   end
 
   describe '.parse' do

@@ -9,7 +9,7 @@ require 'natsuzora'
 
 # Eagerly load the Ruby backend modules so specs that reference
 # internal classes (Lexer, Parser, Renderer) can find them.
-Natsuzora.send(:require_ruby!) if Natsuzora.backend == :ruby
+Natsuzora.send(:require_ruby!)
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|

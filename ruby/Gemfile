@@ -4,8 +4,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-# lexer_kit is needed for the :ruby backend (lexer/dsl.rb).
-# Removed from gemspec runtime dependency since :ffi backend doesn't need it.
+# lexer_kit is needed for the lexer DSL implementation.
 # For monorepo development, prefer the local checkout.
 if File.directory?(File.expand_path('../../lexer_kit', __dir__))
   gem 'lexer_kit', path: '../../lexer_kit'

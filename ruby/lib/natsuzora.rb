@@ -4,45 +4,18 @@ require_relative 'natsuzora/version'
 require_relative 'natsuzora/errors'
 
 module Natsuzora
-  BACKENDS = %i[ruby ffi].freeze
-
   class << self
-    def backend
-      @backend ||= ENV['NATSUZORA_BACKEND']&.to_sym || :ruby
-    end
-
-    def backend=(value)
-      raise ArgumentError, "Unknown backend: #{value}" unless BACKENDS.include?(value)
-
-      @backend = value
-    end
-
     def render(source, data, include_root: nil)
-      case backend
-      when :ffi
-        require_ffi!
-        json_data = JSON.generate(data)
-        FFI.render(source, json_data, include_root)
-      when :ruby
-        require_ruby!
-        Template.new(source, include_root: include_root).render(data)
-      end
+      require_ruby!
+      Template.new(source, include_root: include_root).render(data)
     end
 
     def parse(source, include_root: nil)
-      require_ruby! if backend == :ruby
+      require_ruby!
       Template.new(source, include_root: include_root)
     end
 
     private
-
-    def require_ffi!
-      return if defined?(@ffi_loaded)
-
-      require 'json'
-      require_relative 'natsuzora/ffi'
-      @ffi_loaded = true
-    end
 
     def require_ruby!
       return if defined?(@ruby_loaded)

@@ -52,7 +52,6 @@ natsuzora/
 │   └── crates/
 │       ├── natsuzora/            # Rust公開API
 │       ├── natsuzora-ast/        # AST/parse層
-│       ├── natsuzora-ffi/        # C FFI層
 │       └── tree-sitter-natsuzora/
 ├── ruby/                         # Ruby gem
 └── tree-sitter/                  # tree-sitter grammar
@@ -101,18 +100,6 @@ result = Natsuzora.render(
   { "name" => "World" }
 )
 ```
-
-### Ruby FFIバックエンド（任意）
-
-Rust実装をRubyから使う場合:
-
-```bash
-cd ruby
-bundle exec rake build_ffi
-NATSUZORA_BACKEND=ffi bundle exec rspec
-```
-
-必要に応じて `NATSUZORA_LIB_PATH` で共有ライブラリパスを上書きできます。
 
 ## 仕様
 
