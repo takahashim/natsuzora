@@ -48,28 +48,33 @@ impl TokenProcessor {
 
     fn process_tag(&mut self, start_idx: usize) -> Result<usize, ParseError> {
         let close_idx = self.find_close_index(start_idx);
-        let end_idx = close_idx.unwrap_or(self.tokens.len() - 1);
-        let tag_tokens: Vec<Token> = self.tokens[start_idx..=end_idx].to_vec();
+        let tag_tokens: Vec<Token> = match close_idx {
+            Some(ci) => self.tokens[start_idx..=ci].to_vec(),
+            None => self.tokens[start_idx..].to_vec(),
+        };
 
         self.apply_left_trim(&tag_tokens);
         self.apply_right_trim(&tag_tokens);
 
         if comment_tag(&tag_tokens) {
-            if close_idx.is_none() {
-                let comment = tag_tokens
-                    .iter()
-                    .find(|token| token.token_type == TokenType::Percent)
-                    .unwrap_or(&tag_tokens[0]);
-                return Err(ParseError::UnclosedComment {
-                    line: comment.location.line,
-                    column: comment.location.column,
-                });
+            if let Some(ci) = close_idx {
+                return Ok(ci + 1);
             }
-            return Ok(end_idx + 1);
+            let comment = tag_tokens
+                .iter()
+                .find(|token| token.token_type == TokenType::Percent)
+                .unwrap_or(&tag_tokens[0]);
+            return Err(ParseError::UnclosedComment {
+                line: comment.location.line,
+                column: comment.location.column,
+            });
         }
 
         self.emit_tag_tokens(&tag_tokens);
-        Ok(end_idx + 1)
+        Ok(match close_idx {
+            Some(ci) => ci + 1,
+            None => self.tokens.len(),
+        })
     }
 
     fn append_text(&mut self, token: Token) {
