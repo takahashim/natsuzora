@@ -57,14 +57,14 @@ Natsuzoraは、HTML生成に特化した極小テンプレート言語である�
 
 テンプレートエンジン内部で扱える型は以下に限定される。
 
-|      型     | 説明・制約                                                              |
-|-------------+-------------------------------------------------------------------------|
+|      型     | 説明・制約                                                                     |
+|-------------|--------------------------------------------------------------------------------|
 | Integer     | 符号付き整数。`-(2^53-1)`から`2^53-1`の範囲（`Number.MAX_SAFE_INTEGER`準拠）。 |
-| String      | UTF-8 文字列。                                                          |
-| Boolean     | `true` または `false`。                                                 |
-| Null        | 値が存在しないことを示す `null`。                                       |
-| Array       | 上記の型を要素に持つ順序付きリスト。                                    |
-| Map(Object) | 文字列をキーとし、上記の型を値に持つ連想配列。                          |
+| String      | UTF-8 文字列。                                                                 |
+| Boolean     | `true` または `false`。                                                        |
+| Null        | 値が存在しないことを示す `null`。                                              |
+| Array       | 上記の型を要素に持つ順序付きリスト。                                           |
+| Map(Object) | 文字列をキーとし、上記の型を値に持つ連想配列。                                 |
 
 ### 3.2 禁止される値
 
@@ -119,36 +119,88 @@ Natsuzoraテンプレートは、以下の種類のタグをサポートする�
 | デリミタエスケープ | `{[{]}`            | リテラルの`{[`を出力               |
 | ブロック終了 | `{[ /if ]}`             | ブロックの終わりを示す             |
 
-### 4.2 構文規則 (BNF)
+### 4.2 構文規則 (EBNF)
 
-```bnf
-TEMPLATE ::= NODE*
+```ebnf
+TEMPLATE      := NODE*
+NODE          := TEXT | VAR | IF_BLOCK | UNLESS_BLOCK | EACH_BLOCK | UNSECURE | INCLUDE
 
-NODE ::=
-       | TEXT
-       | VAR_NODE
-       | IF_BLOCK
-       | UNLESS_BLOCK
-       | EACH_BLOCK
-       | UNSECURE_OUTPUT
-       | INCLUDE_NODE
-       | COMMENT
-       | DELIMITER_ESCAPE
+OPEN          := "{[" ["-"]
+CLOSE         := ["-"] "]}"
+WS            := (" " | "\t" | "\r" | "\n")+
+IDENT         := /[A-Za-z][A-Za-z0-9_]*/
+PATH          := IDENT ("." IDENT)*
+MODIFIER      := "?" | "!"
+EXPR          := PATH
+
+VAR           := OPEN WS? PATH MODIFIER? WS? CLOSE
+
+IF_BLOCK      := IF_OPEN NODE* (ELSE_OPEN NODE*)? IF_CLOSE
+IF_OPEN       := OPEN "#" WS? "if" WS+ EXPR WS? CLOSE
+ELSE_OPEN     := OPEN "#" WS? "else" WS? CLOSE
+IF_CLOSE      := OPEN "/" WS? "if" WS? CLOSE
+
+UNLESS_BLOCK  := UNLESS_OPEN NODE* UNLESS_CLOSE
+UNLESS_OPEN   := OPEN "#" WS? "unless" WS+ EXPR WS? CLOSE
+UNLESS_CLOSE  := OPEN "/" WS? "unless" WS? CLOSE
+
+EACH_BLOCK    := EACH_OPEN NODE* EACH_CLOSE
+EACH_OPEN     := OPEN "#" WS? "each" WS+ EXPR WS+ "as" WS+ IDENT WS? CLOSE
+EACH_CLOSE    := OPEN "/" WS? "each" WS? CLOSE
+
+UNSECURE      := OPEN "!unsecure" WS+ PATH WS? CLOSE
+
+INCLUDE       := OPEN "!include" WS+ NAME (WS+ INCLUDE_ARG)* WS? CLOSE
+INCLUDE_ARG   := IDENT WS? "=" WS? PATH
+NAME          := "/" IDENT ("/" IDENT)*
+
+COMMENT       := "{[%" COMMENT_TEXT CLOSE
+              | "{[-%" COMMENT_TEXT CLOSE
 ```
 
-*(注: COMMENTとDELIMITER_ESCAPEはLexerレベルで処理され、AST上はTEXTノードになるか、あるいは存在しない)*
+注:
+- `OPEN` の `["-"]` はオプションの空白制御フラグ（trim）を表す。`CLOSE` も同様。
+- `COMMENT` および `DELIMITER_ESCAPE`（`{[{]}`）はLexerレベルで処理され、ASTには出現しない。
 
 ### 4.3 テキストと空白制御
 
 タグ以外の部分はテキストノードとしてそのまま出力される。
 
-- 空白制御フラグ:
-  - `{[-` (Left Trim): タグの直前にある、行頭からタグ開始までの空白のみで構成される部分を削除する。
-  - `-]}` (Right Trim): タグの直後にある、タグ終了から改行文字までを含む行末までの空白のみで構成される部分を削除する。
-- タグ内部の空白:
-  - `{[` とタグ種別文字 (`#`, `/`, `!`, `%`, `{`) の間に空白は許容されない。
-  - キーワード（`if`, `each`など）と式の間に少なくとも1つの空白が必要である。
-  - それ以外の場所（例: `{[ path ]}` の `path` の前後）では空白は任意に許容される。
+#### 4.3.1 左 trim `{[-`
+
+左 trim は、タグ直前のテキストの「同一行上の末尾区間」が空白（スペース / タブ）のみの場合にだけ適用する。
+
+手順(参考):
+1. 直前のテキストノードを取得する。
+2. そのテキストの「直近の改行以降」を末尾区間として取り出す。
+3. 末尾区間が空白のみなら、その区間を削除する。
+4. 末尾区間に非空白文字が含まれる場合は何もしない。
+
+例: `line1\n  {[-` → `line1\n`（末尾区間 `"  "` が空白のみなので削除）
+
+#### 4.3.2 右 trim `-]}`
+
+右 trim は、タグ直後のテキストの行頭側が「空白のみ＋改行」のときだけ適用する。
+
+手順(参考):
+1. タグ直後のテキスト先頭のスペース / タブを読み飛ばす。
+2. 次が改行なら、その改行1つ（`\n` または `\r\n` または `\r`）を含めて削除する。
+3. 次が改行でなければ何もしない。
+4. テキストが空白のみで終わる場合は空文字になる。
+
+例: `-]}  \nafter` → `after`（空白＋改行を削除）
+
+#### 4.3.3 trim の適用範囲
+
+trim は変数、ブロック開始/終了、include、コメントの各タグで同じ規則を適用する。trim 記号 `-` 自体は出力に現れない。
+
+#### 4.3.4 タグ内部の空白
+
+- `{[`（または `{[-`）とタグ種別文字 (`#`, `/`, `!`, `%`, `{`) の間に空白は許容されない。
+  - 正: `{[#if x]}`, `{[!include /card]}`
+  - 誤: `{[ #if x]}`, `{[ !include /card]}`
+- キーワード（`if`, `each`など）と式の間に少なくとも1つの空白が必要である。
+- それ以外の場所（例: `{[ path ]}` の `path` の前後）でも空白が許容される場合がある。
 
 ### 4.4 変数展開 (Interpolation)
 
@@ -166,6 +218,10 @@ MODIFIER ::= "?" | "!"
 | `?` | `{[ name? ]}` | エラー | 空出力 | 空出力 | 出力 |
 | `!` | `{[ name! ]}` | エラー | エラー | エラー | 出力 |
 
+正例/誤例:
+- 正: `{[ user.name ]}`, `{[ value? ]}`, `{[ value! ]}`
+- 誤: `{[ .name ]}`（パスの先頭にドット）、`{[ value!? ]}`（修飾子の重複）
+
 ### 4.5 制御構文と特殊タグ
 
 #### 4.5.1 if / unless ブロック
@@ -178,6 +234,10 @@ UNLESS_BLOCK ::= UNLESS_OPEN NODE* UNLESS_CLOSE
 - `unless`: パスがFalsyの場合のみ内部を評価する。`else`節は持てない。
 - `else if` は存在しない。
 
+正例/誤例:
+- 正: `{[#if x]}A{[#else]}B{[/if]}`
+- 誤: `{[#else]}A{[/if]}`（`else`が`if`ブロック外）
+
 #### 4.5.2 each ブロック
 
 ```bnf
@@ -187,12 +247,20 @@ EACH_OPEN  ::= TAG_OPEN HASH "each" PATH "as" IDENT TAG_CLOSE
 - パスの評価結果はArrayでなければならない。
 - ループごとに新しいローカルスコープを作成し、要素を `as` で指定された変数名に束縛する。
 
+正例/誤例:
+- 正: `{[#each items as item]}{[ item ]}{[/each]}`
+- 誤: `{[#each items]}{[/each]}`（`as`と束縛名が欠落）
+
 #### 4.5.3 unsecure (エスケープなし出力)
 
 ```bnf
 UNSECURE_OUTPUT ::= TAG_OPEN "!" "unsecure" PATH TAG_CLOSE
 ```
-- `path`の値をHTMLエスケープせずに出力する。使用には注意が必要である。
+- `path`の値をHTMLエスケープせずに出力する。`path`で示すテキストファイルの内容が適切ではない場合、生成結果はHTMLとして正しい文書にならない危険性がある。使用には注意が必要である。
+
+正例/誤例:
+- 正: `{[!unsecure html ]}`
+- 誤: `{[ !unsecure html ]}`（`{[`と`!`の間に空白）
 
 #### 4.5.4 コメント
 
@@ -200,6 +268,15 @@ UNSECURE_OUTPUT ::= TAG_OPEN "!" "unsecure" PATH TAG_CLOSE
 COMMENT ::= TAG_OPEN "%"COMMENT_CONTENT TAG_CLOSE
 ```
 - `{[%` から `]}` までの内容は完全に無視され、出力に含まれない。
+- コメント開始記号 `%` の前に空白を置くことはできない（`{[ %` は不正）。
+- 空白制御（trim）との併用が可能である:
+  - 左 trim 付き: `{[-% ... ]}`
+  - 右 trim 付き: `{[% ... -]}`
+  - 両側 trim 付き: `{[-% ... -]}`
+
+正例/誤例:
+- 正: `{[% comment ]}`, `{[-% c -]}`
+- 誤: `{[ % comment ]}`（`{[`と`%`の間に空白）
 
 #### 4.5.5 include (構文)
 
@@ -209,6 +286,10 @@ INCLUDE_ARG  ::= IDENT "=" PATH
 ```
 - `NAME`: `/`で始まるパーシャルの論理名。`[A-Za-z][A-Za-z0-9_]*` のセグメントを `/` で連結したもの。`.` `..` `\` `//` などは禁止。
 - `INCLUDE_ARG`: `key=value` 形式でパーシャルに渡す引数。`key`は識別子、`value`はパス参照のみ。
+
+正例/誤例:
+- 正: `{[!include /card title=item.title ]}`
+- 誤: `{[!include / ]}`（名前が`/`のみ）、`{[ !include /card ]}`（`{[`と`!`の間に空白）
 
 ### 4.6 パーシャルの評価
 
