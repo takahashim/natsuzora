@@ -52,7 +52,6 @@ natsuzora/
 │   └── crates/
 │       ├── natsuzora/            # Rust公開API
 │       ├── natsuzora-ast/        # AST/parse層
-│       └── tree-sitter-natsuzora/
 ├── ruby/                         # Ruby gem
 └── tree-sitter/                  # tree-sitter grammar
 ```
