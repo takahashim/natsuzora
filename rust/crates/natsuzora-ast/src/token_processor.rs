@@ -115,8 +115,7 @@ impl TokenProcessor {
         let close_idx = tag_tokens
             .iter()
             .position(|token| token.token_type == TokenType::Close);
-        let is_right_trim =
-            matches!(close_idx, Some(ci) if ci > 0 && tag_tokens[ci - 1].token_type == TokenType::Dash);
+        let is_right_trim = matches!(close_idx, Some(ci) if ci > 0 && tag_tokens[ci - 1].token_type == TokenType::Dash);
         if is_right_trim {
             self.strip_next_text = true;
         }

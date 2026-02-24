@@ -116,7 +116,7 @@ impl Parser {
             p += 1;
         }
         if p < self.tokens.len() {
-            self.tokens[p].value.clone()
+            token_surface(&self.tokens[p])
         } else {
             String::new()
         }
@@ -550,6 +550,14 @@ impl Parser {
             column: loc.column,
         })
     }
+}
+
+fn token_surface(token: &Token) -> String {
+    token
+        .token_type
+        .literal()
+        .map(str::to_string)
+        .unwrap_or_else(|| token.value.clone())
 }
 
 #[cfg(test)]

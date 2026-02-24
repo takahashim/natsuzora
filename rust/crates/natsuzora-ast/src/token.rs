@@ -49,6 +49,35 @@ pub enum TokenType {
     Eof,
 }
 
+impl TokenType {
+    /// Returns the fixed source literal for token types that have one.
+    ///
+    /// Tokens whose surface text varies by instance (e.g. identifiers,
+    /// whitespace, text) return `None` and should use `Token.value`.
+    pub fn literal(self) -> Option<&'static str> {
+        match self {
+            TokenType::Percent => Some("%"),
+            TokenType::Dash => Some("-"),
+            TokenType::Close => Some("]}"),
+            TokenType::Hash => Some("#"),
+            TokenType::Slash => Some("/"),
+            TokenType::BangUnsecure => Some("!unsecure"),
+            TokenType::BangInclude => Some("!include"),
+            TokenType::Exclamation => Some("!"),
+            TokenType::KwIf => Some("if"),
+            TokenType::KwUnless => Some("unless"),
+            TokenType::KwElse => Some("else"),
+            TokenType::KwEach => Some("each"),
+            TokenType::KwAs => Some("as"),
+            TokenType::Dot => Some("."),
+            TokenType::Comma => Some(","),
+            TokenType::Equal => Some("="),
+            TokenType::Question => Some("?"),
+            TokenType::Text | TokenType::Whitespace | TokenType::Ident | TokenType::Eof => None,
+        }
+    }
+}
+
 /// A token with its type, value, and location.
 #[derive(Debug, Clone)]
 pub struct Token {
@@ -64,5 +93,24 @@ impl Token {
             value: value.into(),
             location,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::TokenType;
+
+    #[test]
+    fn literal_for_fixed_tokens() {
+        assert_eq!(TokenType::Hash.literal(), Some("#"));
+        assert_eq!(TokenType::Close.literal(), Some("]}"));
+        assert_eq!(TokenType::BangInclude.literal(), Some("!include"));
+    }
+
+    #[test]
+    fn no_literal_for_dynamic_tokens() {
+        assert_eq!(TokenType::Ident.literal(), None);
+        assert_eq!(TokenType::Whitespace.literal(), None);
+        assert_eq!(TokenType::Text.literal(), None);
     }
 }

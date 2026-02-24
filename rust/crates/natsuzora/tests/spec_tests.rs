@@ -40,7 +40,8 @@ fn get_tests_dir() -> PathBuf {
 
 fn load_test_suite(filename: &str) -> TestSuite {
     let path = get_tests_dir().join(filename);
-    let content = fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read {}", path.display()));
+    let content =
+        fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read {}", path.display()));
     serde_json::from_str(&content).unwrap_or_else(|_| panic!("Failed to parse {filename}"))
 }
 

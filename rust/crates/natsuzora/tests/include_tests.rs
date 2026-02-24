@@ -31,7 +31,8 @@ fn include_root() -> PathBuf {
 
 fn render_template(name: &str, data: serde_json::Value) -> Result<String, NatsuzoraError> {
     let path = templates_dir().join(format!("{name}.ntzr"));
-    let source = fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read {}", path.display()));
+    let source =
+        fs::read_to_string(&path).unwrap_or_else(|_| panic!("Failed to read {}", path.display()));
     render_with_includes(&source, data, include_root())
 }
 

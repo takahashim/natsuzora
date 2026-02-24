@@ -24,6 +24,9 @@ struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
+    const TAG_OPEN: &'static [u8] = b"{[";
+    const TAG_OPEN_ESCAPE: &'static [u8] = b"{[{]}";
+
     fn new(source: &'a str) -> Self {
         Self {
             source: source.as_bytes(),
@@ -58,11 +61,11 @@ impl<'a> Lexer<'a> {
         let mut text = String::new();
 
         while self.pos < self.source.len() {
-            if self.looking_at(b"{[") {
+            if self.looking_at(Self::TAG_OPEN) {
                 // Check for escape sequence: {[{]}
-                if self.looking_at(b"{[{]}") {
+                if self.looking_at(Self::TAG_OPEN_ESCAPE) {
                     text.push_str("{[");
-                    self.advance_n(5); // skip {[{]}
+                    self.advance_n(Self::TAG_OPEN_ESCAPE.len()); // skip {[{]}
                     continue;
                 }
 
@@ -80,8 +83,8 @@ impl<'a> Lexer<'a> {
         }
 
         // Enter tag mode if we found {[
-        if self.looking_at(b"{[") {
-            self.advance_n(2); // skip {[
+        if self.looking_at(Self::TAG_OPEN) {
+            self.advance_n(Self::TAG_OPEN.len()); // skip {[
             self.in_tag = true;
         }
     }
@@ -98,64 +101,45 @@ impl<'a> Lexer<'a> {
 
         match ch {
             // Closing delimiter ]}
-            b']' if self.looking_at(b"]}") => {
-                tokens.push(Token::new(TokenType::Close, "]}", loc));
-                self.advance_n(2);
+            b']' if self.looking_at_token(TokenType::Close) => {
+                self.emit_fixed(tokens, TokenType::Close, loc);
                 self.in_tag = false;
             }
 
             b'%' => {
-                tokens.push(Token::new(TokenType::Percent, "%", loc));
-                self.advance_one();
+                self.emit_fixed(tokens, TokenType::Percent, loc);
             }
 
             b'-' => {
-                tokens.push(Token::new(TokenType::Dash, "-", loc));
-                self.advance_one();
+                self.emit_fixed(tokens, TokenType::Dash, loc);
             }
 
             b'#' => {
-                tokens.push(Token::new(TokenType::Hash, "#", loc));
-                self.advance_one();
+                self.emit_fixed(tokens, TokenType::Hash, loc);
             }
 
             b'/' => {
-                tokens.push(Token::new(TokenType::Slash, "/", loc));
-                self.advance_one();
+                self.emit_fixed(tokens, TokenType::Slash, loc);
             }
 
             b'!' => {
-                // Check for !unsecure and !include (longest match)
-                if self.looking_at(b"!unsecure") && !self.is_ident_continue_at(self.pos + 9) {
-                    tokens.push(Token::new(TokenType::BangUnsecure, "!unsecure", loc));
-                    self.advance_n(9);
-                } else if self.looking_at(b"!include") && !self.is_ident_continue_at(self.pos + 8) {
-                    tokens.push(Token::new(TokenType::BangInclude, "!include", loc));
-                    self.advance_n(8);
-                } else {
-                    tokens.push(Token::new(TokenType::Exclamation, "!", loc));
-                    self.advance_one();
-                }
+                self.tokenize_bang(tokens, loc);
             }
 
             b'.' => {
-                tokens.push(Token::new(TokenType::Dot, ".", loc));
-                self.advance_one();
+                self.emit_fixed(tokens, TokenType::Dot, loc);
             }
 
             b',' => {
-                tokens.push(Token::new(TokenType::Comma, ",", loc));
-                self.advance_one();
+                self.emit_fixed(tokens, TokenType::Comma, loc);
             }
 
             b'=' => {
-                tokens.push(Token::new(TokenType::Equal, "=", loc));
-                self.advance_one();
+                self.emit_fixed(tokens, TokenType::Equal, loc);
             }
 
             b'?' => {
-                tokens.push(Token::new(TokenType::Question, "?", loc));
-                self.advance_one();
+                self.emit_fixed(tokens, TokenType::Question, loc);
             }
 
             // Whitespace
@@ -204,6 +188,39 @@ impl<'a> Lexer<'a> {
     /// Check if the source at current position starts with the given bytes.
     fn looking_at(&self, pattern: &[u8]) -> bool {
         self.source[self.pos..].starts_with(pattern)
+    }
+
+    /// Return the fixed literal for a token type.
+    fn token_literal(token_type: TokenType) -> &'static str {
+        token_type
+            .literal()
+            .expect("token type must have a fixed literal")
+    }
+
+    /// Check whether current position starts with the given fixed token literal.
+    fn looking_at_token(&self, token_type: TokenType) -> bool {
+        self.looking_at(Self::token_literal(token_type).as_bytes())
+    }
+
+    /// Emit a token with fixed literal text and advance by its byte length.
+    fn emit_fixed(&mut self, tokens: &mut Vec<Token>, token_type: TokenType, loc: Location) {
+        let literal = Self::token_literal(token_type);
+        tokens.push(Token::new(token_type, literal, loc));
+        self.advance_n(literal.len());
+    }
+
+    /// Tokenize `!`, `!unsecure`, `!include` using longest keyword match.
+    fn tokenize_bang(&mut self, tokens: &mut Vec<Token>, loc: Location) {
+        for token_type in [TokenType::BangUnsecure, TokenType::BangInclude] {
+            let literal = Self::token_literal(token_type);
+            if self.looking_at(literal.as_bytes())
+                && !self.is_ident_continue_at(self.pos + literal.len())
+            {
+                self.emit_fixed(tokens, token_type, loc);
+                return;
+            }
+        }
+        self.emit_fixed(tokens, TokenType::Exclamation, loc);
     }
 
     /// Check if byte at given position is a valid identifier continuation character.
