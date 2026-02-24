@@ -147,12 +147,6 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn test_render_simple() {
-        let result = render("Hello, {[ name ]}!", json!({"name": "World"})).unwrap();
-        assert_eq!(result, "Hello, World!");
-    }
-
-    #[test]
     fn test_template_reuse() {
         let tmpl = Natsuzora::parse("Hello, {[ name ]}!").unwrap();
 
@@ -161,81 +155,5 @@ mod tests {
 
         let result2 = tmpl.render(json!({"name": "Bob"})).unwrap();
         assert_eq!(result2, "Hello, Bob!");
-    }
-
-    #[test]
-    fn test_html_escaping() {
-        let result = render("{[ html ]}", json!({"html": "<b>bold</b>"})).unwrap();
-        assert_eq!(result, "&lt;b&gt;bold&lt;/b&gt;");
-    }
-
-    #[test]
-    fn test_unsecure_output() {
-        let result = render("{[!unsecure html]}", json!({"html": "<b>bold</b>"})).unwrap();
-        assert_eq!(result, "<b>bold</b>");
-    }
-
-    #[test]
-    fn test_if_block() {
-        let result = render("{[#if show]}visible{[/if]}", json!({"show": true})).unwrap();
-        assert_eq!(result, "visible");
-    }
-
-    #[test]
-    fn test_each_block() {
-        let result = render(
-            "{[#each items as item]}{[ item ]}{[/each]}",
-            json!({"items": ["a", "b", "c"]}),
-        )
-        .unwrap();
-        assert_eq!(result, "abc");
-    }
-
-    #[test]
-    fn test_v4_null_error() {
-        let result = render("{[ value ]}", json!({"value": null}));
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_v4_nullable_modifier() {
-        let result = render("{[ value? ]}", json!({"value": null})).unwrap();
-        assert_eq!(result, "");
-    }
-
-    #[test]
-    fn test_v4_required_modifier() {
-        let result = render("{[ value! ]}", json!({"value": ""}));
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_pagination_example() {
-        let template = r#"{[#each pagination.pages as page]}{[#if page.current]}[{[ page.num ]}]{[#else]}{[ page.num ]}{[/if]}{[/each]}"#;
-        let data = json!({
-            "pagination": {
-                "pages": [
-                    {"num": 1, "current": false},
-                    {"num": 2, "current": true},
-                    {"num": 3, "current": false}
-                ]
-            }
-        });
-        let result = render(template, data).unwrap();
-        assert_eq!(result, "1[2]3");
-    }
-
-    #[test]
-    fn test_multiline_each_with_if_else_ws() {
-        // Test: multi-line each with if/else and whitespace control
-        let template = "start\n{[-#each items as item-]}\n{[-#if item.active-]}\nA:{[ item.name ]}\n{[-#else-]}\nB:{[ item.name ]}\n{[-/if-]}\n{[-/each-]}\nend";
-        let data = json!({
-            "items": [
-                {"name": "x", "active": true},
-                {"name": "y", "active": false}
-            ]
-        });
-        let result = render(template, data).unwrap();
-        assert_eq!(result, "start\nA:x\nB:y\nend");
     }
 }

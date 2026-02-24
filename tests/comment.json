@@ -30,6 +30,18 @@
       "template": "{[#if x]}{[% comment ]}yes{[/if]}",
       "data": {"x": true},
       "expected": "yes"
+    },
+    {
+      "name": "comment with left trim",
+      "template": "line1\n  {[-% comment ]}line2",
+      "data": {},
+      "expected": "line1\nline2"
+    },
+    {
+      "name": "comment with right trim",
+      "template": "before{[% comment -]}\nafter",
+      "data": {},
+      "expected": "beforeafter"
     }
   ]
 }

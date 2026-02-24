@@ -101,16 +101,52 @@ mod tests {
     use super::TokenType;
 
     #[test]
-    fn literal_for_fixed_tokens() {
-        assert_eq!(TokenType::Hash.literal(), Some("#"));
-        assert_eq!(TokenType::Close.literal(), Some("]}"));
-        assert_eq!(TokenType::BangInclude.literal(), Some("!include"));
+    fn all_fixed_literal_variants() {
+        let cases: Vec<(TokenType, &str)> = vec![
+            (TokenType::Percent, "%"),
+            (TokenType::Dash, "-"),
+            (TokenType::Close, "]}"),
+            (TokenType::Hash, "#"),
+            (TokenType::Slash, "/"),
+            (TokenType::BangUnsecure, "!unsecure"),
+            (TokenType::BangInclude, "!include"),
+            (TokenType::Exclamation, "!"),
+            (TokenType::KwIf, "if"),
+            (TokenType::KwUnless, "unless"),
+            (TokenType::KwElse, "else"),
+            (TokenType::KwEach, "each"),
+            (TokenType::KwAs, "as"),
+            (TokenType::Dot, "."),
+            (TokenType::Comma, ","),
+            (TokenType::Equal, "="),
+            (TokenType::Question, "?"),
+        ];
+        for (variant, expected) in cases {
+            assert_eq!(
+                variant.literal(),
+                Some(expected),
+                "{:?} should return Some({:?})",
+                variant,
+                expected
+            );
+        }
     }
 
     #[test]
-    fn no_literal_for_dynamic_tokens() {
-        assert_eq!(TokenType::Ident.literal(), None);
-        assert_eq!(TokenType::Whitespace.literal(), None);
-        assert_eq!(TokenType::Text.literal(), None);
+    fn all_dynamic_variants_return_none() {
+        let dynamic = vec![
+            TokenType::Text,
+            TokenType::Whitespace,
+            TokenType::Ident,
+            TokenType::Eof,
+        ];
+        for variant in dynamic {
+            assert_eq!(
+                variant.literal(),
+                None,
+                "{:?} should return None",
+                variant
+            );
+        }
     }
 }
