@@ -100,13 +100,19 @@ impl TokenProcessor {
     }
 
     fn apply_left_trim(&mut self, tag_tokens: &[Token]) {
-        if left_trim(tag_tokens) {
+        let is_left_trim = matches!(tag_tokens.first(), Some(t) if t.token_type == TokenType::Dash);
+        if is_left_trim {
             self.strip_trailing_from_last_text_if_blank_line();
         }
     }
 
     fn apply_right_trim(&mut self, tag_tokens: &[Token]) {
-        if right_trim(tag_tokens) {
+        let close_idx = tag_tokens
+            .iter()
+            .position(|token| token.token_type == TokenType::Close);
+        let is_right_trim =
+            matches!(close_idx, Some(ci) if ci > 0 && tag_tokens[ci - 1].token_type == TokenType::Dash);
+        if is_right_trim {
             self.strip_next_text = true;
         }
     }
@@ -143,27 +149,6 @@ impl TokenProcessor {
             last_text.location,
         );
     }
-}
-
-fn left_trim(tag_tokens: &[Token]) -> bool {
-    tag_begins_with_dash(tag_tokens)
-}
-
-fn right_trim(tag_tokens: &[Token]) -> bool {
-    let Some(close_idx) = tag_close_index(tag_tokens) else {
-        return false;
-    };
-    close_idx > 0 && tag_tokens[close_idx - 1].token_type == TokenType::Dash
-}
-
-fn tag_begins_with_dash(tag_tokens: &[Token]) -> bool {
-    matches!(tag_tokens.first(), Some(token) if token.token_type == TokenType::Dash)
-}
-
-fn tag_close_index(tag_tokens: &[Token]) -> Option<usize> {
-    tag_tokens
-        .iter()
-        .position(|token| token.token_type == TokenType::Close)
 }
 
 fn comment_tag(tag_tokens: &[Token]) -> bool {

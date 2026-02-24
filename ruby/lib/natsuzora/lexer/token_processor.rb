@@ -74,28 +74,12 @@ module Natsuzora
       end
 
       def apply_left_trim(tag_tokens)
-        strip_trailing_from_last_text_if_blank_line if left_trim?(tag_tokens)
+        strip_trailing_from_last_text_if_blank_line if tag_tokens.first&.type == :DASH
       end
 
       def apply_right_trim(tag_tokens)
-        @strip_next_text = true if right_trim?(tag_tokens)
-      end
-
-      def left_trim?(tag_tokens)
-        tag_begins_with_dash?(tag_tokens)
-      end
-
-      def right_trim?(tag_tokens)
-        close_idx = tag_close_index(tag_tokens)
-        close_idx&.positive? && tag_tokens[close_idx - 1].type == :DASH
-      end
-
-      def tag_begins_with_dash?(tag_tokens)
-        tag_tokens.first&.type == :DASH
-      end
-
-      def tag_close_index(tag_tokens)
-        tag_tokens.index { |token| token.type == :CLOSE }
+        close_idx = tag_tokens.index { |token| token.type == :CLOSE }
+        @strip_next_text = true if close_idx&.positive? && tag_tokens[close_idx - 1].type == :DASH
       end
 
       def comment_tag?(tag_tokens)
