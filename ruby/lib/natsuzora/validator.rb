@@ -45,6 +45,29 @@ module Natsuzora
 
         raise IncludeError, "Invalid include name: #{name}"
       end
+
+      # Validate that runtime data conforms to Natsuzora's value type system.
+      #
+      # Error message:
+      # - Float NaN / Infinity     → "Invalid number: ..."
+      # - Other (non-whole) Float  → "Floating point numbers are not supported: ..."
+      # - Integer out of safe range → "Integer out of range: ..."
+      def validate_data!(data)
+        case data
+        when Hash
+          data.each_value { |v| validate_data!(v) }
+        when Array
+          data.each { |v| validate_data!(v) }
+        when Integer
+          return if data.between?(Value::INTEGER_MIN, Value::INTEGER_MAX)
+
+          raise Natsuzora::TypeError, "Integer out of range: #{data}"
+        when Float
+          raise Natsuzora::TypeError, "Invalid number: #{data}" unless data.finite?
+
+          raise Natsuzora::TypeError, "Floating point numbers are not supported: #{data}"
+        end
+      end
     end
   end
 end

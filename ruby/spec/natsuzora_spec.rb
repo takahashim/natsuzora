@@ -19,8 +19,8 @@ RSpec.describe Natsuzora do
 
     it 'allows reusing parsed template' do
       template = described_class.parse('Hello, {[ name ]}!')
-      expect(template.render({ name: 'Alice' })).to eq('Hello, Alice!')
-      expect(template.render({ name: 'Bob' })).to eq('Hello, Bob!')
+      expect(template.render(Natsuzora::Payload.new({ name: 'Alice' }))).to eq('Hello, Alice!')
+      expect(template.render(Natsuzora::Payload.new({ name: 'Bob' }))).to eq('Hello, Bob!')
     end
   end
 

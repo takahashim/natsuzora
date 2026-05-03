@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 module Natsuzora
+  # Manages variable scope and resolution during rendering.
   class Context
     def initialize(root_data)
       raise Natsuzora::TypeError, 'Root data must be an object' unless root_data.is_a?(Hash)
 
-      @root = normalize_data(root_data)
+      @root = root_data
       @local_stack = []
     end
 
@@ -22,11 +23,11 @@ module Natsuzora
 
     def push_scope(bindings = {})
       validate_no_shadowing!(bindings)
-      @local_stack.push(normalize_data(bindings))
+      @local_stack.push(bindings)
     end
 
     def push_include_scope(bindings)
-      @local_stack.push(normalize_data(bindings))
+      @local_stack.push(bindings)
     end
 
     def pop_scope
@@ -82,43 +83,6 @@ module Natsuzora
       raise UndefinedVariableError, "Undefined property: #{key}" unless value.key?(key)
 
       value[key]
-    end
-
-    def normalize_data(data)
-      case data
-      when Hash
-        data.transform_keys(&:to_s).transform_values { |v| normalize_data(v) }
-      when Array
-        data.map { |v| normalize_data(v) }
-      when Integer
-        normalize_integer(data)
-      when Float
-        normalize_float(data)
-      else
-        data
-      end
-    end
-
-    def normalize_integer(value)
-      return value if value.between?(Value::INTEGER_MIN, Value::INTEGER_MAX)
-
-      raise TypeError, "Integer out of range: #{value}"
-    end
-
-    def normalize_float(value)
-      # Reject NaN and Infinity explicitly
-      raise TypeError, "Invalid number: #{value}" unless value.finite?
-
-      # Convert whole-number floats to integers (for JS compatibility)
-      if value == value.to_i
-        int_value = value.to_i
-        return int_value if int_value.between?(Value::INTEGER_MIN, Value::INTEGER_MAX)
-
-        raise TypeError, "Integer out of range: #{int_value}"
-
-      end
-
-      raise TypeError, "Floating point numbers are not supported: #{value}"
     end
   end
 end
