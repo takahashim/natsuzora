@@ -1,0 +1,37 @@
+[package]
+name = "natsuzora-contract"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Natsuzora contract notation parser and validator (formerly subaru)"
+license.workspace = true
+keywords = ["schema", "validation", "json", "natsuzora"]
+categories = ["parser-implementations", "data-structures"]
+
+[lib]
+name = "natsuzora_contract"
+path = "src/lib.rs"
+
+[[bin]]
+name = "natsuzora-contract"
+path = "src/main.rs"
+
+[dependencies]
+bitflags = "2.6"
+natsuzora-ast = { path = "../natsuzora-ast" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dependencies.clap]
+version = "4"
+features = ["derive"]
+optional = true
+
+[dependencies.anyhow]
+version = "1"
+optional = true
+
+[features]
+default = ["cli"]
+cli = ["dep:clap", "dep:anyhow"]
