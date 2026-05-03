@@ -1,0 +1,95 @@
+{
+  "description": "Subaru validator: 基本型・修飾子・構造の validation 結果が両言語で一致するかを検証",
+  "tests": [
+    {
+      "name": "string field present",
+      "schema": "name: string",
+      "data": {"name": "Alice"},
+      "valid": true
+    },
+    {
+      "name": "missing required field",
+      "schema": "name: string",
+      "data": {},
+      "valid": false
+    },
+    {
+      "name": "integer field with integer value",
+      "schema": "count: integer",
+      "data": {"count": 42},
+      "valid": true
+    },
+    {
+      "name": "integer field with string value (type mismatch)",
+      "schema": "count: integer",
+      "data": {"count": "not a number"},
+      "valid": false
+    },
+    {
+      "name": "bool field",
+      "schema": "flag: bool",
+      "data": {"flag": true},
+      "valid": true
+    },
+    {
+      "name": "scalar field accepts string",
+      "schema": "value: scalar",
+      "data": {"value": "anything"},
+      "valid": true
+    },
+    {
+      "name": "scalar field accepts integer",
+      "schema": "value: scalar",
+      "data": {"value": 42},
+      "valid": true
+    },
+    {
+      "name": "nullable accepts null",
+      "schema": "name: string?",
+      "data": {"name": null},
+      "valid": true
+    },
+    {
+      "name": "non-nullable rejects null",
+      "schema": "name: string",
+      "data": {"name": null},
+      "valid": false
+    },
+    {
+      "name": "required string rejects empty",
+      "schema": "name: string!",
+      "data": {"name": ""},
+      "valid": false
+    },
+    {
+      "name": "required string accepts non-empty",
+      "schema": "name: string!",
+      "data": {"name": "ok"},
+      "valid": true
+    },
+    {
+      "name": "nested object valid",
+      "schema": "user {\n  name: string\n  age: integer\n}",
+      "data": {"user": {"name": "Alice", "age": 30}},
+      "valid": true
+    },
+    {
+      "name": "nested object missing field",
+      "schema": "user {\n  name: string\n  age: integer\n}",
+      "data": {"user": {"name": "Alice"}},
+      "valid": false
+    },
+    {
+      "name": "array of strings valid",
+      "schema": "tags: []string",
+      "data": {"tags": ["a", "b", "c"]},
+      "valid": true
+    },
+    {
+      "name": "array element type mismatch",
+      "schema": "tags: []string",
+      "data": {"tags": ["a", 42, "c"]},
+      "valid": false
+    }
+  ]
+}

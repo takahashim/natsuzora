@@ -1,0 +1,55 @@
+{
+  "description": "Subaru parser: 基本構文の parse 成功 / 失敗が両言語で一致するかを検証",
+  "tests": [
+    {
+      "name": "single string field",
+      "schema": "name: string",
+      "should_parse": true
+    },
+    {
+      "name": "scalar type",
+      "schema": "value: scalar",
+      "should_parse": true
+    },
+    {
+      "name": "integer type",
+      "schema": "count: integer",
+      "should_parse": true
+    },
+    {
+      "name": "bool type",
+      "schema": "flag: bool",
+      "should_parse": true
+    },
+    {
+      "name": "nullable modifier",
+      "schema": "name: string?",
+      "should_parse": true
+    },
+    {
+      "name": "required modifier",
+      "schema": "name: string!",
+      "should_parse": true
+    },
+    {
+      "name": "nested object",
+      "schema": "user {\n  name: string\n  age: integer\n}",
+      "should_parse": true
+    },
+    {
+      "name": "array of strings",
+      "schema": "tags: []string",
+      "should_parse": true
+    },
+    {
+      "name": "missing colon (invalid)",
+      "schema": "name string",
+      "should_parse": false
+    },
+    {
+      "name": "unknown scalar type (invalid)",
+      "schema": "name: nosuchtype",
+      "should_parse": false
+    }
+  ]
+}
