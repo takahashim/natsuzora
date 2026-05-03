@@ -19,8 +19,6 @@
 (each_open "each" @keyword.repeat)
 (each_open "as" @keyword)
 (each_close "each" @keyword.repeat)
-(unsecure_open "unsecure" @keyword)
-(unsecure_close "unsecure" @keyword)
 (unsecure_output "unsecure" @keyword)
 
 ; Block markers
@@ -28,11 +26,9 @@
 (else_open "#" @punctuation.special)
 (unless_open "#" @punctuation.special)
 (each_open "#" @punctuation.special)
-(unsecure_open "#" @punctuation.special)
 (if_close "/" @punctuation.special)
 (unless_close "/" @punctuation.special)
 (each_close "/" @punctuation.special)
-(unsecure_close "/" @punctuation.special)
 
 ; Include and unsecure output markers
 (include "!" @punctuation.special)
@@ -58,9 +54,6 @@
 
 ; Each loop variable
 (each_open
-  (identifier) @variable.parameter)
-(each_index
-  "," @punctuation.delimiter
   (identifier) @variable.parameter)
 
 ; Condition expressions

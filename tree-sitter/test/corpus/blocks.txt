@@ -52,10 +52,10 @@ Missing name
       (tag_close))))
 
 ==================
-each with index
+each block
 ==================
-{[#each users as user, idx]}
-- {[user.name]} ({[idx]})
+{[#each users as user]}
+- {[user.name]}
 {[/each]}
 ---
 (template
@@ -65,8 +65,6 @@ each with index
       (path
         (identifier))
       (identifier)
-      (each_index
-        (identifier))
       (tag_close))
     (text)
     (variable
@@ -76,30 +74,7 @@ each with index
         (identifier))
       (tag_close))
     (text)
-    (variable
-      (tag_open)
-      (path
-        (identifier))
-      (tag_close))
-    (text)
     (each_close
-      (tag_open)
-      (tag_close))))
-
-==================
-unsecure block
-==================
-{[#unsecure]}
-<script>alert(1)</script>
-{[/unsecure]}
----
-(template
-  (unsecure_block
-    (unsecure_open
-      (tag_open)
-      (tag_close))
-    (text)
-    (unsecure_close
       (tag_open)
       (tag_close))))
 

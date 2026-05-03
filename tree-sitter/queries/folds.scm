@@ -4,7 +4,6 @@
 (if_block) @fold
 (unless_block) @fold
 (each_block) @fold
-(unsecure_block) @fold
 
 ; Else clause can be folded separately
 (else_clause) @fold

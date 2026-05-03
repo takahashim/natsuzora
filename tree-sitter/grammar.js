@@ -4,8 +4,12 @@
  * Changes from v2.0:
  * - Variable modifiers: {[ name? ]} (nullable), {[ name! ]} (required)
  * - Unsecure output: {[!unsecure path ]} (inline form)
+ *   Note: the block form ({[#unsecure]}...{[/unsecure]}) was dropped; only
+ *   the inline form is supported.
  * - Include: {[!include /path key=value ]} (! prefix instead of >)
  * - Comment: {[% ... ]} uses % prefix (unambiguous, handled inline)
+ * - Each: {[#each items as item]} only; the legacy `, idx` index variant
+ *   was dropped.
  */
 
 module.exports = grammar({
@@ -27,7 +31,6 @@ module.exports = grammar({
       $.if_block,
       $.unless_block,
       $.each_block,
-      $.unsecure_block,
       $.unsecure_output,
       $.include,
       $.variable,
@@ -145,16 +148,8 @@ module.exports = grammar({
       'as',
       $._ws,
       $.identifier,
-      optional($.each_index),
       optional($._ws),
       $.tag_close,
-    ),
-
-    each_index: $ => seq(
-      optional($._ws),
-      ',',
-      optional($._ws),
-      $.identifier,
     ),
 
     each_close: $ => seq(
@@ -162,31 +157,6 @@ module.exports = grammar({
       '/',
       optional($._ws),
       'each',
-      optional($._ws),
-      $.tag_close,
-    ),
-
-    // Unsecure block: {[#unsecure]} ... {[/unsecure]}
-    unsecure_block: $ => seq(
-      $.unsecure_open,
-      repeat($._node),
-      $.unsecure_close,
-    ),
-
-    unsecure_open: $ => seq(
-      $.tag_open,
-      '#',
-      optional($._ws),
-      'unsecure',
-      optional($._ws),
-      $.tag_close,
-    ),
-
-    unsecure_close: $ => seq(
-      $.tag_open,
-      '/',
-      optional($._ws),
-      'unsecure',
       optional($._ws),
       $.tag_close,
     ),

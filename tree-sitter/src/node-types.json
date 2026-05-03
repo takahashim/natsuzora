@@ -44,10 +44,6 @@
           "named": true
         },
         {
-          "type": "unsecure_block",
-          "named": true
-        },
-        {
           "type": "unsecure_output",
           "named": true
         },
@@ -78,21 +74,6 @@
     }
   },
   {
-    "type": "each_index",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "each_open",
     "named": true,
     "fields": {},
@@ -100,10 +81,6 @@
       "multiple": true,
       "required": true,
       "types": [
-        {
-          "type": "each_index",
-          "named": true
-        },
         {
           "type": "identifier",
           "named": true
@@ -161,10 +138,6 @@
         },
         {
           "type": "unless_block",
-          "named": true
-        },
-        {
-          "type": "unsecure_block",
           "named": true
         },
         {
@@ -243,10 +216,6 @@
         },
         {
           "type": "unless_block",
-          "named": true
-        },
-        {
-          "type": "unsecure_block",
           "named": true
         },
         {
@@ -420,10 +389,6 @@
           "named": true
         },
         {
-          "type": "unsecure_block",
-          "named": true
-        },
-        {
           "type": "unsecure_output",
           "named": true
         },
@@ -484,10 +449,6 @@
           "named": true
         },
         {
-          "type": "unsecure_block",
-          "named": true
-        },
-        {
           "type": "unsecure_output",
           "named": true
         },
@@ -529,103 +490,6 @@
           "type": "path",
           "named": true
         },
-        {
-          "type": "tag_close",
-          "named": true
-        },
-        {
-          "type": "tag_open",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "unsecure_block",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "comment",
-          "named": true
-        },
-        {
-          "type": "delimiter_escape",
-          "named": true
-        },
-        {
-          "type": "each_block",
-          "named": true
-        },
-        {
-          "type": "if_block",
-          "named": true
-        },
-        {
-          "type": "include",
-          "named": true
-        },
-        {
-          "type": "text",
-          "named": true
-        },
-        {
-          "type": "unless_block",
-          "named": true
-        },
-        {
-          "type": "unsecure_block",
-          "named": true
-        },
-        {
-          "type": "unsecure_close",
-          "named": true
-        },
-        {
-          "type": "unsecure_open",
-          "named": true
-        },
-        {
-          "type": "unsecure_output",
-          "named": true
-        },
-        {
-          "type": "variable",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "unsecure_close",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "tag_close",
-          "named": true
-        },
-        {
-          "type": "tag_open",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "unsecure_open",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
         {
           "type": "tag_close",
           "named": true
@@ -693,10 +557,6 @@
   },
   {
     "type": "#",
-    "named": false
-  },
-  {
-    "type": ",",
     "named": false
   },
   {
