@@ -6,6 +6,14 @@
 
 Subaru（昴）は、データ構造を記述するためのスキーマ言語である。JSONデータのバリデーション、コード生成、ドキュメント生成などに使用できる。TypeScript、Go、GraphQL などに影響を受けた独自記法を採用している。
 
+本仕様書のリファレンス実装は Natsuzora エコシステムが提供する:
+
+- Ruby: `Natsuzora::Contract` モジュール (`natsuzora` gem に同梱)
+- Rust: `natsuzora-contract` crate (natsuzora workspace のメンバー)
+- 共有テスト: `natsuzora/tests/contract/*.json` (Ruby/Rust 双方が消費)
+
+`.ntzr` テンプレート (Natsuzora 言語) と `.ntzc` ファイル (Subaru 記法) は対で使うことが想定されている。Subaru 言語自体は Natsuzora 非依存だが、本仕様書ではエコシステム内での既定 (`.ntzc` 拡張子、API 名) を併記する。
+
 ## 設計方針
 
 1. **シンプル**: 最小限のキーワードと構文
@@ -325,10 +333,6 @@ field2 { ... }
 ```
 
 型定義はルート定義より前に配置する。
-
-## ファイル拡張子
-
-Subaru ファイルの推奨拡張子は `.sbr` である。
 
 ## 2世代記法（Migration Markers）
 
