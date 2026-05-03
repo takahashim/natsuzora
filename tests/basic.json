@@ -120,6 +120,42 @@
       "template": "Value: {[ value ]}",
       "data": {"value": 0.0},
       "expected": "Value: 0"
+    },
+    {
+      "name": "non-ASCII (Japanese) text body",
+      "template": "こんにちは、世界!",
+      "data": {},
+      "expected": "こんにちは、世界!"
+    },
+    {
+      "name": "non-ASCII (Japanese) variable interpolation",
+      "template": "こんにちは、{[ name ]}さん!",
+      "data": {"name": "太郎"},
+      "expected": "こんにちは、太郎さん!"
+    },
+    {
+      "name": "non-ASCII text with escape and tag",
+      "template": "青空文庫 {[{]} {[ title ]} 公開",
+      "data": {"title": "羅生門"},
+      "expected": "青空文庫 {[ 羅生門 公開"
+    },
+    {
+      "name": "mixed ASCII and Japanese around tag",
+      "template": "Hello, {[ name ]}さん! Today is 今日.",
+      "data": {"name": "Alice"},
+      "expected": "Hello, Aliceさん! Today is 今日."
+    },
+    {
+      "name": "emoji (4-byte UTF-8) in text body",
+      "template": "🌸春が来た🌸",
+      "data": {},
+      "expected": "🌸春が来た🌸"
+    },
+    {
+      "name": "Japanese variable value in ASCII template",
+      "template": "Title: {[ title ]}",
+      "data": {"title": "吾輩は猫である"},
+      "expected": "Title: 吾輩は猫である"
     }
   ]
 }

@@ -56,26 +56,43 @@ impl<'a> Lexer<'a> {
     }
 
     /// Tokenize text mode: accumulate text until `{[` delimiter.
+    ///
+    /// Reads the source as UTF-8 (advancing one full char at a time) so that
+    /// multi-byte characters (e.g. Japanese) are preserved verbatim instead of
+    /// being split into Latin-1 bytes.
     fn tokenize_text(&mut self, tokens: &mut Vec<Token>) {
         let start_loc = Location::new(self.line, self.col, self.pos);
         let mut text = String::new();
+        let mut chunk_start = self.pos;
 
         while self.pos < self.source.len() {
             if self.looking_at(Self::TAG_OPEN) {
-                // Check for escape sequence: {[{]}
+                // Check for escape sequence: {[{]} → literal "{["
                 if self.looking_at(Self::TAG_OPEN_ESCAPE) {
+                    // Flush chunk before the escape
+                    if chunk_start < self.pos {
+                        let slice = std::str::from_utf8(&self.source[chunk_start..self.pos])
+                            .expect("source must be valid UTF-8");
+                        text.push_str(slice);
+                    }
                     text.push_str("{[");
-                    self.advance_n(Self::TAG_OPEN_ESCAPE.len()); // skip {[{]}
+                    self.advance_n(Self::TAG_OPEN_ESCAPE.len());
+                    chunk_start = self.pos;
                     continue;
                 }
 
-                // Found tag open delimiter
+                // Real tag open delimiter: leave it for tokenize_tag to consume.
                 break;
             }
 
-            let ch = self.source[self.pos];
-            text.push(ch as char);
-            self.advance_one();
+            self.advance_char();
+        }
+
+        // Flush the final chunk (covers either pre-tag text or all-text).
+        if chunk_start < self.pos {
+            let slice = std::str::from_utf8(&self.source[chunk_start..self.pos])
+                .expect("source must be valid UTF-8");
+            text.push_str(slice);
         }
 
         if !text.is_empty() {
@@ -232,6 +249,9 @@ impl<'a> Lexer<'a> {
     }
 
     /// Advance position by one byte, updating line/column tracking.
+    ///
+    /// Intended for ASCII-only paths (tag mode where all tokens are ASCII).
+    /// For text mode that may contain multi-byte UTF-8, use `advance_char`.
     fn advance_one(&mut self) {
         if self.pos < self.source.len() {
             if self.source[self.pos] == b'\n' {
@@ -249,6 +269,32 @@ impl<'a> Lexer<'a> {
         for _ in 0..n {
             self.advance_one();
         }
+    }
+
+    /// Advance position by one full UTF-8 character (1-4 bytes).
+    /// Increments column by 1 regardless of byte length.
+    fn advance_char(&mut self) {
+        if self.pos >= self.source.len() {
+            return;
+        }
+        let first = self.source[self.pos];
+        let byte_len = match first {
+            0x00..=0x7F => 1,
+            0xC2..=0xDF => 2,
+            0xE0..=0xEF => 3,
+            0xF0..=0xF4 => 4,
+            // Invalid lead byte: advance by 1 byte to make progress;
+            // upstream guarantees source is valid UTF-8 so this shouldn't trigger.
+            _ => 1,
+        };
+
+        if first == b'\n' {
+            self.line += 1;
+            self.col = 1;
+        } else {
+            self.col += 1;
+        }
+        self.pos += byte_len.min(self.source.len() - self.pos);
     }
 }
 
