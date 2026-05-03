@@ -13,6 +13,7 @@ require_relative 'natsuzora/context'
 require_relative 'natsuzora/template_loader'
 require_relative 'natsuzora/renderer'
 require_relative 'natsuzora/template'
+require_relative 'natsuzora/contract'
 
 module Natsuzora
   class << self
