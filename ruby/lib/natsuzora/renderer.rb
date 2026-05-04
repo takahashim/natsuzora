@@ -2,6 +2,8 @@
 
 module Natsuzora
   class Renderer
+    MAX_RENDER_DEPTH = 1024
+
     def initialize(ast, template_loader: nil)
       @ast = ast
       @template_loader = template_loader
@@ -9,13 +11,21 @@ module Natsuzora
 
     def render(data)
       @context = Context.new(data)
+      @depth = 0
       render_nodes(@ast.nodes)
     end
 
     private
 
     def render_nodes(nodes)
-      nodes.map { |node| render_node(node) }.join
+      @depth += 1
+      raise RenderError, "render depth exceeded #{MAX_RENDER_DEPTH}" if @depth > MAX_RENDER_DEPTH
+
+      begin
+        nodes.map { |node| render_node(node) }.join
+      ensure
+        @depth -= 1
+      end
     end
 
     def render_node(node)

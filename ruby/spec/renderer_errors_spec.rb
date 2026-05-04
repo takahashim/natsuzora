@@ -68,4 +68,12 @@ RSpec.describe Natsuzora do
         .to raise_error(Natsuzora::ShadowingError, /x/)
     end
   end
+
+  describe 'render depth limit' do
+    it 'raises RenderError when nested if blocks exceed MAX_RENDER_DEPTH' do
+      depth = Natsuzora::Renderer::MAX_RENDER_DEPTH + 1
+      source = "#{'{[#if x]}' * depth}ok#{'{[/if]}' * depth}"
+      expect { render(source, { x: 'y' }) }.to raise_error(Natsuzora::RenderError, /depth/)
+    end
+  end
 end
