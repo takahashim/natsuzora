@@ -1,7 +1,14 @@
 # frozen_string_literal: true
 
 require 'json'
-require_relative 'types'
+require_relative 'validation_target'
+require_relative 'scalar_type'
+require_relative 'modifier'
+require_relative 'ast/any'
+require_relative 'ast/scalar'
+require_relative 'ast/record'
+require_relative 'ast/list'
+require_relative 'ast/ref'
 
 module Natsuzora
   module Contract
@@ -24,22 +31,22 @@ module Natsuzora
       end
 
       # Validate JSON data against a contract file with diff markers.
-      def self.validate_with_target(contract_file, data, target: ValidationTarget::CURRENT)
-        contract = build_contract_for_target(contract_file, target)
+      def self.validate_with_target(document, data, target: ValidationTarget::CURRENT)
+        contract = build_contract_for_target(document, target)
         validate(contract, data)
       end
 
       def validate_node(contract, data, path)
         case contract
-        when AnyContract
+        when AST::Any
           nil # any value is valid
-        when ScalarContract
+        when AST::Scalar
           validate_scalar(contract, data, path)
-        when ObjectContract
+        when AST::Record
           validate_object(contract, data, path)
-        when ArrayContract
+        when AST::List
           validate_array(contract, data, path)
-        when TypeRefContract
+        when AST::Ref
           raise ValidationError.new("unresolved type reference '#{contract.name}'", render_path(path))
         else
           raise ArgumentError, "Unknown contract type: #{contract.class}"
@@ -51,7 +58,7 @@ module Natsuzora
       def validate_scalar(contract, data, path)
         # Handle null
         if data.nil?
-          if contract.modifier == ContractModifier::NULLABLE # rubocop:disable Style/GuardClause
+          if contract.modifier == Modifier::NULLABLE # rubocop:disable Style/GuardClause
             return nil
           else
             raise ValidationError.new('null is not allowed', render_path(path))
@@ -62,7 +69,7 @@ module Natsuzora
         valid = case contract.scalar_type
                 when ScalarType::STRING
                   if data.is_a?(String)
-                    if contract.modifier == ContractModifier::REQUIRED && data.empty?
+                    if contract.modifier == Modifier::REQUIRED && data.empty?
                       raise ValidationError.new('empty string is not allowed', render_path(path))
                     end
 
@@ -76,7 +83,7 @@ module Natsuzora
                   data.is_a?(TrueClass) || data.is_a?(FalseClass)
                 when ScalarType::SCALAR
                   if data.is_a?(String)
-                    if contract.modifier == ContractModifier::REQUIRED && data.empty?
+                    if contract.modifier == Modifier::REQUIRED && data.empty?
                       raise ValidationError.new('empty string is not allowed', render_path(path))
                     end
 
@@ -148,10 +155,10 @@ module Natsuzora
       class << self
         private
 
-        def build_contract_for_target(contract_file, target)
+        def build_contract_for_target(document, target)
           # Build type definitions map for the target (excluding unavailable types)
           type_defs = {}
-          contract_file.types.each do |name, type_def|
+          document.types.each do |name, type_def|
             type_defs[name] = type_def.contract if type_def.available?(target)
           end
 
@@ -159,7 +166,7 @@ module Natsuzora
           properties = {}
           required = []
 
-          contract_file.fields.each do |name, field|
+          document.fields.each do |name, field|
             contract = field.for_target(target)
             next unless contract
 
@@ -169,23 +176,23 @@ module Natsuzora
             required << name
           end
 
-          ObjectContract.new(properties, required)
+          AST::Record.new(properties, required)
         end
 
         def resolve_type_refs(contract, type_defs)
           case contract
-          when TypeRefContract
+          when AST::Ref
             resolved = type_defs[contract.name]
             raise ValidationError.new("undefined type '#{contract.name}'") unless resolved
 
             resolve_type_refs(resolved, type_defs)
-          when ArrayContract
-            ArrayContract.new(resolve_type_refs(contract.items, type_defs))
-          when ObjectContract
+          when AST::List
+            AST::List.new(resolve_type_refs(contract.items, type_defs))
+          when AST::Record
             resolved_props = contract.properties.transform_values do |c|
               resolve_type_refs(c, type_defs)
             end
-            ObjectContract.new(resolved_props, contract.required)
+            AST::Record.new(resolved_props, contract.required)
           else
             contract
           end
@@ -203,8 +210,8 @@ module Natsuzora
     end
 
     # Validate JSON data against a contract file with diff markers.
-    def validate_with_target(contract_file, data, target: ValidationTarget::CURRENT)
-      Validator.validate_with_target(contract_file, data, target: target)
+    def validate_with_target(document, data, target: ValidationTarget::CURRENT)
+      Validator.validate_with_target(document, data, target: target)
       true
     end
   end

@@ -1,7 +1,17 @@
 # frozen_string_literal: true
 
 require_relative 'compiled_lexer'
-require_relative 'types'
+require_relative 'parse_error'
+require_relative 'diff_marker'
+require_relative 'scalar_type'
+require_relative 'modifier'
+require_relative 'ast/scalar'
+require_relative 'ast/record'
+require_relative 'ast/list'
+require_relative 'ast/ref'
+require_relative 'field'
+require_relative 'type_def'
+require_relative 'document'
 
 module Natsuzora
   module Contract
@@ -30,7 +40,7 @@ module Natsuzora
 
         root = parse_object_body
 
-        ContractFile.new(
+        Document.new(
           types: types,
           fields: build_fields_from_object(root)
         )
@@ -61,7 +71,7 @@ module Natsuzora
           skip_separators
         end
 
-        ContractFile.new(types: types, fields: fields)
+        Document.new(types: types, fields: fields)
       end
 
       private
@@ -191,13 +201,13 @@ module Natsuzora
           skip_separators
         end
 
-        ObjectContract.new(properties, required)
+        AST::Record.new(properties, required)
       end
 
       def parse_field_with_diff(marker)
         name = expect_identifier
         current_type_contract, next_type = parse_field_contract_with_diff(marker)
-        field = ContractField.new(current_type_contract, marker: marker, next_type: next_type)
+        field = Field.new(current_type_contract, marker: marker, next_type: next_type)
         [name, field]
       end
 
@@ -276,7 +286,7 @@ module Natsuzora
                     parse_scalar_type
                   end
 
-          return ArrayContract.new(items)
+          return AST::List.new(items)
         end
 
         # Check for type reference (uppercase)
@@ -287,7 +297,7 @@ module Natsuzora
 
       def parse_type_reference
         type_name = expect_type_name
-        TypeRefContract.new(type_name)
+        AST::Ref.new(type_name)
       end
 
       def parse_scalar_type
@@ -305,28 +315,28 @@ module Natsuzora
                         )
                       end
 
-        ScalarContract.new(scalar_type, parse_modifier)
+        AST::Scalar.new(scalar_type, parse_modifier)
       end
 
       def parse_modifier
-        return ContractModifier::NONE if eof?
+        return Modifier::NONE if eof?
 
         check_error!
         case current_type
         when :QUESTION
           advance
-          ContractModifier::NULLABLE
+          Modifier::NULLABLE
         when :EXCLAMATION
           advance
-          ContractModifier::REQUIRED
+          Modifier::REQUIRED
         else
-          ContractModifier::NONE
+          Modifier::NONE
         end
       end
 
       def build_fields_from_object(object_contract)
         object_contract.properties.transform_values do |contract|
-          ContractField.new(contract)
+          Field.new(contract)
         end
       end
     end
@@ -341,7 +351,7 @@ module Natsuzora
       file.to_contract
     end
 
-    # Parse contract notation into a ContractFile.
+    # Parse contract notation into a Document.
     def parse_file(input)
       parser = Parser.new(input)
       parser.parse_file

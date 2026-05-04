@@ -6,19 +6,19 @@ RSpec.describe Natsuzora::Contract::Parser do
   describe '.parse' do
     it 'parses a simple field' do
       contract = Natsuzora::Contract.parse('name: string')
-      expect(contract).to be_a(Natsuzora::Contract::ObjectContract)
-      expect(contract.properties['name']).to be_a(Natsuzora::Contract::ScalarContract)
+      expect(contract).to be_a(Natsuzora::Contract::AST::Record)
+      expect(contract.properties['name']).to be_a(Natsuzora::Contract::AST::Scalar)
       expect(contract.properties['name'].scalar_type).to eq(Natsuzora::Contract::ScalarType::STRING)
     end
 
     it 'parses nullable modifier' do
       contract = Natsuzora::Contract.parse('name: string?')
-      expect(contract.properties['name'].modifier).to eq(Natsuzora::Contract::ContractModifier::NULLABLE)
+      expect(contract.properties['name'].modifier).to eq(Natsuzora::Contract::Modifier::NULLABLE)
     end
 
     it 'parses required modifier' do
       contract = Natsuzora::Contract.parse('name: string!')
-      expect(contract.properties['name'].modifier).to eq(Natsuzora::Contract::ContractModifier::REQUIRED)
+      expect(contract.properties['name'].modifier).to eq(Natsuzora::Contract::Modifier::REQUIRED)
     end
 
     it 'parses nested object' do
@@ -29,15 +29,15 @@ RSpec.describe Natsuzora::Contract::Parser do
         }
       SCHEMA
 
-      expect(contract.properties['user']).to be_a(Natsuzora::Contract::ObjectContract)
-      expect(contract.properties['user'].properties['name']).to be_a(Natsuzora::Contract::ScalarContract)
-      expect(contract.properties['user'].properties['age']).to be_a(Natsuzora::Contract::ScalarContract)
+      expect(contract.properties['user']).to be_a(Natsuzora::Contract::AST::Record)
+      expect(contract.properties['user'].properties['name']).to be_a(Natsuzora::Contract::AST::Scalar)
+      expect(contract.properties['user'].properties['age']).to be_a(Natsuzora::Contract::AST::Scalar)
     end
 
     it 'parses simple array' do
       contract = Natsuzora::Contract.parse('tags: []string')
-      expect(contract.properties['tags']).to be_a(Natsuzora::Contract::ArrayContract)
-      expect(contract.properties['tags'].items).to be_a(Natsuzora::Contract::ScalarContract)
+      expect(contract.properties['tags']).to be_a(Natsuzora::Contract::AST::List)
+      expect(contract.properties['tags'].items).to be_a(Natsuzora::Contract::AST::Scalar)
     end
 
     it 'parses object array' do
@@ -48,8 +48,8 @@ RSpec.describe Natsuzora::Contract::Parser do
         }
       SCHEMA
 
-      expect(contract.properties['items']).to be_a(Natsuzora::Contract::ArrayContract)
-      expect(contract.properties['items'].items).to be_a(Natsuzora::Contract::ObjectContract)
+      expect(contract.properties['items']).to be_a(Natsuzora::Contract::AST::List)
+      expect(contract.properties['items'].items).to be_a(Natsuzora::Contract::AST::Record)
     end
 
     it 'parses type definition' do
@@ -62,8 +62,8 @@ RSpec.describe Natsuzora::Contract::Parser do
         user: User
       SCHEMA
 
-      expect(contract.properties['user']).to be_a(Natsuzora::Contract::ObjectContract)
-      expect(contract.properties['user'].properties['name']).to be_a(Natsuzora::Contract::ScalarContract)
+      expect(contract.properties['user']).to be_a(Natsuzora::Contract::AST::Record)
+      expect(contract.properties['user'].properties['name']).to be_a(Natsuzora::Contract::AST::Scalar)
     end
 
     it 'parses comments' do
@@ -79,7 +79,7 @@ RSpec.describe Natsuzora::Contract::Parser do
 
     it 'parses type as field name' do
       contract = Natsuzora::Contract.parse('type: string')
-      expect(contract.properties['type']).to be_a(Natsuzora::Contract::ScalarContract)
+      expect(contract.properties['type']).to be_a(Natsuzora::Contract::AST::Scalar)
     end
 
     it 'parses type definition and type field together' do
@@ -92,8 +92,8 @@ RSpec.describe Natsuzora::Contract::Parser do
         user: User
       SCHEMA
 
-      expect(contract.properties['type']).to be_a(Natsuzora::Contract::ScalarContract)
-      expect(contract.properties['user']).to be_a(Natsuzora::Contract::ObjectContract)
+      expect(contract.properties['type']).to be_a(Natsuzora::Contract::AST::Scalar)
+      expect(contract.properties['user']).to be_a(Natsuzora::Contract::AST::Record)
     end
 
     it 'raises error for unknown type' do
@@ -119,7 +119,7 @@ RSpec.describe Natsuzora::Contract::Parser do
     it 'parses changed field' do
       file = Natsuzora::Contract.parse_file_with_diff('* age: integer -> scalar')
       expect(file.fields['age'].marker).to eq(Natsuzora::Contract::DiffMarker::CHANGED)
-      expect(file.fields['age'].next_type).to be_a(Natsuzora::Contract::ScalarContract)
+      expect(file.fields['age'].next_type).to be_a(Natsuzora::Contract::AST::Scalar)
     end
 
     it 'raises error for * marker without arrow' do

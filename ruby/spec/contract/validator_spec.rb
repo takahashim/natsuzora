@@ -15,43 +15,43 @@ RSpec.describe Natsuzora::Contract::Validator do
     end
 
     it 'validates nullable modifier' do
-      contract = Natsuzora::Contract::ScalarContract.new(Natsuzora::Contract::ScalarType::STRING, Natsuzora::Contract::ContractModifier::NULLABLE)
+      contract = Natsuzora::Contract::AST::Scalar.new(Natsuzora::Contract::ScalarType::STRING, Natsuzora::Contract::Modifier::NULLABLE)
       expect { Natsuzora::Contract.validate(contract, nil) }.not_to raise_error
     end
 
     it 'raises error for null without nullable modifier' do
-      contract = Natsuzora::Contract::ScalarContract.new(Natsuzora::Contract::ScalarType::STRING, Natsuzora::Contract::ContractModifier::NONE)
+      contract = Natsuzora::Contract::AST::Scalar.new(Natsuzora::Contract::ScalarType::STRING, Natsuzora::Contract::Modifier::NONE)
       expect { Natsuzora::Contract.validate(contract, nil) }.to raise_error(Natsuzora::Contract::ValidationError, /null is not allowed/)
     end
 
     it 'validates required modifier rejects empty string' do
-      contract = Natsuzora::Contract::ScalarContract.new(Natsuzora::Contract::ScalarType::STRING, Natsuzora::Contract::ContractModifier::REQUIRED)
+      contract = Natsuzora::Contract::AST::Scalar.new(Natsuzora::Contract::ScalarType::STRING, Natsuzora::Contract::Modifier::REQUIRED)
       expect { Natsuzora::Contract.validate(contract, '') }.to raise_error(Natsuzora::Contract::ValidationError, /empty string/)
     end
 
     it 'validates integer type' do
-      contract = Natsuzora::Contract::ScalarContract.new(Natsuzora::Contract::ScalarType::INTEGER, Natsuzora::Contract::ContractModifier::NONE)
+      contract = Natsuzora::Contract::AST::Scalar.new(Natsuzora::Contract::ScalarType::INTEGER, Natsuzora::Contract::Modifier::NONE)
       expect { Natsuzora::Contract.validate(contract, 42) }.not_to raise_error
       expect { Natsuzora::Contract.validate(contract, 'not an integer') }.to raise_error(Natsuzora::Contract::ValidationError)
     end
 
     it 'validates bool type' do
-      contract = Natsuzora::Contract::ScalarContract.new(Natsuzora::Contract::ScalarType::BOOL, Natsuzora::Contract::ContractModifier::NONE)
+      contract = Natsuzora::Contract::AST::Scalar.new(Natsuzora::Contract::ScalarType::BOOL, Natsuzora::Contract::Modifier::NONE)
       expect { Natsuzora::Contract.validate(contract, true) }.not_to raise_error
       expect { Natsuzora::Contract.validate(contract, false) }.not_to raise_error
       expect { Natsuzora::Contract.validate(contract, 'not a bool') }.to raise_error(Natsuzora::Contract::ValidationError)
     end
 
     it 'validates scalar type (string or integer)' do
-      contract = Natsuzora::Contract::ScalarContract.new(Natsuzora::Contract::ScalarType::SCALAR, Natsuzora::Contract::ContractModifier::NONE)
+      contract = Natsuzora::Contract::AST::Scalar.new(Natsuzora::Contract::ScalarType::SCALAR, Natsuzora::Contract::Modifier::NONE)
       expect { Natsuzora::Contract.validate(contract, 'hello') }.not_to raise_error
       expect { Natsuzora::Contract.validate(contract, 42) }.not_to raise_error
       expect { Natsuzora::Contract.validate(contract, true) }.to raise_error(Natsuzora::Contract::ValidationError)
     end
 
     it 'validates arrays' do
-      contract = Natsuzora::Contract::ArrayContract.new(
-        Natsuzora::Contract::ScalarContract.new(Natsuzora::Contract::ScalarType::STRING)
+      contract = Natsuzora::Contract::AST::List.new(
+        Natsuzora::Contract::AST::Scalar.new(Natsuzora::Contract::ScalarType::STRING)
       )
       expect { Natsuzora::Contract.validate(contract, %w[a b c]) }.not_to raise_error
       expect { Natsuzora::Contract.validate(contract, 'not an array') }.to raise_error(Natsuzora::Contract::ValidationError, /expected array/)
