@@ -180,13 +180,13 @@ module Natsuzora
     end
 
     # Validate JSON data against a contract.
-    def self.validate(contract, data)
+    def self.validate(contract, data) # rubocop:disable Naming/PredicateMethod
       Validator.validate(contract, data)
       true
     end
 
     # Validate JSON data against a contract file with diff markers.
-    def self.validate_with_target(document, data, target: ValidationTarget::CURRENT)
+    def self.validate_with_target(document, data, target: ValidationTarget::CURRENT) # rubocop:disable Naming/PredicateMethod
       Validator.validate_with_target(document, data, target: target)
       true
     end
