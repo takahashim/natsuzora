@@ -26,6 +26,14 @@ module Natsuzora
           @modifier = modifier
         end
 
+        def nullable?
+          @modifier == Modifier::NULLABLE
+        end
+
+        def required?
+          @modifier == Modifier::REQUIRED
+        end
+
         def to_h
           h = { 'kind' => 'scalar', 'type' => @scalar_type.to_s }
           h['modifier'] = @modifier.to_s unless @modifier == Modifier::NONE

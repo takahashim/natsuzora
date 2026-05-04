@@ -56,48 +56,45 @@ module Natsuzora
       private
 
       def validate_scalar(contract, data, path)
-        # Handle null
-        if data.nil?
-          if contract.modifier == AST::Scalar::Modifier::NULLABLE # rubocop:disable Style/GuardClause
-            return nil
-          else
-            raise ValidationError.new('null is not allowed', render_path(path))
-          end
-        end
-
-        # Check type
-        valid = case contract.scalar_type
-                when ScalarType::STRING
-                  if data.is_a?(String)
-                    if contract.modifier == AST::Scalar::Modifier::REQUIRED && data.empty?
-                      raise ValidationError.new('empty string is not allowed', render_path(path))
-                    end
-
-                    true
-                  else
-                    false
-                  end
-                when ScalarType::INTEGER
-                  data.is_a?(Integer)
-                when ScalarType::BOOL
-                  data.is_a?(TrueClass) || data.is_a?(FalseClass)
-                when ScalarType::SCALAR
-                  if data.is_a?(String)
-                    if contract.modifier == AST::Scalar::Modifier::REQUIRED && data.empty?
-                      raise ValidationError.new('empty string is not allowed', render_path(path))
-                    end
-
-                    true
-                  else
-                    data.is_a?(Integer)
-                  end
-                else
-                  false
-                end
-
-        return nil if valid
+        return validate_null(contract, path) if data.nil?
+        return nil if scalar_value_valid?(contract, data, path)
 
         raise ValidationError.new("expected #{contract.scalar_type}", render_path(path))
+      end
+
+      def validate_null(contract, path)
+        return nil if contract.nullable?
+
+        raise ValidationError.new('null is not allowed', render_path(path))
+      end
+
+      def scalar_value_valid?(contract, data, path)
+        case contract.scalar_type
+        when ScalarType::STRING then valid_string?(contract, data, path)
+        when ScalarType::INTEGER then data.is_a?(Integer)
+        when ScalarType::BOOL then data.is_a?(TrueClass) || data.is_a?(FalseClass)
+        when ScalarType::SCALAR then valid_scalar?(contract, data, path)
+        else false
+        end
+      end
+
+      def valid_string?(contract, data, path)
+        return false unless data.is_a?(String)
+
+        ensure_not_empty!(contract, data, path)
+        true
+      end
+
+      def valid_scalar?(contract, data, path)
+        return valid_string?(contract, data, path) if data.is_a?(String)
+
+        data.is_a?(Integer)
+      end
+
+      def ensure_not_empty!(contract, data, path)
+        return unless contract.required? && data.empty?
+
+        raise ValidationError.new('empty string is not allowed', render_path(path))
       end
 
       def validate_object(contract, data, path)
