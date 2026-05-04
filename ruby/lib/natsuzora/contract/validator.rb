@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require_relative 'type_ref_resolver'
 require_relative 'validation_target'
 require_relative 'scalar_type'
 require_relative 'ast/any'
@@ -155,13 +156,14 @@ module Natsuzora
         private
 
         def build_contract_for_target(document, target)
-          # Build type definitions map for the target (excluding unavailable types)
-          type_defs = {}
-          document.types.each do |name, type_def|
-            type_defs[name] = type_def.contract if type_def.available?(target)
-          end
+          on_undefined = ->(name) { raise ValidationError.new("undefined type '#{name}'") }
+          resolver = TypeRefResolver.new(
+            document.types,
+            target: target,
+            on_missing: on_undefined,
+            on_unavailable: on_undefined
+          )
 
-          # Build root object properties for the target
           properties = {}
           required = []
 
@@ -169,32 +171,11 @@ module Natsuzora
             contract = field.for_target(target)
             next unless contract
 
-            # Resolve type references
-            resolved = resolve_type_refs(contract, type_defs)
-            properties[name] = resolved
+            properties[name] = resolver.resolve(contract)
             required << name
           end
 
           AST::Record.new(properties, required)
-        end
-
-        def resolve_type_refs(contract, type_defs)
-          case contract
-          when AST::Ref
-            resolved = type_defs[contract.name]
-            raise ValidationError.new("undefined type '#{contract.name}'") unless resolved
-
-            resolve_type_refs(resolved, type_defs)
-          when AST::List
-            AST::List.new(resolve_type_refs(contract.items, type_defs))
-          when AST::Record
-            resolved_props = contract.properties.transform_values do |c|
-              resolve_type_refs(c, type_defs)
-            end
-            AST::Record.new(resolved_props, contract.required)
-          else
-            contract
-          end
         end
       end
     end

@@ -36,6 +36,7 @@ module Natsuzora
       end
 
       # Get the contract for the specified target generation.
+      # NOTE: Diff resolution table here mirrors TypeDef#available? — keep in sync.
       def for_target(target)
         case [@marker, target]
         in [nil, _]

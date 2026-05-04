@@ -15,6 +15,7 @@ module Natsuzora
       end
 
       # Check if this type is available for the specified target.
+      # NOTE: Diff resolution table here mirrors Field#for_target — keep in sync.
       def available?(target)
         case [@marker, target]
         in [nil, _]
