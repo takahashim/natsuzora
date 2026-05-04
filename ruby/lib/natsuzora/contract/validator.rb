@@ -51,7 +51,7 @@ module Natsuzora
       def validate_scalar(contract, data, path)
         # Handle null
         if data.nil?
-          if contract.modifier == ContractModifier::NULLABLE
+          if contract.modifier == ContractModifier::NULLABLE # rubocop:disable Style/GuardClause
             return nil
           else
             raise ValidationError.new('null is not allowed', render_path(path))
@@ -200,16 +200,12 @@ module Natsuzora
     def validate(contract, data)
       Validator.validate(contract, data)
       true
-    rescue ValidationError
-      raise
     end
 
     # Validate JSON data against a contract file with diff markers.
     def validate_with_target(contract_file, data, target: ValidationTarget::CURRENT)
       Validator.validate_with_target(contract_file, data, target: target)
       true
-    rescue ValidationError
-      raise
     end
   end
 end

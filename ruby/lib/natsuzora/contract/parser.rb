@@ -124,7 +124,7 @@ module Natsuzora
       def expect_token(type, message)
         return if !eof? && current_type == type
 
-        if eof?
+        if eof? # rubocop:disable Style/GuardClause
           raise ParseError.new(message, @last_line, @last_col)
         else
           line, col = @stream.line_col
@@ -135,7 +135,7 @@ module Natsuzora
       def expect_identifier
         check_error!
         if eof? || current_type != :IDENTIFIER
-          if eof?
+          if eof? # rubocop:disable Style/GuardClause
             raise ParseError.new('expected field name (lowercase identifier)', @last_line, @last_col)
           else
             line, col = @stream.line_col
@@ -149,7 +149,7 @@ module Natsuzora
       def expect_type_name
         check_error!
         if eof? || current_type != :TYPE_NAME
-          if eof?
+          if eof? # rubocop:disable Style/GuardClause
             raise ParseError.new('expected type name (uppercase identifier)', @last_line, @last_col)
           else
             line, col = @stream.line_col
