@@ -10,12 +10,18 @@ module Natsuzora
       @local_stack = []
     end
 
-    def resolve(path)
+    def resolve(variable)
+      path = variable.path
+      line = variable.line
+      column = variable.column
+
       name = path.first
-      value = resolve_name(name)
+      raise UndefinedVariableError.new('Undefined variable: <empty path>', line: line, column: column) unless name
+
+      value = resolve_name(name, line: line, column: column)
 
       path[1..].each do |segment|
-        value = access_property(value, segment)
+        value = access_property(value, segment, line: line, column: column)
       end
 
       value
@@ -47,14 +53,14 @@ module Natsuzora
 
     private
 
-    def resolve_name(name)
+    def resolve_name(name, line: nil, column: nil)
       @local_stack.reverse_each do |scope|
         return scope[name] if scope.key?(name)
       end
 
       return @root[name] if @root.key?(name)
 
-      raise UndefinedVariableError, "Undefined variable: #{name}"
+      raise UndefinedVariableError.new("Undefined variable: #{name}", line: line, column: column)
     end
 
     def validate_no_shadowing!(bindings)
@@ -77,10 +83,12 @@ module Natsuzora
       nil
     end
 
-    def access_property(value, key)
+    def access_property(value, key, line: nil, column: nil)
       raise TypeError, "Cannot access property '#{key}' on non-object" unless value.is_a?(Hash)
 
-      raise UndefinedVariableError, "Undefined property: #{key}" unless value.key?(key)
+      unless value.key?(key)
+        raise UndefinedVariableError.new("Undefined property: #{key}", line: line, column: column)
+      end
 
       value[key]
     end

@@ -44,7 +44,7 @@ module Natsuzora
     end
 
     def render_variable(node)
-      value = @context.resolve(node.path)
+      value = @context.resolve(node)
       str = stringify_with_modifier(value, node.modifier)
       HtmlEscape.escape(str)
     end
@@ -61,7 +61,7 @@ module Natsuzora
     end
 
     def render_if(node)
-      value = @context.resolve(node.condition.path)
+      value = @context.resolve(node.condition)
       if Value.truthy?(value)
         render_nodes(node.then_nodes)
       elsif node.else_nodes
@@ -72,7 +72,7 @@ module Natsuzora
     end
 
     def render_unless(node)
-      value = @context.resolve(node.condition.path)
+      value = @context.resolve(node.condition)
       if Value.truthy?(value)
         ''
       else
@@ -81,7 +81,7 @@ module Natsuzora
     end
 
     def render_each(node)
-      collection = @context.resolve(node.collection.path)
+      collection = @context.resolve(node.collection)
       Value.ensure_array!(collection)
 
       collection.map do |item|
@@ -94,7 +94,7 @@ module Natsuzora
     end
 
     def render_unsecure_output(node)
-      value = @context.resolve(node.path.path)
+      value = @context.resolve(node.path)
       Value.stringify(value) # No escaping
     end
 
@@ -105,7 +105,7 @@ module Natsuzora
 
       bindings = {}
       node.args.each do |key, var|
-        bindings[key] = @context.resolve(var.path)
+        bindings[key] = @context.resolve(var)
       end
 
       @template_loader.with_include(node.name) do
