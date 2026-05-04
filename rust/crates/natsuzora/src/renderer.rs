@@ -141,6 +141,17 @@ impl Renderer {
         let result = self.render_nodes(partial.nodes(), context);
         context.pop_scope();
 
+        let result = result.map_err(|e| match e {
+            NatsuzoraError::WithIncludeTrace { .. } => e,
+            e => match self.template_loader.as_ref() {
+                Some(loader) => NatsuzoraError::WithIncludeTrace {
+                    trace: loader.include_stack_trace(),
+                    source: Box::new(e),
+                },
+                None => e,
+            },
+        });
+
         if let Some(loader) = self.template_loader.as_mut() {
             loader.pop_include();
         }

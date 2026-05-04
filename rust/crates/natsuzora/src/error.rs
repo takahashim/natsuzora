@@ -27,6 +27,13 @@ pub enum NatsuzoraError {
 
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
+
+    #[error("{source}\n  within include {trace}")]
+    WithIncludeTrace {
+        trace: String,
+        #[source]
+        source: Box<NatsuzoraError>,
+    },
 }
 
 /// Result type alias for Natsuzora operations

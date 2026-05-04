@@ -149,6 +149,20 @@ impl TemplateLoader {
         self.include_stack.pop();
     }
 
+    /// Format the current include stack as a trace string for error messages
+    pub fn include_stack_trace(&self) -> String {
+        let mut parts: Vec<String> = self
+            .include_stack
+            .iter()
+            .map(|name| {
+                let path = self.path_resolver.resolve_template_path(name);
+                format!("{name} ({})", path.display())
+            })
+            .collect();
+        parts.push("current include".to_string());
+        parts.join(" > ")
+    }
+
     fn load_and_parse(&self, name: &str) -> Result<Template> {
         let path = self.path_resolver.resolve_template_path(name);
         self.path_resolver.ensure_within_root(&path)?;
