@@ -156,12 +156,11 @@ module Natsuzora
         private
 
         def build_contract_for_target(document, target)
-          on_undefined = ->(name) { raise ValidationError.new("undefined type '#{name}'") }
           resolver = TypeRefResolver.new(
             document.types,
             target: target,
-            on_missing: on_undefined,
-            on_unavailable: on_undefined
+            on_missing: ->(name) { raise ValidationError, "undefined type '#{name}'" },
+            on_unavailable: ->(name) { raise ValidationError, "type '#{name}' is not available for #{target}" }
           )
 
           properties = {}
