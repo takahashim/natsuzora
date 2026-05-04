@@ -9,6 +9,11 @@ RSpec.describe Natsuzora do
     it 'raises TypeError when root data is a string' do
       expect { Natsuzora.render('Hello', 'not an object') }.to raise_error(Natsuzora::TypeError)
     end
+
+    it 'renders unsecure output as raw html' do
+      result = Natsuzora.render('{[!unsecure html ]}', { html: '<b>' })
+      expect(result).to eq('<b>')
+    end
   end
 
   describe '.parse' do
