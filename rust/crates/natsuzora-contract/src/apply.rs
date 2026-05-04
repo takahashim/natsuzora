@@ -171,10 +171,7 @@ mod tests {
     fn apply_diff_keeps_unchanged() {
         let file = ContractFileWithDiff {
             types: BTreeMap::new(),
-            fields: BTreeMap::from([(
-                "name".into(),
-                ContractField::new(make_string_field()),
-            )]),
+            fields: BTreeMap::from([("name".into(), ContractField::new(make_string_field()))]),
         };
 
         let result = apply_diff(&file);
@@ -214,7 +211,10 @@ mod tests {
             types: BTreeMap::new(),
             fields: BTreeMap::from([
                 ("name".into(), ContractField::new(make_string_field())),
-                ("legacy".into(), ContractField::removed(make_integer_field())),
+                (
+                    "legacy".into(),
+                    ContractField::removed(make_integer_field()),
+                ),
             ]),
         };
 
@@ -282,7 +282,10 @@ mod tests {
             types: BTreeMap::new(),
             fields: BTreeMap::from([
                 ("name".into(), ContractField::new(make_string_field())),
-                ("legacy".into(), ContractField::removed(make_integer_field())),
+                (
+                    "legacy".into(),
+                    ContractField::removed(make_integer_field()),
+                ),
             ]),
         };
 

@@ -10,8 +10,8 @@ use std::{
 
 use bitflags::bitflags;
 use natsuzora::ast::{
-    AstNode, EachBlock, IfBlock, IncludeLoader, IncludeNode, Modifier, Path, Template,
-    UnlessBlock, UnsecureNode, VariableNode,
+    AstNode, EachBlock, IfBlock, IncludeLoader, IncludeNode, Modifier, Path, Template, UnlessBlock,
+    UnsecureNode, VariableNode,
 };
 use thiserror::Error;
 
@@ -502,19 +502,15 @@ mod tests {
         let mut loader = TestLoader;
         let contract = extract_contract(&template, &mut loader).unwrap();
         match contract {
-            Contract::Object { properties, .. } => {
-                match properties.get("items") {
-                    Some(Contract::Array { items }) => {
-                        match items.as_ref() {
-                            Contract::Object { properties, .. } => {
-                                assert!(properties.contains_key("name"));
-                            }
-                            _ => panic!("items should contain objects"),
-                        }
+            Contract::Object { properties, .. } => match properties.get("items") {
+                Some(Contract::Array { items }) => match items.as_ref() {
+                    Contract::Object { properties, .. } => {
+                        assert!(properties.contains_key("name"));
                     }
-                    _ => panic!("items should be array"),
-                }
-            }
+                    _ => panic!("items should contain objects"),
+                },
+                _ => panic!("items should be array"),
+            },
             _ => panic!("root should be object"),
         }
     }

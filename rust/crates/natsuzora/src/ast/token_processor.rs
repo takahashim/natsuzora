@@ -223,8 +223,8 @@ fn leading_newline_advance(bytes: &[u8], pos: usize) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::Location;
+    use super::*;
 
     fn text_token(value: &str) -> Token {
         Token::new(TokenType::Text, value, Location::new(1, 1, 0))

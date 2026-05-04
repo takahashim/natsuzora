@@ -254,13 +254,8 @@ impl<'a> Parser<'a> {
     }
 
     fn skip_separators(&mut self) -> Result<(), ParseError> {
-        loop {
-            match &self.current {
-                Token::Newline | Token::Comment(_) => {
-                    self.advance()?;
-                }
-                _ => break,
-            }
+        while let Token::Newline | Token::Comment(_) = &self.current {
+            self.advance()?;
         }
         Ok(())
     }
@@ -430,13 +425,7 @@ impl<'a> Parser<'a> {
                 }
                 self.advance()?;
 
-                types.insert(
-                    type_name,
-                    TypeDef {
-                        marker,
-                        contract,
-                    },
-                );
+                types.insert(type_name, TypeDef { marker, contract });
             } else if matches!(self.current, Token::Identifier(_)) {
                 // This is a field (including fields named "type" when followed by : or {)
                 let (name, field) = self.parse_field_with_diff(marker)?;
@@ -1276,7 +1265,10 @@ mod tests {
     fn error_star_on_type() {
         let result = parse_file_with_diff("* type ChangedType {\n  name: string\n}");
         assert!(result.is_err());
-        assert!(result.unwrap_err().message.contains("* marker is not allowed"));
+        assert!(result
+            .unwrap_err()
+            .message
+            .contains("* marker is not allowed"));
     }
 
     #[test]
@@ -1304,9 +1296,18 @@ name: string
         let file = parse_file_with_diff(input).unwrap();
         assert_eq!(file.fields.len(), 4);
         assert_eq!(file.fields.get("name").unwrap().marker, None);
-        assert_eq!(file.fields.get("email").unwrap().marker, Some(DiffMarker::Added));
-        assert_eq!(file.fields.get("legacyId").unwrap().marker, Some(DiffMarker::Removed));
-        assert_eq!(file.fields.get("age").unwrap().marker, Some(DiffMarker::Changed));
+        assert_eq!(
+            file.fields.get("email").unwrap().marker,
+            Some(DiffMarker::Added)
+        );
+        assert_eq!(
+            file.fields.get("legacyId").unwrap().marker,
+            Some(DiffMarker::Removed)
+        );
+        assert_eq!(
+            file.fields.get("age").unwrap().marker,
+            Some(DiffMarker::Changed)
+        );
     }
 
     // =========================================================================
@@ -1340,7 +1341,9 @@ name: string
             Contract::Object { properties, .. } => {
                 assert!(properties.contains_key("type"));
                 match properties.get("type") {
-                    Some(Contract::Object { properties: inner, .. }) => {
+                    Some(Contract::Object {
+                        properties: inner, ..
+                    }) => {
                         assert!(inner.contains_key("name"));
                     }
                     _ => panic!("expected nested object"),

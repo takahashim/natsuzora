@@ -3,15 +3,15 @@
 //! Since TokenProcessor handles whitespace control before parsing,
 //! the renderer simply evaluates the AST without any whitespace trimming logic.
 
+use crate::ast::{
+    AstNode, EachBlock, IfBlock, IncludeNode, Modifier, Template, UnlessBlock, UnsecureNode,
+    VariableNode,
+};
 use crate::context::Context;
 use crate::error::{NatsuzoraError, Result};
 use crate::html_escape;
 use crate::template_loader::TemplateLoader;
 use crate::value::Value;
-use crate::ast::{
-    AstNode, EachBlock, IfBlock, IncludeNode, Modifier, Template, UnlessBlock, UnsecureNode,
-    VariableNode,
-};
 use std::collections::HashMap;
 
 /// Renderer for evaluating Natsuzora AST

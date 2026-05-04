@@ -37,7 +37,9 @@ mod validator;
 mod writer;
 
 // Re-export types
-pub use types::{Contract, ContractField, ContractModifier, DiffMarker, ScalarType, TypeDef, ValidationTarget};
+pub use types::{
+    Contract, ContractField, ContractModifier, DiffMarker, ScalarType, TypeDef, ValidationTarget,
+};
 
 // Re-export extractor
 pub use extractor::{extract_contract, ContractError};
@@ -46,7 +48,9 @@ pub use extractor::{extract_contract, ContractError};
 pub use validator::{validate, validate_with_target, ValidationError};
 
 // Re-export parser
-pub use parser::{parse, parse_file, parse_file_with_diff, ContractFile, ContractFileWithDiff, ParseError};
+pub use parser::{
+    parse, parse_file, parse_file_with_diff, ContractFile, ContractFileWithDiff, ParseError,
+};
 
 // Re-export writer
 pub use writer::{write, write_with_diff};

@@ -173,9 +173,7 @@ fn contracts_equal(a: &Contract, b: &Contract) -> bool {
             },
         ) => st1 == st2 && m1 == m2,
         (Contract::TypeRef { name: n1 }, Contract::TypeRef { name: n2 }) => n1 == n2,
-        (Contract::Array { items: i1 }, Contract::Array { items: i2 }) => {
-            contracts_equal(i1, i2)
-        }
+        (Contract::Array { items: i1 }, Contract::Array { items: i2 }) => contracts_equal(i1, i2),
         (
             Contract::Object {
                 required: r1,

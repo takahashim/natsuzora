@@ -1,7 +1,7 @@
 //! Template loader for handling include directives.
 
-use crate::error::{NatsuzoraError, Result};
 use crate::ast::{IncludeLoader, LoaderError, Template};
+use crate::error::{NatsuzoraError, Result};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};

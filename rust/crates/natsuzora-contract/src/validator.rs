@@ -109,12 +109,10 @@ fn resolve_type_refs(
     type_defs: &BTreeMap<String, Contract>,
 ) -> Result<Contract, ValidationError> {
     match contract {
-        Contract::TypeRef { name } => {
-            type_defs.get(name).cloned().ok_or_else(|| ValidationError {
-                path: String::new(),
-                message: format!("undefined type '{name}'"),
-            })
-        }
+        Contract::TypeRef { name } => type_defs.get(name).cloned().ok_or_else(|| ValidationError {
+            path: String::new(),
+            message: format!("undefined type '{name}'"),
+        }),
         Contract::Array { items } => Ok(Contract::Array {
             items: Box::new(resolve_type_refs(items, type_defs)?),
         }),
@@ -194,7 +192,7 @@ fn validate_scalar(
     scalar_type: ScalarType,
     modifier: ContractModifier,
     data: &serde_json::Value,
-    path: &mut Vec<PathSegment>,
+    path: &[PathSegment],
 ) -> Result<(), ValidationError> {
     // Handle null
     if data.is_null() {
@@ -440,9 +438,17 @@ mod tests {
         };
 
         // Current: email is not required (added field)
-        assert!(validate_with_target(&file, &json!({"name": "Alice"}), ValidationTarget::Current).is_ok());
+        assert!(
+            validate_with_target(&file, &json!({"name": "Alice"}), ValidationTarget::Current)
+                .is_ok()
+        );
         // email can be present, but extra fields are ignored
-        assert!(validate_with_target(&file, &json!({"name": "Alice", "email": "test@example.com"}), ValidationTarget::Current).is_ok());
+        assert!(validate_with_target(
+            &file,
+            &json!({"name": "Alice", "email": "test@example.com"}),
+            ValidationTarget::Current
+        )
+        .is_ok());
     }
 
     #[test]
@@ -468,8 +474,15 @@ mod tests {
         };
 
         // Next: email is required
-        assert!(validate_with_target(&file, &json!({"name": "Alice"}), ValidationTarget::Next).is_err());
-        assert!(validate_with_target(&file, &json!({"name": "Alice", "email": "test@example.com"}), ValidationTarget::Next).is_ok());
+        assert!(
+            validate_with_target(&file, &json!({"name": "Alice"}), ValidationTarget::Next).is_err()
+        );
+        assert!(validate_with_target(
+            &file,
+            &json!({"name": "Alice", "email": "test@example.com"}),
+            ValidationTarget::Next
+        )
+        .is_ok());
     }
 
     #[test]
@@ -495,8 +508,16 @@ mod tests {
         };
 
         // Current: legacyId is required
-        assert!(validate_with_target(&file, &json!({"name": "Alice"}), ValidationTarget::Current).is_err());
-        assert!(validate_with_target(&file, &json!({"name": "Alice", "legacyId": 123}), ValidationTarget::Current).is_ok());
+        assert!(
+            validate_with_target(&file, &json!({"name": "Alice"}), ValidationTarget::Current)
+                .is_err()
+        );
+        assert!(validate_with_target(
+            &file,
+            &json!({"name": "Alice", "legacyId": 123}),
+            ValidationTarget::Current
+        )
+        .is_ok());
     }
 
     #[test]
@@ -522,7 +543,9 @@ mod tests {
         };
 
         // Next: legacyId is not required (removed field)
-        assert!(validate_with_target(&file, &json!({"name": "Alice"}), ValidationTarget::Next).is_ok());
+        assert!(
+            validate_with_target(&file, &json!({"name": "Alice"}), ValidationTarget::Next).is_ok()
+        );
     }
 
     #[test]
@@ -545,8 +568,12 @@ mod tests {
         };
 
         // Current: age must be integer
-        assert!(validate_with_target(&file, &json!({"age": 30}), ValidationTarget::Current).is_ok());
-        assert!(validate_with_target(&file, &json!({"age": "30"}), ValidationTarget::Current).is_err());
+        assert!(
+            validate_with_target(&file, &json!({"age": 30}), ValidationTarget::Current).is_ok()
+        );
+        assert!(
+            validate_with_target(&file, &json!({"age": "30"}), ValidationTarget::Current).is_err()
+        );
     }
 
     #[test]
@@ -591,12 +618,21 @@ mod tests {
             )]),
             fields: BTreeMap::from([(
                 "user".into(),
-                ContractField::new(Contract::TypeRef { name: "User".into() }),
+                ContractField::new(Contract::TypeRef {
+                    name: "User".into(),
+                }),
             )]),
         };
 
-        assert!(validate_with_target(&file, &json!({"user": {"name": "Alice"}}), ValidationTarget::Current).is_ok());
-        assert!(validate_with_target(&file, &json!({"user": {}}), ValidationTarget::Current).is_err());
+        assert!(validate_with_target(
+            &file,
+            &json!({"user": {"name": "Alice"}}),
+            ValidationTarget::Current
+        )
+        .is_ok());
+        assert!(
+            validate_with_target(&file, &json!({"user": {}}), ValidationTarget::Current).is_err()
+        );
     }
 
     #[test]
@@ -622,7 +658,9 @@ mod tests {
             )]),
             fields: BTreeMap::from([(
                 "data".into(),
-                ContractField::added(Contract::TypeRef { name: "NewType".into() }),
+                ContractField::added(Contract::TypeRef {
+                    name: "NewType".into(),
+                }),
             )]),
         };
 
@@ -653,12 +691,19 @@ mod tests {
             )]),
             fields: BTreeMap::from([(
                 "data".into(),
-                ContractField::added(Contract::TypeRef { name: "NewType".into() }),
+                ContractField::added(Contract::TypeRef {
+                    name: "NewType".into(),
+                }),
             )]),
         };
 
         // Next: data field with NewType is required
         assert!(validate_with_target(&file, &json!({}), ValidationTarget::Next).is_err());
-        assert!(validate_with_target(&file, &json!({"data": {"value": "test"}}), ValidationTarget::Next).is_ok());
+        assert!(validate_with_target(
+            &file,
+            &json!({"data": {"value": "test"}}),
+            ValidationTarget::Next
+        )
+        .is_ok());
     }
 }

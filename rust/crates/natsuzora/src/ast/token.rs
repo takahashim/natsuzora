@@ -139,11 +139,7 @@ mod tests {
             TokenType::Eof,
         ];
         for variant in dynamic {
-            assert_eq!(
-                variant.literal(),
-                None,
-                "{variant:?} should return None"
-            );
+            assert_eq!(variant.literal(), None, "{variant:?} should return None");
         }
     }
 }

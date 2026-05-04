@@ -181,9 +181,7 @@ impl<'a, L: IncludeLoader> TemplateChecker<'a, L> {
                     self.errors.push(TemplateCheckError {
                         location: path.location(),
                         path: path.as_str(),
-                        message: format!(
-                            "cannot access property '{segment}' on scalar value"
-                        ),
+                        message: format!("cannot access property '{segment}' on scalar value"),
                         suggestion: None,
                     });
                     return None;
@@ -210,7 +208,10 @@ impl<'a, L: IncludeLoader> TemplateChecker<'a, L> {
                         self.errors.push(TemplateCheckError {
                             location: path.location(),
                             path: path.as_str(),
-                            message: format!("'{}' is an object, not a scalar value", path.as_str()),
+                            message: format!(
+                                "'{}' is an object, not a scalar value",
+                                path.as_str()
+                            ),
                             suggestion: Some("access a specific property".to_string()),
                         });
                     }
@@ -333,25 +334,21 @@ fn levenshtein_distance(a: &str, b: &str) -> usize {
         return a_len;
     }
 
-    let mut matrix = vec![vec![0usize; b_len + 1]; a_len + 1];
+    let mut previous: Vec<usize> = (0..=b_len).collect();
+    let mut current = vec![0usize; b_len + 1];
 
-    for i in 0..=a_len {
-        matrix[i][0] = i;
-    }
-    for j in 0..=b_len {
-        matrix[0][j] = j;
-    }
-
-    for i in 1..=a_len {
-        for j in 1..=b_len {
-            let cost = if a_chars[i - 1] == b_chars[j - 1] { 0 } else { 1 };
-            matrix[i][j] = (matrix[i - 1][j] + 1)
-                .min(matrix[i][j - 1] + 1)
-                .min(matrix[i - 1][j - 1] + cost);
+    for (i, a_char) in a_chars.iter().enumerate() {
+        current[0] = i + 1;
+        for (j, b_char) in b_chars.iter().enumerate() {
+            let cost = if a_char == b_char { 0 } else { 1 };
+            current[j + 1] = (previous[j + 1] + 1)
+                .min(current[j] + 1)
+                .min(previous[j] + cost);
         }
+        std::mem::swap(&mut previous, &mut current);
     }
 
-    matrix[a_len][b_len]
+    previous[b_len]
 }
 
 #[cfg(test)]
@@ -465,8 +462,7 @@ mod tests {
     #[test]
     fn each_on_non_array_error() {
         let contract = make_contract();
-        let template =
-            natsuzora::ast::parse("{[#each site as item]}{[ item ]}{[/each]}").unwrap();
+        let template = natsuzora::ast::parse("{[#each site as item]}{[ item ]}{[/each]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);

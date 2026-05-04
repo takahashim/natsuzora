@@ -40,10 +40,9 @@ fn shared_tests_dir() -> PathBuf {
 
 fn load_suite(name: &str) -> TestSuite {
     let path = shared_tests_dir().join(name);
-    let content = fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("read {}: {}", path.display(), e));
-    serde_json::from_str(&content)
-        .unwrap_or_else(|e| panic!("parse {}: {}", path.display(), e))
+    let content =
+        fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {}", path.display(), e));
+    serde_json::from_str(&content).unwrap_or_else(|e| panic!("parse {}: {}", path.display(), e))
 }
 
 #[test]
@@ -57,15 +56,26 @@ fn parser_basic_shared_tests() {
         match (should_parse, result.is_ok()) {
             (true, true) | (false, false) => { /* expected */ }
             (true, false) => {
-                failures.push(format!("{}: expected to parse, but failed: {:?}", tc.name, result.err()));
+                failures.push(format!(
+                    "{}: expected to parse, but failed: {:?}",
+                    tc.name,
+                    result.err()
+                ));
             }
             (false, true) => {
-                failures.push(format!("{}: expected to fail to parse, but parsed", tc.name));
+                failures.push(format!(
+                    "{}: expected to fail to parse, but parsed",
+                    tc.name
+                ));
             }
         }
     }
 
-    assert!(failures.is_empty(), "parser failures:\n{}", failures.join("\n"));
+    assert!(
+        failures.is_empty(),
+        "parser failures:\n{}",
+        failures.join("\n")
+    );
 }
 
 #[test]
@@ -89,7 +99,11 @@ fn validator_basic_shared_tests() {
         match (valid_expected, result.is_ok()) {
             (true, true) | (false, false) => { /* expected */ }
             (true, false) => {
-                failures.push(format!("{}: expected valid, but error: {:?}", tc.name, result.err()));
+                failures.push(format!(
+                    "{}: expected valid, but error: {:?}",
+                    tc.name,
+                    result.err()
+                ));
             }
             (false, true) => {
                 failures.push(format!("{}: expected invalid, but validated", tc.name));
@@ -97,5 +111,9 @@ fn validator_basic_shared_tests() {
         }
     }
 
-    assert!(failures.is_empty(), "validator failures:\n{}", failures.join("\n"));
+    assert!(
+        failures.is_empty(),
+        "validator failures:\n{}",
+        failures.join("\n")
+    );
 }
