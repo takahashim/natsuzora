@@ -10,26 +10,28 @@ module Natsuzora
     class Parser
       def initialize(input)
         @stream = CompiledLexer.instance.stream(input)
-        @types = {}
+        # Position of the most recently consumed token; used for EOF error messages
+        # and for errors that point back at the just-read identifier (e.g. unknown scalar type).
         @last_line = 1
         @last_col = 1
       end
 
       # Parse the entire contract file.
       def parse_file
+        types = {}
+
         skip_separators
 
-        # Parse type definitions
         while type_definition?
-          parse_type_def
+          type_name, contract = parse_type_def
+          types[type_name] = TypeDef.new(contract)
           skip_separators
         end
 
-        # Parse root contract
         root = parse_object_body
 
         ContractFile.new(
-          types: @types.transform_values { |c| TypeDef.new(c) },
+          types: types,
           fields: build_fields_from_object(root)
         )
       end
@@ -42,21 +44,11 @@ module Natsuzora
         skip_separators
 
         until eof?
-          # Check for diff marker
           marker = try_parse_diff_marker
 
-          # Check if this is a type definition
           if type_definition?
-            # Validate marker for type def (* is not allowed)
-            raise_current_parse_error('* marker is not allowed for type definitions') if marker == DiffMarker::CHANGED
-
-            advance # consume 'type'
-            type_name = expect_type_name
-
-            expect_token(:OPEN_BRACE, "expected '{' after type name")
-            contract = parse_braced_object_body
-
-            types[type_name] = TypeDef.new(contract, marker: marker)
+            type_name, type_def = parse_type_def_with_diff(marker)
+            types[type_name] = type_def
           elsif current_type == :IDENTIFIER
             name, field = parse_field_with_diff(marker)
             fields[name] = field
@@ -157,13 +149,17 @@ module Natsuzora
       end
 
       def parse_type_def
-        # Consume 'type' identifier
-        advance
-
+        advance # consume 'type'
         type_name = expect_type_name
-
         expect_token(:OPEN_BRACE, "expected '{' after type name")
-        @types[type_name] = parse_braced_object_body
+        [type_name, parse_braced_object_body]
+      end
+
+      def parse_type_def_with_diff(marker)
+        raise_current_parse_error('* marker is not allowed for type definitions') if marker == DiffMarker::CHANGED
+
+        type_name, contract = parse_type_def
+        [type_name, TypeDef.new(contract, marker: marker)]
       end
 
       def parse_object_body
@@ -309,23 +305,23 @@ module Natsuzora
                         )
                       end
 
-        modifier = if eof?
-                     ContractModifier::NONE
-                   else
-                     check_error!
-                     case current_type
-                     when :QUESTION
-                       advance
-                       ContractModifier::NULLABLE
-                     when :EXCLAMATION
-                       advance
-                       ContractModifier::REQUIRED
-                     else
-                       ContractModifier::NONE
-                     end
-                   end
+        ScalarContract.new(scalar_type, parse_modifier)
+      end
 
-        ScalarContract.new(scalar_type, modifier)
+      def parse_modifier
+        return ContractModifier::NONE if eof?
+
+        check_error!
+        case current_type
+        when :QUESTION
+          advance
+          ContractModifier::NULLABLE
+        when :EXCLAMATION
+          advance
+          ContractModifier::REQUIRED
+        else
+          ContractModifier::NONE
+        end
       end
 
       def build_fields_from_object(object_contract)
