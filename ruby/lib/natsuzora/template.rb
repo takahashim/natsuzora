@@ -14,15 +14,14 @@ module Natsuzora
 
     def initialize(source, include_root: nil)
       @source = source
-      @include_root = include_root
+      @loader = include_root && TemplateLoader.new(include_root)
       @ast = parse_ruby(source)
     end
 
     # @param payload [Natsuzora::Payload] prepared render input
     # @return [String] rendered output
     def render(payload)
-      loader = @include_root ? TemplateLoader.new(@include_root) : nil
-      Renderer.new(@ast, template_loader: loader).render(payload.data)
+      Renderer.new(@ast, template_loader: @loader).render(payload.data)
     end
 
     private

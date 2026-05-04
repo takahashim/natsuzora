@@ -66,13 +66,14 @@ module Natsuzora
     end
 
     def initialize(include_root)
-      @path_resolver = include_root ? IncludePathResolver.new(include_root) : nil
+      raise ArgumentError, 'include_root is required' if include_root.nil?
+
+      @path_resolver = IncludePathResolver.new(include_root)
       @cache = {}
       @include_stack = []
     end
 
     def load(name)
-      validate_include_root!
       validate_name!(name)
 
       raise IncludeError, "Circular include detected: #{name}" if @include_stack.include?(name)
@@ -90,12 +91,6 @@ module Natsuzora
     end
 
     private
-
-    def validate_include_root!
-      return if @path_resolver
-
-      raise IncludeError, 'include_root is not configured'
-    end
 
     def validate_name!(name)
       Validator.validate_include_name_runtime!(name)
