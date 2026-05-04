@@ -262,6 +262,7 @@ EACH_OPEN  ::= TAG_OPEN HASH "each" PATH "as" IDENT TAG_CLOSE
 UNSECURE_OUTPUT ::= TAG_OPEN "!" "unsecure" PATH TAG_CLOSE
 ```
 - `path`の値をHTMLエスケープせずに出力する。`path`で示すテキストファイルの内容が適切ではない場合、生成結果はHTMLとして正しい文書にならない危険性がある。使用には注意が必要である。
+- `unsecure` は通常の安全境界を外す構文であるため、テンプレート作成者は信頼済みHTMLにだけ使用し、ユーザー入力由来の値を渡す場合は呼び出し側でサニタイズ済みでなければならない。
 
 設計意図: HTMLのフラグメントを直接埋め込む際に使用する。
 

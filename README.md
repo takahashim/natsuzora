@@ -68,6 +68,15 @@ let html = natsuzora::render(
 assert_eq!(html, "Hello, World!");
 ```
 
+`{[!unsecure ...]}`は安全かつ壊れていないHTMLフラグメントのみに対して使用してください:
+
+```rust
+let html = natsuzora::render(
+    "{[!unsecure trusted_html ]}",
+    json!({"trusted_html": "<strong>OK</strong>"}),
+).unwrap();
+```
+
 ### includeあり
 
 ```rust
@@ -80,12 +89,25 @@ let html = natsuzora::render_with_includes(
 ).unwrap();
 ```
 
+`include_root` 外を指す include はエラーになります。`natsuzora-contract`
+CLI でも、プロジェクト外の読み書きを防ぐため symlink ディレクトリの走査や
+symlink 経由の `.ntzc` 書き込みを拒否します。
+
 ## Ruby実装
 
 ```ruby
 result = Natsuzora.render(
   "Hello, {[ name ]}!",
   { "name" => "World" }
+)
+```
+
+`{[!unsecure ...]}`は安全かつ壊れていないHTMLフラグメントのみに対して使用してください:
+
+```ruby
+result = Natsuzora.render(
+  "{[!unsecure trusted_html ]}",
+  { "trusted_html" => "<strong>OK</strong>" }
 )
 ```
 
