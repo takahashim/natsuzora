@@ -8,6 +8,7 @@ license.workspace = true
 repository.workspace = true
 keywords = ["schema", "validation", "json", "natsuzora"]
 categories = ["parser-implementations", "data-structures"]
+readme = "README.md"
 
 [lib]
 name = "natsuzora_contract"
