@@ -21,9 +21,8 @@ minimal schema language for describing the JSON shape that a
 use natsuzora_contract::{parse, validate};
 use serde_json::json;
 
-let contract = parse("name: string!\nage: integer?")?;
-validate(&contract, &json!({"name": "Alice", "age": 30}))?;
-# Ok::<_, Box<dyn std::error::Error>>(())
+let contract = parse("name: string!\nage: integer?").unwrap();
+validate(&contract, &json!({"name": "Alice", "age": 30})).unwrap();
 ```
 
 ## Notation

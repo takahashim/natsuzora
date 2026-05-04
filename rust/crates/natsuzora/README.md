@@ -5,10 +5,10 @@ A minimal, display-only template language for safe HTML generation.
 ## Features
 
 - HTML-escaped by default; only `{[!unsecure ... ]}` outputs raw HTML.
-- Deterministic — no side effects, no I/O, no globals.
+- Deterministic — templates cannot access globals or perform arbitrary I/O.
 - `include` resolution rooted at a configured directory; symlinks and
   `..` paths are rejected.
-- Bounded recursion and output size guard against pathological input.
+- Circular includes are rejected.
 
 ## Example
 
@@ -18,9 +18,8 @@ use serde_json::json;
 let html = natsuzora::render(
     "Hello, {[ name ]}!",
     json!({"name": "World"}),
-)?;
+).unwrap();
 assert_eq!(html, "Hello, World!");
-# Ok::<_, natsuzora::NatsuzoraError>(())
 ```
 
 `{[!unsecure ... ]}` must only be used for trusted HTML fragments:
@@ -31,22 +30,24 @@ use serde_json::json;
 let html = natsuzora::render(
     "{[!unsecure trusted_html ]}",
     json!({"trusted_html": "<strong>OK</strong>"}),
-)?;
-# Ok::<_, natsuzora::NatsuzoraError>(())
+).unwrap();
+assert_eq!(html, "<strong>OK</strong>");
 ```
 
 With includes:
 
-```rust
+```rust,ignore
 use serde_json::json;
 
 let html = natsuzora::render_with_includes(
     "{[!include /components/header ]}",
     json!({}),
     "templates/shared",
-)?;
-# Ok::<_, natsuzora::NatsuzoraError>(())
+).unwrap();
 ```
+
+`/components/header` resolves under the include root as
+`components/_header.ntzr`.
 
 ## Syntax overview
 
