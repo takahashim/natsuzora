@@ -125,9 +125,7 @@ mod tests {
             assert_eq!(
                 variant.literal(),
                 Some(expected),
-                "{:?} should return Some({:?})",
-                variant,
-                expected
+                "{variant:?} should return Some({expected:?})"
             );
         }
     }
@@ -144,8 +142,7 @@ mod tests {
             assert_eq!(
                 variant.literal(),
                 None,
-                "{:?} should return None",
-                variant
+                "{variant:?} should return None"
             );
         }
     }
