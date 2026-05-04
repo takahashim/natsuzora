@@ -90,12 +90,12 @@ impl Natsuzora {
     /// Render the template with the given JSON data
     pub fn render(&self, data: serde_json::Value) -> Result<String> {
         let value = Value::from_json(data)?;
-        let mut loader = self
+        let loader = self
             .include_root
             .as_ref()
             .map(TemplateLoader::new)
             .transpose()?;
-        let mut renderer = Renderer::new(loader.as_mut());
+        let mut renderer = Renderer::new(loader);
         renderer.render(&self.template, value)
     }
 

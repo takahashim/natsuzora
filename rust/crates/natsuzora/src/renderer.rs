@@ -15,13 +15,13 @@ use natsuzora_ast::{
 use std::collections::HashMap;
 
 /// Renderer for evaluating Natsuzora AST
-pub struct Renderer<'a> {
-    template_loader: Option<&'a mut TemplateLoader>,
+pub struct Renderer {
+    template_loader: Option<TemplateLoader>,
 }
 
-impl<'a> Renderer<'a> {
+impl Renderer {
     /// Create a new renderer
-    pub fn new(template_loader: Option<&'a mut TemplateLoader>) -> Self {
+    pub fn new(template_loader: Option<TemplateLoader>) -> Self {
         Self { template_loader }
     }
 
