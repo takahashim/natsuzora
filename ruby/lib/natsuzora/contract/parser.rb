@@ -48,29 +48,20 @@ module Natsuzora
           # Check if this is a type definition
           if type_definition?
             # Validate marker for type def (* is not allowed)
-            if marker == DiffMarker::CHANGED
-              line, col = @stream.line_col
-              raise ParseError.new('* marker is not allowed for type definitions', line, col)
-            end
+            raise_current_parse_error('* marker is not allowed for type definitions') if marker == DiffMarker::CHANGED
 
             advance # consume 'type'
             type_name = expect_type_name
 
             expect_token(:OPEN_BRACE, "expected '{' after type name")
-            advance
-
-            contract = parse_object_body
-
-            expect_token(:CLOSE_BRACE, "expected '}'")
-            advance
+            contract = parse_braced_object_body
 
             types[type_name] = TypeDef.new(contract, marker: marker)
           elsif current_type == :IDENTIFIER
             name, field = parse_field_with_diff(marker)
             fields[name] = field
           elsif marker
-            line, col = @stream.line_col
-            raise ParseError.new("expected field name or 'type' after diff marker", line, col)
+            raise_current_parse_error("expected field name or 'type' after diff marker")
           else
             break
           end
@@ -124,38 +115,19 @@ module Natsuzora
       def expect_token(type, message)
         return if !eof? && current_type == type
 
-        if eof? # rubocop:disable Style/GuardClause
-          raise ParseError.new(message, @last_line, @last_col)
-        else
-          line, col = @stream.line_col
-          raise ParseError.new(message, line, col)
-        end
+        raise_at_current_or_last(message)
       end
 
       def expect_identifier
         check_error!
-        if eof? || current_type != :IDENTIFIER
-          if eof? # rubocop:disable Style/GuardClause
-            raise ParseError.new('expected field name (lowercase identifier)', @last_line, @last_col)
-          else
-            line, col = @stream.line_col
-            raise ParseError.new('expected field name (lowercase identifier)', line, col)
-          end
-        end
+        raise_at_current_or_last('expected field name (lowercase identifier)') if eof? || current_type != :IDENTIFIER
 
         advance
       end
 
       def expect_type_name
         check_error!
-        if eof? || current_type != :TYPE_NAME
-          if eof? # rubocop:disable Style/GuardClause
-            raise ParseError.new('expected type name (uppercase identifier)', @last_line, @last_col)
-          else
-            line, col = @stream.line_col
-            raise ParseError.new('expected type name (uppercase identifier)', line, col)
-          end
-        end
+        raise_at_current_or_last('expected type name (uppercase identifier)') if eof? || current_type != :TYPE_NAME
 
         advance
       end
@@ -191,14 +163,7 @@ module Natsuzora
         type_name = expect_type_name
 
         expect_token(:OPEN_BRACE, "expected '{' after type name")
-        advance
-
-        contract = parse_object_body
-
-        expect_token(:CLOSE_BRACE, "expected '}'")
-        advance
-
-        @types[type_name] = contract
+        @types[type_name] = parse_braced_object_body
       end
 
       def parse_object_body
@@ -214,24 +179,16 @@ module Natsuzora
           name = expect_identifier
           required << name
 
-          contract = if eof?
-                       raise ParseError.new("expected ':' or '{'", @last_line, @last_col)
+          raise_at_current_or_last("expected ':' or '{'") if eof?
+          check_error!
+          contract = case current_type
+                     when :COLON
+                       advance
+                       parse_type
+                     when :OPEN_BRACE
+                       parse_braced_object_body
                      else
-                       check_error!
-                       case current_type
-                       when :COLON
-                         advance
-                         parse_type
-                       when :OPEN_BRACE
-                         advance
-                         inner = parse_object_body
-                         expect_token(:CLOSE_BRACE, "expected '}'")
-                         advance
-                         inner
-                       else
-                         line, col = @stream.line_col
-                         raise ParseError.new("expected ':' or '{'", line, col)
-                       end
+                       raise_current_parse_error("expected ':' or '{'")
                      end
 
           properties[name] = contract
@@ -243,53 +200,63 @@ module Natsuzora
 
       def parse_field_with_diff(marker)
         name = expect_identifier
-
-        current_type_contract, next_type = if eof?
-                                             raise ParseError.new("expected ':' or '{'", @last_line, @last_col)
-                                           else
-                                             check_error!
-                                             case current_type
-                                             when :COLON
-                                               advance
-                                               first_type = parse_type
-
-                                               if !eof? && current_type == :ARROW
-                                                 unless marker == DiffMarker::CHANGED
-                                                   line, col = @stream.line_col
-                                                   raise ParseError.new("'->' is only allowed with * marker", line, col)
-                                                 end
-
-                                                 advance
-                                                 second_type = parse_type
-                                                 [first_type, second_type]
-                                               else
-                                                 if marker == DiffMarker::CHANGED
-                                                   line = eof? ? @last_line : @stream.line_col[0]
-                                                   col = eof? ? @last_col : @stream.line_col[1]
-                                                   raise ParseError.new("* marker requires '->' for type change", line, col)
-                                                 end
-
-                                                 [first_type, nil]
-                                               end
-                                             when :OPEN_BRACE
-                                               if marker == DiffMarker::CHANGED
-                                                 line, col = @stream.line_col
-                                                 raise ParseError.new('* marker is not allowed for nested objects', line, col)
-                                               end
-
-                                               advance
-                                               inner = parse_object_body
-                                               expect_token(:CLOSE_BRACE, "expected '}'")
-                                               advance
-                                               [inner, nil]
-                                             else
-                                               line, col = @stream.line_col
-                                               raise ParseError.new("expected ':' or '{'", line, col)
-                                             end
-                                           end
-
+        current_type_contract, next_type = parse_field_contract_with_diff(marker)
         field = ContractField.new(current_type_contract, marker: marker, next_type: next_type)
         [name, field]
+      end
+
+      def parse_field_contract_with_diff(marker)
+        raise_at_current_or_last("expected ':' or '{'") if eof?
+
+        check_error!
+        case current_type
+        when :COLON
+          parse_typed_field_with_diff(marker)
+        when :OPEN_BRACE
+          parse_nested_object_field_with_diff(marker)
+        else
+          raise_current_parse_error("expected ':' or '{'")
+        end
+      end
+
+      def parse_typed_field_with_diff(marker)
+        advance
+        first_type = parse_type
+
+        if !eof? && current_type == :ARROW
+          raise_current_parse_error("'->' is only allowed with * marker") unless marker == DiffMarker::CHANGED
+
+          advance
+          return [first_type, parse_type]
+        end
+
+        raise_at_current_or_last("* marker requires '->' for type change") if marker == DiffMarker::CHANGED
+
+        [first_type, nil]
+      end
+
+      def parse_nested_object_field_with_diff(marker)
+        raise_current_parse_error('* marker is not allowed for nested objects') if marker == DiffMarker::CHANGED
+
+        [parse_braced_object_body, nil]
+      end
+
+      def parse_braced_object_body
+        advance # consume '{'
+        inner = parse_object_body
+        expect_token(:CLOSE_BRACE, "expected '}'")
+        advance
+        inner
+      end
+
+      def raise_current_parse_error(message)
+        line, col = @stream.line_col
+        raise ParseError.new(message, line, col)
+      end
+
+      def raise_at_current_or_last(message)
+        line, col = eof? ? [@last_line, @last_col] : @stream.line_col
+        raise ParseError.new(message, line, col)
       end
 
       def parse_type
@@ -302,15 +269,12 @@ module Natsuzora
           expect_token(:CLOSE_BRACKET, "expected ']'")
           advance
 
-          items = if eof?
-                    raise ParseError.new("expected type after '[]'", @last_line, @last_col)
-                  elsif current_type == :OPEN_BRACE
-                    advance
-                    inner = parse_object_body
-                    expect_token(:CLOSE_BRACE, "expected '}'")
-                    advance
-                    inner
-                  elsif current_type == :TYPE_NAME
+          raise_at_current_or_last("expected type after '[]'") if eof?
+
+          items = case current_type
+                  when :OPEN_BRACE
+                    parse_braced_object_body
+                  when :TYPE_NAME
                     parse_type_reference
                   else
                     parse_scalar_type
