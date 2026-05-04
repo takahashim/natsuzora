@@ -107,38 +107,6 @@ impl Context {
         None
     }
 
-    /// Get the length of an array at a path (without holding a reference)
-    pub fn get_array_len(&self, path: &[String], location: Location) -> Result<usize> {
-        let value = self.resolve(path, location)?;
-        match value {
-            Value::Array(arr) => Ok(arr.len()),
-            _ => Err(NatsuzoraError::TypeError {
-                message: format!("Expected array, got {}", value.type_name()),
-            }),
-        }
-    }
-
-    /// Get and clone a single array item by index (without holding a reference)
-    pub fn get_array_item(
-        &self,
-        path: &[String],
-        index: usize,
-        location: Location,
-    ) -> Result<Value> {
-        let value = self.resolve(path, location)?;
-        match value {
-            Value::Array(arr) => arr
-                .get(index)
-                .cloned()
-                .ok_or_else(|| NatsuzoraError::TypeError {
-                    message: format!("Array index {index} out of bounds"),
-                }),
-            _ => Err(NatsuzoraError::TypeError {
-                message: format!("Expected array, got {}", value.type_name()),
-            }),
-        }
-    }
-
     /// Access a property on an object value
     fn access_property<'a>(
         &self,

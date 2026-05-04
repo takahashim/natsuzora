@@ -93,12 +93,18 @@ impl<'a> Renderer<'a> {
 
     fn render_each(&mut self, node: &EachBlock, context: &mut Context) -> Result<String> {
         let location = node.location;
-        let len = context.get_array_len(node.collection.segments(), location)?;
+
+        let items: Vec<Value> = match context.resolve(node.collection.segments(), location)? {
+            Value::Array(arr) => arr.clone(),
+            other => {
+                return Err(NatsuzoraError::TypeError {
+                    message: format!("Expected array, got {}", other.type_name()),
+                });
+            }
+        };
 
         let mut output = String::new();
-        for index in 0..len {
-            let item = context.get_array_item(node.collection.segments(), index, location)?;
-
+        for item in items {
             let mut bindings = HashMap::new();
             bindings.insert(node.item_ident.clone(), item);
 
