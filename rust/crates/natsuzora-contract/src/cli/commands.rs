@@ -550,4 +550,76 @@ mod tests {
         let err = create_contract_parent_dir(&root, &root.join("index.ntzc")).unwrap_err();
         assert!(err.to_string().contains("refusing symlink directory"));
     }
+
+    #[cfg(unix)]
+    #[test]
+    fn run_sync_rejects_contract_parent_symlink() {
+        use std::os::unix::fs::symlink;
+
+        let project = tempfile::tempdir().unwrap();
+        let templates = project.path().join("templates");
+        let contracts = project.path().join("contracts");
+        let outside = tempfile::tempdir().unwrap();
+
+        fs::create_dir_all(templates.join("nested")).unwrap();
+        fs::create_dir_all(&contracts).unwrap();
+        fs::write(templates.join("nested").join("index.ntzr"), "{[ title ]}").unwrap();
+        fs::write(outside.path().join("index.ntzc"), "title: string").unwrap();
+        symlink(outside.path(), contracts.join("nested")).unwrap();
+
+        let err = run_sync(SyncArgs {
+            path: Some(project.path().to_path_buf()),
+            templates_dir: None,
+            contracts_dir: None,
+            include_root: None,
+            name: None,
+            dry_run: false,
+        })
+        .unwrap_err();
+
+        assert!(err.to_string().contains("refusing symlink path component"));
+    }
+
+    #[test]
+    fn run_sync_dry_run_does_not_create_contract_parent_dir() {
+        let project = tempfile::tempdir().unwrap();
+        let templates = project.path().join("templates");
+
+        fs::create_dir_all(templates.join("nested")).unwrap();
+        fs::write(templates.join("nested").join("index.ntzr"), "{[ title ]}").unwrap();
+
+        run_sync(SyncArgs {
+            path: Some(project.path().to_path_buf()),
+            templates_dir: None,
+            contracts_dir: None,
+            include_root: None,
+            name: None,
+            dry_run: true,
+        })
+        .unwrap();
+
+        assert!(!project.path().join("contracts").join("nested").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn run_apply_rejects_symlink_contracts_root() {
+        use std::os::unix::fs::symlink;
+
+        let project = tempfile::tempdir().unwrap();
+        let outside = tempfile::tempdir().unwrap();
+        let contracts = project.path().join("contracts");
+
+        fs::write(outside.path().join("index.ntzc"), "+ title: string").unwrap();
+        symlink(outside.path(), &contracts).unwrap();
+
+        let err = run_apply(ApplyArgs {
+            path: Some(project.path().to_path_buf()),
+            contracts_dir: None,
+            name: None,
+        })
+        .unwrap_err();
+
+        assert!(err.to_string().contains("refusing symlink directory"));
+    }
 }
