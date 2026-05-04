@@ -29,5 +29,4 @@ RSpec.describe Natsuzora do
       expect(Natsuzora::VERSION).to match(/\d+\.\d+\.\d+/)
     end
   end
-
 end
