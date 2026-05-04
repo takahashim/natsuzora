@@ -119,15 +119,13 @@ impl<'a> Renderer<'a> {
     }
 
     fn render_include(&mut self, node: &IncludeNode, context: &mut Context) -> Result<String> {
-        let partial = {
-            let loader =
-                self.template_loader
-                    .as_mut()
-                    .ok_or_else(|| NatsuzoraError::IncludeError {
-                        message: "Template loader not configured for include".to_string(),
-                    })?;
-            loader.load(&node.name)?
-        };
+        let partial = self
+            .template_loader
+            .as_mut()
+            .ok_or_else(|| NatsuzoraError::IncludeError {
+                message: "Template loader not configured for include".to_string(),
+            })?
+            .load(&node.name)?;
 
         let mut bindings = HashMap::new();
         for arg in &node.args {
