@@ -31,6 +31,9 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Max: 12
 
+RSpec/DescribedClass:
+  EnforcedStyle: explicit
+
 RSpec/ExampleLength:
   Max: 25
 
