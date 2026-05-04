@@ -3,6 +3,7 @@
 module Natsuzora
   class Renderer
     MAX_RENDER_DEPTH = 1024
+    MAX_OUTPUT_BYTES = 50 * 1024 * 1024 # 50 MB
 
     def initialize(ast, template_loader: nil)
       @ast = ast
@@ -12,7 +13,10 @@ module Natsuzora
     def render(data)
       @context = Context.new(data)
       @depth = 0
-      render_nodes(@ast.nodes)
+      output = render_nodes(@ast.nodes)
+      raise RenderError, "output exceeded #{MAX_OUTPUT_BYTES} bytes" if output.bytesize > MAX_OUTPUT_BYTES
+
+      output
     end
 
     private
@@ -94,13 +98,13 @@ module Natsuzora
       collection = @context.resolve(node.collection)
       Value.ensure_array!(collection)
 
-      collection.map do |item|
+      buffer = +''
+      collection.each do |item|
         bindings = { node.item_name => item }
-
-        @context.with_scope(bindings) do
-          render_nodes(node.body_nodes)
-        end
-      end.join
+        buffer << @context.with_scope(bindings) { render_nodes(node.body_nodes) }
+        raise RenderError, "output exceeded #{MAX_OUTPUT_BYTES} bytes" if buffer.bytesize > MAX_OUTPUT_BYTES
+      end
+      buffer
     end
 
     def render_unsecure_output(node)
