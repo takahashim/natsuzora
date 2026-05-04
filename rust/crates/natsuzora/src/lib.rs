@@ -18,19 +18,22 @@
 //! assert_eq!(result, "Hello, World!");
 //! ```
 
+// Internal modules
+pub(crate) mod context;
+pub(crate) mod html_escape;
+pub(crate) mod renderer;
+pub(crate) mod template_loader;
+pub(crate) mod value;
+
 // Public modules
-pub mod context;
 pub mod error;
-pub mod html_escape;
-pub mod renderer;
-pub mod template_loader;
-pub mod value;
 
 pub use error::{NatsuzoraError, Result};
 pub use natsuzora_ast::{IncludeLoader, LoaderError, Location, Modifier, ParseError, Template};
-pub use renderer::Renderer;
-pub use template_loader::TemplateLoader;
-pub use value::Value;
+
+use renderer::Renderer;
+use template_loader::TemplateLoader;
+use value::Value;
 
 use std::path::Path;
 

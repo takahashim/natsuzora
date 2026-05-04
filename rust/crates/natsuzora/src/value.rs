@@ -122,16 +122,6 @@ impl Value {
         matches!(self, Value::String(s) if s.is_empty())
     }
 
-    /// Ensure the value is an array and return a reference to it
-    pub fn as_array(&self) -> Result<&Vec<Value>> {
-        match self {
-            Value::Array(arr) => Ok(arr),
-            _ => Err(NatsuzoraError::TypeError {
-                message: format!("Expected array, got {}", self.type_name()),
-            }),
-        }
-    }
-
     /// Stringify with required modifier (! modifier)
     /// Null and empty string cause TypeError
     pub fn stringify_required(&self) -> Result<String> {
