@@ -1,31 +1,26 @@
 use anyhow::{anyhow, Context, Result};
-use std::{
-    collections::{BTreeMap, HashSet},
-    fs,
-    path::PathBuf,
-};
 use natsuzora_contract::{
     check_template, extract_contract, validate, write, Contract, ContractField, ContractFile,
     ContractFileWithDiff, TypeDef,
 };
+use std::{
+    collections::{BTreeMap, HashSet},
+    fs,
+    path::{Path, PathBuf},
+};
 
 use super::loader::FileIncludeLoader;
-use super::project::{
-    collect_ntzc_files, collect_ntzr_files, resolve_dirs, resolve_include_root,
-};
-use super::{
-    ApplyArgs, CheckArgs, ExtractArgs, OutputFormat, ParseArgs, SyncArgs, ValidateArgs,
-};
+use super::project::{collect_ntzc_files, collect_ntzr_files, resolve_dirs, resolve_include_root};
+use super::{ApplyArgs, CheckArgs, ExtractArgs, OutputFormat, ParseArgs, SyncArgs, ValidateArgs};
 
 pub(super) fn run_extract(args: ExtractArgs) -> Result<()> {
     let include_root = resolve_include_root(args.include_root.as_deref(), &args.template);
 
-    let source =
-        fs::read_to_string(&args.template).with_context(|| format!("reading {:?}", args.template))?;
-    let template =
-        natsuzora_ast::parse(&source).map_err(|err| anyhow!("parse error: {err}"))?;
+    let source = fs::read_to_string(&args.template)
+        .with_context(|| format!("reading {:?}", args.template))?;
+    let template = natsuzora_ast::parse(&source).map_err(|err| anyhow!("parse error: {err}"))?;
 
-    let mut loader = FileIncludeLoader::new(include_root);
+    let mut loader = FileIncludeLoader::new(include_root)?;
     let contract = extract_contract(&template, &mut loader)?;
 
     if let Some(data_path) = args.data.as_ref() {
@@ -33,8 +28,7 @@ pub(super) fn run_extract(args: ExtractArgs) -> Result<()> {
             fs::read_to_string(data_path).with_context(|| format!("reading {data_path:?}"))?;
         let data_json: serde_json::Value = serde_json::from_str(&data_text)
             .with_context(|| format!("parsing JSON {data_path:?}"))?;
-        validate(&contract, &data_json)
-            .map_err(|err| anyhow!("validation failed: {err}"))?;
+        validate(&contract, &data_json).map_err(|err| anyhow!("validation failed: {err}"))?;
         eprintln!("Validation passed");
     }
 
@@ -73,16 +67,16 @@ fn run_check_single(args: CheckArgs) -> Result<()> {
 
     let include_root = resolve_include_root(args.include_root.as_deref(), &template_path);
 
-    let contract_source = fs::read_to_string(&contract_path)
-        .with_context(|| format!("reading {contract_path:?}"))?;
+    let contract_source =
+        fs::read_to_string(&contract_path).with_context(|| format!("reading {contract_path:?}"))?;
     let contract = natsuzora_contract::parse(&contract_source).map_err(|e| anyhow!("{e}"))?;
 
-    let template_source = fs::read_to_string(&template_path)
-        .with_context(|| format!("reading {template_path:?}"))?;
-    let template = natsuzora_ast::parse(&template_source)
-        .map_err(|err| anyhow!("parse error: {err}"))?;
+    let template_source =
+        fs::read_to_string(&template_path).with_context(|| format!("reading {template_path:?}"))?;
+    let template =
+        natsuzora_ast::parse(&template_source).map_err(|err| anyhow!("parse error: {err}"))?;
 
-    let mut loader = FileIncludeLoader::new(include_root);
+    let mut loader = FileIncludeLoader::new(include_root)?;
     let errors = check_template(&template, &contract, &mut loader);
 
     if errors.is_empty() {
@@ -105,8 +99,11 @@ fn run_check_single(args: CheckArgs) -> Result<()> {
 
 fn run_check_batch(args: CheckArgs) -> Result<()> {
     let base = args.path.as_deref();
-    let (templates_dir, contracts_dir) =
-        resolve_dirs(base, args.templates_dir.as_deref(), args.contracts_dir.as_deref())?;
+    let (templates_dir, contracts_dir) = resolve_dirs(
+        base,
+        args.templates_dir.as_deref(),
+        args.contracts_dir.as_deref(),
+    )?;
 
     if !templates_dir.exists() {
         return Err(anyhow!("templates directory not found: {templates_dir:?}"));
@@ -115,9 +112,7 @@ fn run_check_batch(args: CheckArgs) -> Result<()> {
         return Err(anyhow!("contracts directory not found: {contracts_dir:?}"));
     }
 
-    let include_root = args
-        .include_root
-        .unwrap_or_else(|| templates_dir.clone());
+    let include_root = args.include_root.unwrap_or_else(|| templates_dir.clone());
 
     let templates = collect_ntzr_files(&templates_dir, args.name.as_deref())?;
     let contracts = collect_ntzc_files(&contracts_dir, None)?;
@@ -176,7 +171,7 @@ fn run_check_batch(args: CheckArgs) -> Result<()> {
             }
         };
 
-        let mut loader = FileIncludeLoader::new(include_root.clone());
+        let mut loader = FileIncludeLoader::new(include_root.clone())?;
         let errors = check_template(&template, &contract, &mut loader);
 
         if errors.is_empty() {
@@ -220,8 +215,7 @@ fn run_check_batch(args: CheckArgs) -> Result<()> {
 pub(super) fn run_validate(args: ValidateArgs) -> Result<()> {
     let contract_source = fs::read_to_string(&args.contract)
         .with_context(|| format!("reading {:?}", args.contract))?;
-    let contract =
-        natsuzora_contract::parse(&contract_source).map_err(|e| anyhow!("{e}"))?;
+    let contract = natsuzora_contract::parse(&contract_source).map_err(|e| anyhow!("{e}"))?;
 
     let data_text =
         fs::read_to_string(&args.data).with_context(|| format!("reading {:?}", args.data))?;
@@ -236,8 +230,7 @@ pub(super) fn run_validate(args: ValidateArgs) -> Result<()> {
 pub(super) fn run_parse(args: ParseArgs) -> Result<()> {
     let source = fs::read_to_string(&args.contract)
         .with_context(|| format!("reading {:?}", args.contract))?;
-    let contract =
-        natsuzora_contract::parse(&source).map_err(|e| anyhow!("{e}"))?;
+    let contract = natsuzora_contract::parse(&source).map_err(|e| anyhow!("{e}"))?;
     output_contract(&contract, &args.format, args.output.as_ref())
 }
 
@@ -262,7 +255,7 @@ pub(super) fn run_sync(args: SyncArgs) -> Result<()> {
     let mut unchanged = 0usize;
 
     for (name, template_path) in &templates {
-        let mut loader = FileIncludeLoader::new(include_root.clone());
+        let mut loader = FileIncludeLoader::new(include_root.clone())?;
 
         let template_source = fs::read_to_string(template_path)
             .with_context(|| format!("reading {template_path:?}"))?;
@@ -274,6 +267,7 @@ pub(super) fn run_sync(args: SyncArgs) -> Result<()> {
         let contract_path = contracts_dir.join(format!("{name}.ntzc"));
 
         if contract_path.exists() {
+            ensure_contract_write_path(&contracts_dir, &contract_path)?;
             let existing_source = fs::read_to_string(&contract_path)
                 .with_context(|| format!("reading {contract_path:?}"))?;
             let existing =
@@ -286,9 +280,6 @@ pub(super) fn run_sync(args: SyncArgs) -> Result<()> {
                 eprint!("{}", natsuzora_contract::format_diff(&diff));
 
                 if !args.dry_run {
-                    if let Some(parent) = contract_path.parent() {
-                        fs::create_dir_all(parent)?;
-                    }
                     fs::write(&contract_path, natsuzora_contract::write_with_diff(&diff))?;
                 }
                 synced += 1;
@@ -300,9 +291,7 @@ pub(super) fn run_sync(args: SyncArgs) -> Result<()> {
             eprintln!("{name}: new");
 
             if !args.dry_run {
-                if let Some(parent) = contract_path.parent() {
-                    fs::create_dir_all(parent)?;
-                }
+                create_contract_parent_dir(&contracts_dir, &contract_path)?;
                 fs::write(&contract_path, write(&extracted))?;
             }
             created += 1;
@@ -310,9 +299,7 @@ pub(super) fn run_sync(args: SyncArgs) -> Result<()> {
     }
 
     eprintln!();
-    eprintln!(
-        "sync: {synced} synced, {created} created, {unchanged} unchanged"
-    );
+    eprintln!("sync: {synced} synced, {created} created, {unchanged} unchanged");
     Ok(())
 }
 
@@ -344,6 +331,7 @@ pub(super) fn run_apply(args: ApplyArgs) -> Result<()> {
             natsuzora_contract::parse_file_with_diff(&source).map_err(|e| anyhow!("{e}"))?;
 
         if natsuzora_contract::has_changes(&parsed) {
+            ensure_contract_write_path(&contracts_dir, contract_path)?;
             let next = natsuzora_contract::apply_diff(&parsed);
             fs::write(contract_path, write_contract_file(&next))?;
             eprintln!("{name}: applied");
@@ -356,6 +344,105 @@ pub(super) fn run_apply(args: ApplyArgs) -> Result<()> {
 
     eprintln!();
     eprintln!("apply: {applied} applied, {skipped} skipped");
+    Ok(())
+}
+
+fn ensure_contract_write_path(contracts_dir: &Path, contract_path: &Path) -> Result<()> {
+    let root = canonical_existing_dir(contracts_dir)?;
+    let parent = contract_path
+        .parent()
+        .ok_or_else(|| anyhow!("contract path has no parent: {contract_path:?}"))?;
+    ensure_no_symlink_components(contracts_dir, parent)?;
+
+    if fs::symlink_metadata(contract_path)
+        .with_context(|| format!("checking {contract_path:?}"))?
+        .file_type()
+        .is_symlink()
+    {
+        return Err(anyhow!(
+            "refusing to write through symlink contract: {contract_path:?}"
+        ));
+    }
+
+    let target = contract_path
+        .canonicalize()
+        .with_context(|| format!("resolving {contract_path:?}"))?;
+    if !target.starts_with(&root) {
+        return Err(anyhow!(
+            "contract path escapes contracts directory: {contract_path:?}"
+        ));
+    }
+
+    Ok(())
+}
+
+fn create_contract_parent_dir(contracts_dir: &Path, contract_path: &Path) -> Result<()> {
+    let parent = contract_path
+        .parent()
+        .ok_or_else(|| anyhow!("contract path has no parent: {contract_path:?}"))?;
+
+    let root = create_contracts_root_dir(contracts_dir)?;
+    ensure_no_symlink_components(contracts_dir, parent)?;
+    fs::create_dir_all(parent).with_context(|| format!("creating {parent:?}"))?;
+    ensure_no_symlink_components(contracts_dir, parent)?;
+
+    let parent = parent
+        .canonicalize()
+        .with_context(|| format!("resolving {parent:?}"))?;
+    if !parent.starts_with(&root) {
+        return Err(anyhow!(
+            "contract path escapes contracts directory: {contract_path:?}"
+        ));
+    }
+
+    Ok(())
+}
+
+fn create_contracts_root_dir(path: &Path) -> Result<PathBuf> {
+    if let Ok(meta) = fs::symlink_metadata(path) {
+        if meta.file_type().is_symlink() {
+            return Err(anyhow!("refusing symlink directory: {path:?}"));
+        }
+    }
+
+    fs::create_dir_all(path).with_context(|| format!("creating {path:?}"))?;
+    canonical_existing_dir(path)
+}
+
+fn canonical_existing_dir(path: &Path) -> Result<PathBuf> {
+    if fs::symlink_metadata(path)
+        .with_context(|| format!("checking {path:?}"))?
+        .file_type()
+        .is_symlink()
+    {
+        return Err(anyhow!("refusing symlink directory: {path:?}"));
+    }
+
+    let canonical = path
+        .canonicalize()
+        .with_context(|| format!("resolving {path:?}"))?;
+    if !canonical.is_dir() {
+        return Err(anyhow!("not a directory: {path:?}"));
+    }
+    Ok(canonical)
+}
+
+fn ensure_no_symlink_components(root: &Path, path: &Path) -> Result<()> {
+    let relative = path
+        .strip_prefix(root)
+        .with_context(|| format!("path {path:?} is not under {root:?}"))?;
+    let mut cursor = root.to_path_buf();
+    for component in relative.components() {
+        cursor.push(component);
+        match fs::symlink_metadata(&cursor) {
+            Ok(meta) if meta.file_type().is_symlink() => {
+                return Err(anyhow!("refusing symlink path component: {cursor:?}"));
+            }
+            Ok(_) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => break,
+            Err(e) => return Err(e).with_context(|| format!("checking {cursor:?}")),
+        }
+    }
     Ok(())
 }
 
@@ -395,4 +482,72 @@ fn write_contract_file(file: &ContractFile) -> String {
 
     let diff_file = ContractFileWithDiff { types, fields };
     natsuzora_contract::write_with_diff(&diff_file)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn ensure_contract_write_path_rejects_final_symlink() {
+        use std::os::unix::fs::symlink;
+
+        let root = tempfile::tempdir().unwrap();
+        let outside = tempfile::NamedTempFile::new().unwrap();
+        let contract = root.path().join("index.ntzc");
+        symlink(outside.path(), &contract).unwrap();
+
+        let err = ensure_contract_write_path(root.path(), &contract).unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("refusing to write through symlink"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn ensure_no_symlink_components_rejects_parent_symlink() {
+        use std::os::unix::fs::symlink;
+
+        let root = tempfile::tempdir().unwrap();
+        let outside = tempfile::tempdir().unwrap();
+        let linked = root.path().join("linked");
+        symlink(outside.path(), &linked).unwrap();
+
+        let err = ensure_no_symlink_components(root.path(), &linked).unwrap_err();
+        assert!(err.to_string().contains("refusing symlink path component"));
+    }
+
+    #[test]
+    fn ensure_contract_write_path_allows_regular_path() {
+        let root = tempfile::tempdir().unwrap();
+        let contract = root.path().join("nested").join("index.ntzc");
+
+        fs::create_dir_all(contract.parent().unwrap()).unwrap();
+        fs::write(&contract, "title: string").unwrap();
+        ensure_contract_write_path(root.path(), &contract).unwrap();
+    }
+
+    #[test]
+    fn create_contract_parent_dir_allows_new_nested_path() {
+        let root = tempfile::tempdir().unwrap();
+        let contract = root.path().join("nested").join("index.ntzc");
+
+        create_contract_parent_dir(root.path(), &contract).unwrap();
+        assert!(contract.parent().unwrap().is_dir());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn create_contract_parent_dir_rejects_symlink_root() {
+        use std::os::unix::fs::symlink;
+
+        let outside = tempfile::tempdir().unwrap();
+        let parent = tempfile::tempdir().unwrap();
+        let root = parent.path().join("contracts");
+        symlink(outside.path(), &root).unwrap();
+
+        let err = create_contract_parent_dir(&root, &root.join("index.ntzc")).unwrap_err();
+        assert!(err.to_string().contains("refusing symlink directory"));
+    }
 }

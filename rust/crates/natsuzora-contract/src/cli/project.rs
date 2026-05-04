@@ -66,14 +66,27 @@ fn collect_files(
     name_filter: Option<&str>,
 ) -> Result<Vec<(String, PathBuf)>> {
     let mut results = Vec::new();
-    let entries = fs::read_dir(current_dir)
-        .with_context(|| format!("reading directory {current_dir:?}"))?;
+    if fs::symlink_metadata(current_dir)
+        .with_context(|| format!("checking directory {current_dir:?}"))?
+        .file_type()
+        .is_symlink()
+    {
+        return Err(anyhow!("refusing symlink directory: {current_dir:?}"));
+    }
+
+    let entries =
+        fs::read_dir(current_dir).with_context(|| format!("reading directory {current_dir:?}"))?;
 
     for entry in entries {
         let entry = entry?;
         let path = entry.path();
+        let file_type = entry
+            .file_type()
+            .with_context(|| format!("checking file type for {path:?}"))?;
 
-        if path.is_dir() {
+        if file_type.is_symlink() {
+            continue;
+        } else if file_type.is_dir() {
             results.extend(collect_files(
                 base_dir,
                 &path,
@@ -81,12 +94,11 @@ fn collect_files(
                 exclude_underscored,
                 name_filter,
             )?);
-        } else if path.extension().and_then(|e| e.to_str()) == Some(extension) {
+        } else if file_type.is_file()
+            && path.extension().and_then(|e| e.to_str()) == Some(extension)
+        {
             if exclude_underscored {
-                let file_name = path
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("");
+                let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
                 if file_name.starts_with('_') {
                     continue;
                 }
@@ -113,4 +125,39 @@ fn collect_files(
 
     results.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(results)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn collect_files_skips_symlink_entries() {
+        use std::os::unix::fs::symlink;
+
+        let root = tempfile::tempdir().unwrap();
+        let outside = tempfile::tempdir().unwrap();
+        fs::write(root.path().join("index.ntzr"), "").unwrap();
+        fs::write(outside.path().join("outside.ntzr"), "").unwrap();
+        symlink(outside.path(), root.path().join("linked")).unwrap();
+
+        let files = collect_ntzr_files(root.path(), None).unwrap();
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].0, "index");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn collect_files_rejects_symlink_root() {
+        use std::os::unix::fs::symlink;
+
+        let outside = tempfile::tempdir().unwrap();
+        let parent = tempfile::tempdir().unwrap();
+        let linked = parent.path().join("templates");
+        symlink(outside.path(), &linked).unwrap();
+
+        let err = collect_ntzr_files(&linked, None).unwrap_err();
+        assert!(err.to_string().contains("refusing symlink directory"));
+    }
 }

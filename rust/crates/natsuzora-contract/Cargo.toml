@@ -35,3 +35,6 @@ optional = true
 [features]
 default = ["cli"]
 cli = ["dep:clap", "dep:anyhow"]
+
+[dev-dependencies]
+tempfile = "3.10"
