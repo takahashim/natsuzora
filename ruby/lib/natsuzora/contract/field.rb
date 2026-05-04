@@ -38,6 +38,7 @@ module Natsuzora
       # Get the contract for the specified target generation.
       # NOTE: Diff resolution table here mirrors TypeDef#available? — keep in sync.
       def for_target(target)
+        # rubocop:disable Lint/DuplicateBranch
         case [@marker, target]
         in [nil, _]
           @current_type
@@ -54,6 +55,7 @@ module Natsuzora
         in [DiffMarker::CHANGED, ValidationTarget::NEXT]
           @next_type
         end
+        # rubocop:enable Lint/DuplicateBranch
       end
     end
   end

@@ -17,6 +17,7 @@ module Natsuzora
       # Check if this type is available for the specified target.
       # NOTE: Diff resolution table here mirrors Field#for_target — keep in sync.
       def available?(target)
+        # rubocop:disable Lint/DuplicateBranch
         case [@marker, target]
         in [nil, _]
           true
@@ -31,6 +32,7 @@ module Natsuzora
         in [DiffMarker::CHANGED, _]
           false # Changed not allowed for type defs
         end
+        # rubocop:enable Lint/DuplicateBranch
       end
     end
   end
