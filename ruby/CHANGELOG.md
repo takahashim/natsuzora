@@ -17,7 +17,18 @@
   from its hash representation.
 - `Natsuzora::Contract::TypeRefResolver` walks an AST tree replacing
   `AST::Ref` nodes with concrete contracts; configurable via
-  `on_missing` / `on_unavailable` callbacks.
+  `on_missing` / `on_unavailable` / `on_cyclic` callbacks. Cyclic type
+  references (e.g. `type A { ref: B }; type B { ref: A }`) raise via
+  `on_cyclic` instead of recursing forever.
+- Resource limits to bound pathological input:
+  - `Natsuzora::Renderer::MAX_RENDER_DEPTH` (1024) — caps recursion
+    through nested `{[#if]}` / `{[#each]}` / `{[!include]}` blocks.
+  - `Natsuzora::Renderer::MAX_OUTPUT_BYTES` (50 MiB) — caps the
+    rendered output size, checked per `{[#each]}` iteration.
+  - `Natsuzora::Contract::Validator::MAX_VALIDATE_DEPTH` (64) — caps
+    nesting depth of validated data trees.
+  Exceeding any limit raises `Natsuzora::RenderError` or
+  `Natsuzora::Contract::ValidationError` with a descriptive message.
 - Shared JSON tests under `tests/contract/` for cross-language parity with
   the Rust `natsuzora-contract` crate.
 - `Natsuzora::Payload` class wrapping render input data. The class

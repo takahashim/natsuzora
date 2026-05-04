@@ -79,8 +79,8 @@ RSpec.describe Natsuzora do
 
   describe 'output size limit' do
     it 'raises RenderError when each iteration accumulates beyond MAX_OUTPUT_BYTES' do
-      chunk = 'x' * 1024
-      items = Array.new(60_000) { chunk } # ~60 MB > 50 MB cap
+      stub_const('Natsuzora::Renderer::MAX_OUTPUT_BYTES', 100)
+      items = Array.new(50) { 'abcdefghij' } # 50 * 10 = 500 bytes > 100 bytes
       expect { render('{[#each xs as x]}{[ x ]}{[/each]}', { xs: items }) }
         .to raise_error(Natsuzora::RenderError, /output exceeded/)
     end
