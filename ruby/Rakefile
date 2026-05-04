@@ -26,6 +26,8 @@ def build_program(source)
 end
 
 def compile_lexers
+  require 'lexer_kit'
+
   LEXERS.each do |name, config|
     FileUtils.mkdir_p(File.dirname(config[:output]))
     LexerKit::Format::LKT1.save(build_program(config[:source]), path: config[:output])
