@@ -179,17 +179,14 @@ module Natsuzora
       end
     end
 
-    # Module-level validate functions.
-    module_function
-
     # Validate JSON data against a contract.
-    def validate(contract, data)
+    def self.validate(contract, data)
       Validator.validate(contract, data)
       true
     end
 
     # Validate JSON data against a contract file with diff markers.
-    def validate_with_target(document, data, target: ValidationTarget::CURRENT)
+    def self.validate_with_target(document, data, target: ValidationTarget::CURRENT)
       Validator.validate_with_target(document, data, target: target)
       true
     end

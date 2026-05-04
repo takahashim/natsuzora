@@ -340,24 +340,21 @@ module Natsuzora
       end
     end
 
-    # Module-level parse functions.
-    module_function
-
     # Parse contract notation into a resolved Contract.
-    def parse(input)
+    def self.parse(input)
       parser = Parser.new(input)
       file = parser.parse_file
       file.to_contract
     end
 
     # Parse contract notation into a Document.
-    def parse_file(input)
+    def self.parse_file(input)
       parser = Parser.new(input)
       parser.parse_file
     end
 
     # Parse contract notation with diff markers.
-    def parse_file_with_diff(input)
+    def self.parse_file_with_diff(input)
       parser = Parser.new(input)
       parser.parse_file_with_diff
     end
