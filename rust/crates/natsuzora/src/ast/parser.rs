@@ -3,8 +3,8 @@
 //! Mirrors Ruby's `Parser` class. Consumes a processed token stream
 //! (after TokenProcessor) and produces an AST.
 
-use crate::token::{Token, TokenType};
-use crate::{
+use super::token::{Token, TokenType};
+use super::{
     validate_identifier, AstNode, EachBlock, IfBlock, IncludeArg, IncludeNode, Location, Modifier,
     ParseError, Path, Template, TextNode, UnlessBlock, UnsecureNode, VariableNode,
 };
@@ -562,7 +562,7 @@ fn token_surface(token: &Token) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::parse;
+    use super::super::parse;
 
     #[test]
     fn test_parse_simple_variable() {

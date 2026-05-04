@@ -6,8 +6,8 @@
 //!
 //! Escape: `{[{]}` → `{[` (processed inline as text)
 
-use crate::token::{Token, TokenType};
-use crate::{Location, ParseError};
+use super::token::{Token, TokenType};
+use super::{Location, ParseError};
 
 /// Tokenize a source string into a sequence of tokens.
 pub fn tokenize(source: &str) -> Result<Vec<Token>, ParseError> {

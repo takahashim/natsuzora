@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "crates/natsuzora-ast",
     "crates/natsuzora",
     "crates/natsuzora-contract",
 ]

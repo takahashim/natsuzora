@@ -26,10 +26,11 @@ pub(crate) mod template_loader;
 pub(crate) mod value;
 
 // Public modules
+pub mod ast;
 pub mod error;
 
+pub use ast::{IncludeLoader, LoaderError, Location, Modifier, ParseError, Template};
 pub use error::{NatsuzoraError, Result};
-pub use natsuzora_ast::{IncludeLoader, LoaderError, Location, Modifier, ParseError, Template};
 
 use renderer::Renderer;
 use template_loader::TemplateLoader;
@@ -56,7 +57,7 @@ impl Natsuzora {
     /// assert_eq!(result, "Hello, Alice!");
     /// ```
     pub fn parse(source: &str) -> Result<Self> {
-        let template = natsuzora_ast::parse(source).map_err(|e| NatsuzoraError::ParseError {
+        let template = crate::ast::parse(source).map_err(|e| NatsuzoraError::ParseError {
             message: e.to_string(),
             location: Location::default(),
         })?;
@@ -77,7 +78,7 @@ impl Natsuzora {
     /// ).unwrap();
     /// ```
     pub fn parse_with_includes(source: &str, include_root: impl AsRef<Path>) -> Result<Self> {
-        let template = natsuzora_ast::parse(source).map_err(|e| NatsuzoraError::ParseError {
+        let template = crate::ast::parse(source).map_err(|e| NatsuzoraError::ParseError {
             message: e.to_string(),
             location: Location::default(),
         })?;

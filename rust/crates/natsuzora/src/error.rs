@@ -3,7 +3,7 @@
 use thiserror::Error;
 
 // Re-export Location from natsuzora-ast
-pub use natsuzora_ast::Location;
+pub use crate::ast::Location;
 
 /// All errors that can occur in Natsuzora
 #[derive(Error, Debug)]

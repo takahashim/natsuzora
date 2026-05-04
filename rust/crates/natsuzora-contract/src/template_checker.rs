@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use natsuzora_ast::{AstNode, IncludeLoader, Location, Path, Template};
+use natsuzora::ast::{AstNode, IncludeLoader, Location, Path, Template};
 
 use crate::types::Contract;
 
@@ -363,7 +363,7 @@ mod tests {
     struct NoopLoader;
 
     impl IncludeLoader for NoopLoader {
-        fn load(&mut self, _: &str) -> Result<natsuzora_ast::Template, LoaderError> {
+        fn load(&mut self, _: &str) -> Result<natsuzora::ast::Template, LoaderError> {
             Err("no includes".into())
         }
     }
@@ -425,7 +425,7 @@ mod tests {
     #[test]
     fn valid_template_passes() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ site.title ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site.title ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert!(errors.is_empty());
@@ -434,7 +434,7 @@ mod tests {
     #[test]
     fn undefined_field_error() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ site.tagline ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site.tagline ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -445,7 +445,7 @@ mod tests {
     #[test]
     fn suggestion_for_typo() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ site.titel ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site.titel ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -456,7 +456,7 @@ mod tests {
     fn each_on_array_works() {
         let contract = make_contract();
         let template =
-            natsuzora_ast::parse("{[#each posts as post]}{[ post.title ]}{[/each]}").unwrap();
+            natsuzora::ast::parse("{[#each posts as post]}{[ post.title ]}{[/each]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert!(errors.is_empty());
@@ -466,7 +466,7 @@ mod tests {
     fn each_on_non_array_error() {
         let contract = make_contract();
         let template =
-            natsuzora_ast::parse("{[#each site as item]}{[ item ]}{[/each]}").unwrap();
+            natsuzora::ast::parse("{[#each site as item]}{[ item ]}{[/each]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -477,7 +477,7 @@ mod tests {
     fn nested_path_in_each() {
         let contract = make_contract();
         let template =
-            natsuzora_ast::parse("{[#each posts as post]}{[ post.unknown ]}{[/each]}").unwrap();
+            natsuzora::ast::parse("{[#each posts as post]}{[ post.unknown ]}{[/each]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -487,7 +487,7 @@ mod tests {
     #[test]
     fn multiple_errors_in_template() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ site.foo ]}{[ site.bar ]}{[ unknown ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site.foo ]}{[ site.bar ]}{[ unknown ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 3);
@@ -497,7 +497,7 @@ mod tests {
     fn if_condition_allows_any_type() {
         let contract = make_contract();
         // site is an object, but can be used in if condition (truthiness check)
-        let template = natsuzora_ast::parse("{[#if site]}has site{[/if]}").unwrap();
+        let template = natsuzora::ast::parse("{[#if site]}has site{[/if]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert!(errors.is_empty());
@@ -506,7 +506,7 @@ mod tests {
     #[test]
     fn unless_condition_allows_any_type() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[#unless posts]}no posts{[/unless]}").unwrap();
+        let template = natsuzora::ast::parse("{[#unless posts]}no posts{[/unless]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert!(errors.is_empty());
@@ -515,7 +515,7 @@ mod tests {
     #[test]
     fn if_with_undefined_condition_error() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[#if unknown]}test{[/if]}").unwrap();
+        let template = natsuzora::ast::parse("{[#if unknown]}test{[/if]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -525,7 +525,7 @@ mod tests {
     #[test]
     fn object_as_scalar_error() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ site ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -536,7 +536,7 @@ mod tests {
     #[test]
     fn array_as_scalar_error() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ posts ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ posts ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -547,7 +547,7 @@ mod tests {
     #[test]
     fn access_property_on_scalar_error() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ site.title.foo ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site.title.foo ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -557,7 +557,7 @@ mod tests {
     #[test]
     fn access_property_on_array_error() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ posts.title ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ posts.title ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -567,7 +567,7 @@ mod tests {
     #[test]
     fn unsecure_output_check() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[!unsecure site.title ]}").unwrap();
+        let template = natsuzora::ast::parse("{[!unsecure site.title ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert!(errors.is_empty());
@@ -576,7 +576,7 @@ mod tests {
     #[test]
     fn unsecure_undefined_error() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[!unsecure site.unknown ]}").unwrap();
+        let template = natsuzora::ast::parse("{[!unsecure site.unknown ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -588,7 +588,7 @@ mod tests {
         let contract = make_contract();
         // Include arguments can be objects, arrays, or scalars
         let template =
-            natsuzora_ast::parse("{[!include /header site=site posts=posts title=site.title ]}")
+            natsuzora::ast::parse("{[!include /header site=site posts=posts title=site.title ]}")
                 .unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
@@ -598,7 +598,7 @@ mod tests {
     #[test]
     fn include_args_undefined_error() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[!include /header data=unknown ]}").unwrap();
+        let template = natsuzora::ast::parse("{[!include /header data=unknown ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -608,7 +608,7 @@ mod tests {
     #[test]
     fn error_location_is_accurate() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("Hello {[ site.unknown ]}!").unwrap();
+        let template = natsuzora::ast::parse("Hello {[ site.unknown ]}!").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -619,7 +619,7 @@ mod tests {
     #[test]
     fn multiline_error_location() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("Line 1\n{[ site.foo ]}").unwrap();
+        let template = natsuzora::ast::parse("Line 1\n{[ site.foo ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -665,7 +665,7 @@ mod tests {
             )]),
         };
 
-        let template = natsuzora_ast::parse(
+        let template = natsuzora::ast::parse(
             "{[#each categories as cat]}{[ cat.name ]}{[#each cat.posts as post]}{[ post.title ]}{[/each]}{[/each]}",
         )
         .unwrap();
@@ -703,7 +703,7 @@ mod tests {
             )]),
         };
 
-        let template = natsuzora_ast::parse(
+        let template = natsuzora::ast::parse(
             "{[#each categories as cat]}{[#each cat.posts as post]}{[ post.unknown ]}{[/each]}{[/each]}",
         )
         .unwrap();
@@ -717,7 +717,7 @@ mod tests {
     fn if_else_both_branches_checked() {
         let contract = make_contract();
         let template =
-            natsuzora_ast::parse("{[#if site]}{[ site.foo ]}{[#else]}{[ site.bar ]}{[/if]}")
+            natsuzora::ast::parse("{[#if site]}{[ site.foo ]}{[#else]}{[ site.bar ]}{[/if]}")
                 .unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
@@ -727,7 +727,7 @@ mod tests {
     #[test]
     fn case_insensitive_suggestion() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ site.Title ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site.Title ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -738,7 +738,7 @@ mod tests {
     fn levenshtein_suggestion() {
         let contract = make_contract();
         // "tite" has edit distance 1 from "title"
-        let template = natsuzora_ast::parse("{[ site.tite ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site.tite ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);
@@ -748,7 +748,7 @@ mod tests {
     #[test]
     fn no_suggestion_for_unrelated_name() {
         let contract = make_contract();
-        let template = natsuzora_ast::parse("{[ site.xyz ]}").unwrap();
+        let template = natsuzora::ast::parse("{[ site.xyz ]}").unwrap();
         let mut loader = NoopLoader;
         let errors = check_template(&template, &contract, &mut loader);
         assert_eq!(errors.len(), 1);

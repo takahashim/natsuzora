@@ -8,7 +8,7 @@ use crate::error::{NatsuzoraError, Result};
 use crate::html_escape;
 use crate::template_loader::TemplateLoader;
 use crate::value::Value;
-use natsuzora_ast::{
+use crate::ast::{
     AstNode, EachBlock, IfBlock, IncludeNode, Modifier, Template, UnlessBlock, UnsecureNode,
     VariableNode,
 };

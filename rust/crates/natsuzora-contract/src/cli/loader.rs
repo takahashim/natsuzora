@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use natsuzora_ast::{IncludeLoader, LoaderError, Template};
+use natsuzora::ast::{IncludeLoader, LoaderError, Template};
 use std::{collections::HashMap, fs, path::PathBuf};
 
 pub(super) struct FileIncludeLoader {
@@ -81,7 +81,7 @@ impl IncludeLoader for FileIncludeLoader {
         let path = self.resolve_secure_path(name)?;
         let source =
             fs::read_to_string(&path).with_context(|| format!("reading include {path:?}"))?;
-        let template = natsuzora_ast::parse(&source)?;
+        let template = natsuzora::ast::parse(&source)?;
         self.cache.insert(name.to_string(), template.clone());
         Ok(template)
     }

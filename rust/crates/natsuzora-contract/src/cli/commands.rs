@@ -18,7 +18,7 @@ pub(super) fn run_extract(args: ExtractArgs) -> Result<()> {
 
     let source = fs::read_to_string(&args.template)
         .with_context(|| format!("reading {:?}", args.template))?;
-    let template = natsuzora_ast::parse(&source).map_err(|err| anyhow!("parse error: {err}"))?;
+    let template = natsuzora::ast::parse(&source).map_err(|err| anyhow!("parse error: {err}"))?;
 
     let mut loader = FileIncludeLoader::new(include_root)?;
     let contract = extract_contract(&template, &mut loader)?;
@@ -74,7 +74,7 @@ fn run_check_single(args: CheckArgs) -> Result<()> {
     let template_source =
         fs::read_to_string(&template_path).with_context(|| format!("reading {template_path:?}"))?;
     let template =
-        natsuzora_ast::parse(&template_source).map_err(|err| anyhow!("parse error: {err}"))?;
+        natsuzora::ast::parse(&template_source).map_err(|err| anyhow!("parse error: {err}"))?;
 
     let mut loader = FileIncludeLoader::new(include_root)?;
     let errors = check_template(&template, &contract, &mut loader);
@@ -162,7 +162,7 @@ fn run_check_batch(args: CheckArgs) -> Result<()> {
                 continue;
             }
         };
-        let template = match natsuzora_ast::parse(&template_source) {
+        let template = match natsuzora::ast::parse(&template_source) {
             Ok(t) => t,
             Err(e) => {
                 eprintln!("{name}: error parsing template: {e}");
@@ -259,7 +259,7 @@ pub(super) fn run_sync(args: SyncArgs) -> Result<()> {
 
         let template_source = fs::read_to_string(template_path)
             .with_context(|| format!("reading {template_path:?}"))?;
-        let template = natsuzora_ast::parse(&template_source)
+        let template = natsuzora::ast::parse(&template_source)
             .map_err(|err| anyhow!("parse error in {template_path:?}: {err}"))?;
 
         let extracted = extract_contract(&template, &mut loader)?;

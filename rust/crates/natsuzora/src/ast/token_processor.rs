@@ -5,8 +5,8 @@
 //! - Consume comment tags entirely
 //! - Detect unclosed comments
 
-use crate::token::{Token, TokenType};
-use crate::ParseError;
+use super::token::{Token, TokenType};
+use super::ParseError;
 
 /// Process tokens: handle whitespace control and strip comments.
 pub fn process(tokens: Vec<Token>) -> Result<Vec<Token>, ParseError> {
@@ -224,7 +224,7 @@ fn leading_newline_advance(bytes: &[u8], pos: usize) -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Location;
+    use super::super::Location;
 
     fn text_token(value: &str) -> Token {
         Token::new(TokenType::Text, value, Location::new(1, 1, 0))

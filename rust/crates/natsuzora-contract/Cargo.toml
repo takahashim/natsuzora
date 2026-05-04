@@ -18,7 +18,7 @@ path = "src/main.rs"
 
 [dependencies]
 bitflags = "2.6"
-natsuzora-ast = { path = "../natsuzora-ast" }
+natsuzora = { path = "../natsuzora", version = "0.4.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

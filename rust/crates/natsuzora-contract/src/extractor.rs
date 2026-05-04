@@ -9,7 +9,7 @@ use std::{
 };
 
 use bitflags::bitflags;
-use natsuzora_ast::{
+use natsuzora::ast::{
     AstNode, EachBlock, IfBlock, IncludeLoader, IncludeNode, Modifier, Path, Template,
     UnlessBlock, UnsecureNode, VariableNode,
 };
@@ -26,7 +26,7 @@ pub enum ContractError {
     IncludeLoad {
         name: String,
         #[source]
-        source: natsuzora_ast::LoaderError,
+        source: natsuzora::ast::LoaderError,
     },
 }
 
@@ -39,7 +39,7 @@ pub enum ContractError {
 /// # Example
 ///
 /// ```rust,ignore
-/// use natsuzora_ast::parse;
+/// use natsuzora::ast::parse;
 /// use natsuzora_contract::extract_contract;
 ///
 /// let template = parse("Hello {[ user.name ]}!").unwrap();
@@ -441,7 +441,7 @@ fn scalar_constraint_for_modifier(modifier: Modifier) -> ScalarConstraint {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use natsuzora_ast::LoaderError;
+    use natsuzora::ast::LoaderError;
 
     struct TestLoader;
 
@@ -453,7 +453,7 @@ mod tests {
 
     #[test]
     fn extracts_simple_object_contract() {
-        let template = natsuzora_ast::parse("Hello {[ user.name ]}!").unwrap();
+        let template = natsuzora::ast::parse("Hello {[ user.name ]}!").unwrap();
         let mut loader = TestLoader;
         let contract = extract_contract(&template, &mut loader).unwrap();
         match contract {
@@ -478,7 +478,7 @@ mod tests {
 
     #[test]
     fn extracts_bool_for_if_condition() {
-        let template = natsuzora_ast::parse("{[#if visible]}Hello{[/if]}").unwrap();
+        let template = natsuzora::ast::parse("{[#if visible]}Hello{[/if]}").unwrap();
         let mut loader = TestLoader;
         let contract = extract_contract(&template, &mut loader).unwrap();
         match contract {
@@ -498,7 +498,7 @@ mod tests {
     #[test]
     fn extracts_array_for_each() {
         let template =
-            natsuzora_ast::parse("{[#each items as item]}{[ item.name ]}{[/each]}").unwrap();
+            natsuzora::ast::parse("{[#each items as item]}{[ item.name ]}{[/each]}").unwrap();
         let mut loader = TestLoader;
         let contract = extract_contract(&template, &mut loader).unwrap();
         match contract {

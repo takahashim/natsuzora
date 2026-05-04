@@ -1,7 +1,7 @@
 //! Template loader for handling include directives.
 
 use crate::error::{NatsuzoraError, Result};
-use natsuzora_ast::{IncludeLoader, LoaderError, Template};
+use crate::ast::{IncludeLoader, LoaderError, Template};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -174,7 +174,7 @@ impl TemplateLoader {
         }
 
         let source = fs::read_to_string(&path)?;
-        natsuzora_ast::parse(&source).map_err(|e| NatsuzoraError::IncludeError {
+        crate::ast::parse(&source).map_err(|e| NatsuzoraError::IncludeError {
             message: format!("Failed to parse include '{name}': {e}"),
         })
     }

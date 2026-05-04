@@ -1,6 +1,6 @@
 //! Token types for the Natsuzora lexer.
 
-use crate::Location;
+use super::Location;
 
 /// Token types produced by the lexer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

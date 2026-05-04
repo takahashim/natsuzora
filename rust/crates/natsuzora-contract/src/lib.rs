@@ -24,8 +24,8 @@
 //! let errors = check_template(&template, &contract, &mut loader);
 //! ```
 
-// Re-export IncludeLoader from natsuzora_ast for convenience
-pub use natsuzora_ast::{IncludeLoader, LoaderError};
+// Re-export IncludeLoader from natsuzora::ast for convenience
+pub use natsuzora::ast::{IncludeLoader, LoaderError};
 
 mod apply;
 mod diff;
@@ -63,7 +63,7 @@ pub use apply::{apply_current, apply_diff};
 #[cfg(test)]
 mod tests {
     use super::*;
-    use natsuzora_ast::Template;
+    use natsuzora::ast::Template;
     use serde_json::json;
     use std::collections::BTreeMap;
 
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn integration_extract_and_validate() {
-        let template = natsuzora_ast::parse("Hello {[ user.name ]}!").unwrap();
+        let template = natsuzora::ast::parse("Hello {[ user.name ]}!").unwrap();
         let mut loader = TestLoader;
         let contract = extract_contract(&template, &mut loader).unwrap();
 
