@@ -4,9 +4,7 @@ require 'lexer_kit'
 
 module Natsuzora
   module LexerLoader
-    module_function
-
-    def load_compiled(path)
+    def self.load_compiled(path)
       unless File.file?(path)
         raise LoadError, "Precompiled lexer is missing: #{path}. Run `rake lexers:compile`."
       end

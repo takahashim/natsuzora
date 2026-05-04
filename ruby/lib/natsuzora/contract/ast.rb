@@ -11,10 +11,8 @@ module Natsuzora
   module Contract
     # Contract AST nodes and their serialization helpers.
     module AST
-      module_function
-
       # Build an AST::Node tree from its hash representation.
-      def from_h(hash)
+      def self.from_h(hash)
         case hash['kind']
         when 'any'
           Any.new
