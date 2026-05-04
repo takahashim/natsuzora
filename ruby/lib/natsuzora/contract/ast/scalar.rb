@@ -34,6 +34,15 @@ module Natsuzora
           @modifier == Modifier::REQUIRED
         end
 
+        def accepts?(data)
+          case @scalar_type
+          when ScalarType::STRING then data.is_a?(String)
+          when ScalarType::INTEGER then data.is_a?(Integer)
+          when ScalarType::BOOL then data.is_a?(TrueClass) || data.is_a?(FalseClass)
+          when ScalarType::SCALAR then data.is_a?(String) || data.is_a?(Integer)
+          end
+        end
+
         def to_h
           h = { 'kind' => 'scalar', 'type' => @scalar_type.to_s }
           h['modifier'] = @modifier.to_s unless @modifier == Modifier::NONE

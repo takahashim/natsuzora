@@ -3,7 +3,6 @@
 require 'json'
 require_relative 'type_ref_resolver'
 require_relative 'validation_target'
-require_relative 'scalar_type'
 require_relative 'ast/any'
 require_relative 'ast/scalar'
 require_relative 'ast/record'
@@ -69,26 +68,10 @@ module Natsuzora
       end
 
       def scalar_value_valid?(contract, data, path)
-        case contract.scalar_type
-        when ScalarType::STRING then valid_string?(contract, data, path)
-        when ScalarType::INTEGER then data.is_a?(Integer)
-        when ScalarType::BOOL then data.is_a?(TrueClass) || data.is_a?(FalseClass)
-        when ScalarType::SCALAR then valid_scalar?(contract, data, path)
-        else false
-        end
-      end
+        return false unless contract.accepts?(data)
 
-      def valid_string?(contract, data, path)
-        return false unless data.is_a?(String)
-
-        ensure_not_empty!(contract, data, path)
+        ensure_not_empty!(contract, data, path) if data.is_a?(String)
         true
-      end
-
-      def valid_scalar?(contract, data, path)
-        return valid_string?(contract, data, path) if data.is_a?(String)
-
-        data.is_a?(Integer)
       end
 
       def ensure_not_empty!(contract, data, path)
