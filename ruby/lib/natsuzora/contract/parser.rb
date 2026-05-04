@@ -4,7 +4,6 @@ require_relative 'compiled_lexer'
 require_relative 'parse_error'
 require_relative 'diff_marker'
 require_relative 'scalar_type'
-require_relative 'modifier'
 require_relative 'ast/scalar'
 require_relative 'ast/record'
 require_relative 'ast/list'
@@ -319,18 +318,18 @@ module Natsuzora
       end
 
       def parse_modifier
-        return Modifier::NONE if eof?
+        return AST::Scalar::Modifier::NONE if eof?
 
         check_error!
         case current_type
         when :QUESTION
           advance
-          Modifier::NULLABLE
+          AST::Scalar::Modifier::NULLABLE
         when :EXCLAMATION
           advance
-          Modifier::REQUIRED
+          AST::Scalar::Modifier::REQUIRED
         else
-          Modifier::NONE
+          AST::Scalar::Modifier::NONE
         end
       end
 

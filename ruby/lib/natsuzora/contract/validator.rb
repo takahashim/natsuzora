@@ -3,7 +3,6 @@
 require 'json'
 require_relative 'validation_target'
 require_relative 'scalar_type'
-require_relative 'modifier'
 require_relative 'ast/any'
 require_relative 'ast/scalar'
 require_relative 'ast/record'
@@ -58,7 +57,7 @@ module Natsuzora
       def validate_scalar(contract, data, path)
         # Handle null
         if data.nil?
-          if contract.modifier == Modifier::NULLABLE # rubocop:disable Style/GuardClause
+          if contract.modifier == AST::Scalar::Modifier::NULLABLE # rubocop:disable Style/GuardClause
             return nil
           else
             raise ValidationError.new('null is not allowed', render_path(path))
@@ -69,7 +68,7 @@ module Natsuzora
         valid = case contract.scalar_type
                 when ScalarType::STRING
                   if data.is_a?(String)
-                    if contract.modifier == Modifier::REQUIRED && data.empty?
+                    if contract.modifier == AST::Scalar::Modifier::REQUIRED && data.empty?
                       raise ValidationError.new('empty string is not allowed', render_path(path))
                     end
 
@@ -83,7 +82,7 @@ module Natsuzora
                   data.is_a?(TrueClass) || data.is_a?(FalseClass)
                 when ScalarType::SCALAR
                   if data.is_a?(String)
-                    if contract.modifier == Modifier::REQUIRED && data.empty?
+                    if contract.modifier == AST::Scalar::Modifier::REQUIRED && data.empty?
                       raise ValidationError.new('empty string is not allowed', render_path(path))
                     end
 

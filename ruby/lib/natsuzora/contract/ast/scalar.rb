@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'node'
-require_relative '../modifier'
 require_relative '../scalar_type'
 
 module Natsuzora
@@ -9,6 +8,16 @@ module Natsuzora
     module AST
       # Scalar value with type and modifier.
       class Scalar < Node
+        # Modifier for null/empty handling on scalar values.
+        module Modifier
+          # Default: null not allowed, empty string allowed
+          NONE = :none
+          # `?` modifier: null allowed
+          NULLABLE = :nullable
+          # `!` modifier: null not allowed, empty string not allowed
+          REQUIRED = :required
+        end
+
         attr_reader :scalar_type, :modifier
 
         def initialize(scalar_type, modifier = Modifier::NONE)

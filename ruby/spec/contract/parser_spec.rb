@@ -13,12 +13,12 @@ RSpec.describe Natsuzora::Contract::Parser do
 
     it 'parses nullable modifier' do
       contract = Natsuzora::Contract.parse('name: string?')
-      expect(contract.properties['name'].modifier).to eq(Natsuzora::Contract::Modifier::NULLABLE)
+      expect(contract.properties['name'].modifier).to eq(Natsuzora::Contract::AST::Scalar::Modifier::NULLABLE)
     end
 
     it 'parses required modifier' do
       contract = Natsuzora::Contract.parse('name: string!')
-      expect(contract.properties['name'].modifier).to eq(Natsuzora::Contract::Modifier::REQUIRED)
+      expect(contract.properties['name'].modifier).to eq(Natsuzora::Contract::AST::Scalar::Modifier::REQUIRED)
     end
 
     it 'parses nested object' do
