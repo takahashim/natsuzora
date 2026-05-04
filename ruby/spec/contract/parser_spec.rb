@@ -103,6 +103,17 @@ RSpec.describe Natsuzora::Contract::Parser do
     it 'raises error for undefined type reference' do
       expect { Natsuzora::Contract.parse('user: UndefinedType') }.to raise_error(Natsuzora::Contract::ParseError)
     end
+
+    it 'raises error for cyclic type reference' do
+      schema = <<~SCHEMA
+        type A { ref: B }
+        type B { ref: A }
+        root: A
+      SCHEMA
+      expect { Natsuzora::Contract.parse(schema) }.to raise_error(
+        Natsuzora::Contract::ParseError, /cyclic type reference/
+      )
+    end
   end
 
   describe '.parse_file_with_diff' do

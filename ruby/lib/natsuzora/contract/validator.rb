@@ -140,7 +140,8 @@ module Natsuzora
             document.types,
             target: target,
             on_missing: ->(name) { raise ValidationError, "undefined type '#{name}'" },
-            on_unavailable: ->(name) { raise ValidationError, "type '#{name}' is not available for #{target}" }
+            on_unavailable: ->(name) { raise ValidationError, "type '#{name}' is not available for #{target}" },
+            on_cyclic: ->(name) { raise ValidationError, "cyclic type reference '#{name}'" }
           )
 
           properties = {}

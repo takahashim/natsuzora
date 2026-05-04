@@ -10,11 +10,13 @@ module Natsuzora
     # looked up from a TypeDef registry. Missing or unavailable refs are
     # delegated to caller-supplied callbacks.
     class TypeRefResolver
-      def initialize(types, target:, on_missing:, on_unavailable:)
+      def initialize(types, target:, on_missing:, on_unavailable:, on_cyclic:)
         @types = types
         @target = target
         @on_missing = on_missing
         @on_unavailable = on_unavailable
+        @on_cyclic = on_cyclic
+        @visiting = Set.new
       end
 
       def resolve(contract)
@@ -36,11 +38,18 @@ module Natsuzora
       private
 
       def resolve_ref(name)
+        return @on_cyclic.call(name) if @visiting.include?(name)
+
         type_def = @types[name]
         return @on_missing.call(name) unless type_def
         return @on_unavailable.call(name) unless type_def.available?(@target)
 
-        resolve(type_def.contract)
+        @visiting.add(name)
+        begin
+          resolve(type_def.contract)
+        ensure
+          @visiting.delete(name)
+        end
       end
     end
   end

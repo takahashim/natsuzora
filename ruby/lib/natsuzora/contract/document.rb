@@ -23,7 +23,8 @@ module Natsuzora
           @types,
           target: target,
           on_missing: ->(name) { raise ParseError.new("undefined type '#{name}'", 0, 0) },
-          on_unavailable: ->(_) { AST::Any.new }
+          on_unavailable: ->(_) { AST::Any.new },
+          on_cyclic: ->(name) { raise ParseError.new("cyclic type reference '#{name}'", 0, 0) }
         )
 
         properties = {}
