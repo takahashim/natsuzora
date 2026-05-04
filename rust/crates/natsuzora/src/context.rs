@@ -40,7 +40,7 @@ impl Context {
         let mut value = self.resolve_name(name, location)?;
 
         for segment in &path[1..] {
-            value = self.access_property(value, segment, location)?;
+            value = access_property(value, segment, location)?;
         }
 
         Ok(value)
@@ -106,25 +106,20 @@ impl Context {
         }
         None
     }
+}
 
-    /// Access a property on an object value
-    fn access_property<'a>(
-        &self,
-        value: &'a Value,
-        key: &str,
-        location: Location,
-    ) -> Result<&'a Value> {
-        match value {
-            Value::Object(obj) => obj
-                .get(key)
-                .ok_or_else(|| NatsuzoraError::UndefinedVariable {
-                    message: format!("Undefined property: {key}"),
-                    location,
-                }),
-            _ => Err(NatsuzoraError::TypeError {
-                message: format!("Cannot access property '{key}' on non-object"),
+/// Access a property on an object value.
+fn access_property<'a>(value: &'a Value, key: &str, location: Location) -> Result<&'a Value> {
+    match value {
+        Value::Object(obj) => obj
+            .get(key)
+            .ok_or_else(|| NatsuzoraError::UndefinedVariable {
+                message: format!("Undefined property: {key}"),
+                location,
             }),
-        }
+        _ => Err(NatsuzoraError::TypeError {
+            message: format!("Cannot access property '{key}' on non-object"),
+        }),
     }
 }
 

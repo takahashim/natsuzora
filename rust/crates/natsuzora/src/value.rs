@@ -27,15 +27,15 @@ impl Value {
             JsonValue::Bool(b) => Ok(Value::Bool(b)),
             JsonValue::Number(n) => {
                 if let Some(i) = n.as_i64() {
-                    if !(INTEGER_MIN..=INTEGER_MAX).contains(&i) {
-                        return Err(NatsuzoraError::TypeError {
+                    if (INTEGER_MIN..=INTEGER_MAX).contains(&i) {
+                        Ok(Value::Integer(i))
+                    } else {
+                        Err(NatsuzoraError::TypeError {
                             message: format!("Integer out of range: {i}"),
-                        });
+                        })
                     }
-                    Ok(Value::Integer(i))
                 } else if let Some(f) = n.as_f64() {
-                    // Try to convert float to integer if it's a whole number
-                    if f.fract() == 0.0 && f >= INTEGER_MIN as f64 && f <= INTEGER_MAX as f64 {
+                    if f.fract() == 0.0 && (INTEGER_MIN as f64..=INTEGER_MAX as f64).contains(&f) {
                         Ok(Value::Integer(f as i64))
                     } else {
                         Err(NatsuzoraError::TypeError {
@@ -54,11 +54,11 @@ impl Value {
                 Ok(Value::Array(values?))
             }
             JsonValue::Object(obj) => {
-                let mut map = HashMap::new();
-                for (k, v) in obj {
-                    map.insert(k, Value::from_json(v)?);
-                }
-                Ok(Value::Object(map))
+                let values: Result<HashMap<_, _>> = obj
+                    .into_iter()
+                    .map(|(k, v)| Ok((k, Value::from_json(v)?)))
+                    .collect();
+                Ok(Value::Object(values?))
             }
         }
     }
@@ -81,14 +81,7 @@ impl Value {
     pub fn stringify(&self) -> Result<String> {
         match self {
             Value::String(s) => Ok(s.clone()),
-            Value::Integer(n) => {
-                if *n < INTEGER_MIN || *n > INTEGER_MAX {
-                    return Err(NatsuzoraError::TypeError {
-                        message: format!("Integer out of range: {n}"),
-                    });
-                }
-                Ok(n.to_string())
-            }
+            Value::Integer(n) => Ok(n.to_string()),
             Value::Null => Err(NatsuzoraError::TypeError {
                 message: "Cannot stringify null value without '?' modifier".to_string(),
             }),
@@ -112,30 +105,18 @@ impl Value {
         }
     }
 
-    /// Check if value is null
-    pub fn is_null(&self) -> bool {
-        matches!(self, Value::Null)
-    }
-
-    /// Check if value is an empty string
-    pub fn is_empty_string(&self) -> bool {
-        matches!(self, Value::String(s) if s.is_empty())
-    }
-
     /// Stringify with required modifier (! modifier)
     /// Null and empty string cause TypeError
     pub fn stringify_required(&self) -> Result<String> {
-        if self.is_null() {
-            return Err(NatsuzoraError::TypeError {
+        match self {
+            Value::Null => Err(NatsuzoraError::TypeError {
                 message: "Cannot stringify null value with '!' modifier".to_string(),
-            });
-        }
-        if self.is_empty_string() {
-            return Err(NatsuzoraError::TypeError {
+            }),
+            Value::String(s) if s.is_empty() => Err(NatsuzoraError::TypeError {
                 message: "Cannot stringify empty string with '!' modifier".to_string(),
-            });
+            }),
+            _ => self.stringify(),
         }
-        self.stringify()
     }
 
     /// Get the type name for error messages (uses Ruby class names)

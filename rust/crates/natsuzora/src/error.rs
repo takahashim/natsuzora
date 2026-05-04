@@ -11,7 +11,7 @@ pub enum NatsuzoraError {
     #[error("Parse error at line {}, column {}: {message}", location.line, location.column)]
     ParseError { message: String, location: Location },
 
-    #[error("{message}")]
+    #[error("{message} at line {}, column {}", location.line, location.column)]
     UndefinedVariable { message: String, location: Location },
 
     #[error("Type error: {message}")]

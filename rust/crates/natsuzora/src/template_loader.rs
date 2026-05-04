@@ -124,7 +124,7 @@ impl TemplateLoader {
     pub fn load(&mut self, name: &str) -> Result<Template> {
         validate_include_name(name)?;
 
-        if self.include_stack.contains(&name.to_string()) {
+        if self.include_stack.iter().any(|n| n == name) {
             return Err(NatsuzoraError::IncludeError {
                 message: format!("Circular include detected: {name}"),
             });
