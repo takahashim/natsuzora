@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Natsuzora contract notation parser and validator (formerly subaru)"
 license.workspace = true
+repository.workspace = true
 keywords = ["schema", "validation", "json", "natsuzora"]
 categories = ["parser-implementations", "data-structures"]
 
