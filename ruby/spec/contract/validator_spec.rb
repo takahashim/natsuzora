@@ -74,6 +74,15 @@ RSpec.describe Natsuzora::Contract::Validator do
           expect(error.path).to eq('$.items[0].title')
         end
     end
+
+    it 'rejects data nested deeper than MAX_VALIDATE_DEPTH' do
+      depth = Natsuzora::Contract::Validator::MAX_VALIDATE_DEPTH + 5
+      schema = "#{'x { ' * depth}leaf: string#{' }' * depth}"
+      contract = Natsuzora::Contract.parse(schema)
+      data = depth.times.inject({ 'leaf' => 'ok' }) { |acc, _| { 'x' => acc } }
+      expect { Natsuzora::Contract.validate(contract, data) }
+        .to raise_error(Natsuzora::Contract::ValidationError, /depth exceeded/)
+    end
   end
 
   describe '.validate_with_target' do

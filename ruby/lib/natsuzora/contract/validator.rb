@@ -24,6 +24,8 @@ module Natsuzora
 
     # Validator for JSON data against contracts.
     class Validator
+      MAX_VALIDATE_DEPTH = 64
+
       # Validate JSON data against a contract.
       def self.validate(contract, data)
         new.validate_node(contract, data, [])
@@ -36,6 +38,8 @@ module Natsuzora
       end
 
       def validate_node(contract, data, path)
+        raise ValidationError.new('validation depth exceeded', render_path(path)) if path.length > MAX_VALIDATE_DEPTH
+
         case contract
         when AST::Any
           nil # any value is valid
