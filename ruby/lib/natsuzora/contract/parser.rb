@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'lexer'
+require_relative 'compiled_lexer'
 require_relative 'types'
 
 module Natsuzora
@@ -9,7 +9,7 @@ module Natsuzora
     # Uses LexerKit stream directly without creating Token objects.
     class Parser
       def initialize(input)
-        @stream = LEXER.stream(input)
+        @stream = CompiledLexer.instance.stream(input)
         @types = {}
         @last_line = 1
         @last_col = 1

@@ -27,5 +27,8 @@ jobs:
       - name: Install Ruby dependencies
         run: bundle install --jobs 4 --retry 3
 
+      - name: Check precompiled lexers
+        run: bundle exec rake lexers:check
+
       - name: Run Ruby tests
         run: bundle exec rspec

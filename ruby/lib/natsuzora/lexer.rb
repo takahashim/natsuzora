@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'lexer/dsl'
+require_relative 'lexer/compiled_lexer'
 require_relative 'lexer/token_processor'
 require_relative 'token'
 require_relative 'errors'
@@ -22,7 +22,7 @@ module Natsuzora
     end
 
     def tokenize
-      stream = DSL.instance.stream(@source)
+      stream = CompiledLexer.instance.stream(@source)
       mapped_tokens = map_tokens_from_stream(stream)
       processed_tokens = TokenProcessor.new(mapped_tokens).process
       add_eof(processed_tokens)

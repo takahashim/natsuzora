@@ -1,10 +1,73 @@
 # frozen_string_literal: true
 
 require 'bundler/gem_tasks'
+require 'fileutils'
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
+
+LEXER_ROOT = File.expand_path(__dir__)
+LEXERS = {
+  contract: {
+    source: File.join(LEXER_ROOT, 'lib', 'natsuzora', 'lexers', 'contract.rb'),
+    output: File.join(LEXER_ROOT, 'lib', 'natsuzora', 'data', 'lexers', 'contract.lkt1')
+  },
+  template: {
+    source: File.join(LEXER_ROOT, 'lib', 'natsuzora', 'lexers', 'template.rb'),
+    output: File.join(LEXER_ROOT, 'lib', 'natsuzora', 'data', 'lexers', 'template.lkt1')
+  }
+}.freeze
 
 RSpec::Core::RakeTask.new(:spec)
 RuboCop::RakeTask.new
 
-task default: %i[spec rubocop]
+def build_program(source)
+  require 'lexer_kit'
+  LexerKit.load_builder(source).compile
+end
+
+def compile_lexers
+  LEXERS.each do |name, config|
+    FileUtils.mkdir_p(File.dirname(config[:output]))
+    LexerKit::Format::LKT1.save(build_program(config[:source]), path: config[:output])
+    puts "Compiled #{name} lexer to #{config[:output]}"
+  end
+end
+
+def lexer_check_failures
+  require 'lexer_kit'
+
+  LEXERS.each_with_object([]) do |(name, config), failures|
+    unless File.file?(config[:output])
+      failures << "Missing #{name} lexer: #{config[:output]}"
+      next
+    end
+
+    expected_binary = build_program(config[:source]).to_binary
+    actual_binary = LexerKit.load_lexer(config[:output]).to_binary
+    failures << "Stale #{name} lexer: #{config[:output]}" unless actual_binary == expected_binary
+  rescue StandardError => e
+    failures << "Invalid #{name} lexer: #{e.class}: #{e.message}"
+  end
+end
+
+def abort_if_lexers_stale
+  failures = lexer_check_failures
+  return if failures.empty?
+
+  failures.each { |failure| warn failure }
+  abort 'Precompiled lexer files are not up to date. Run `rake lexers:compile`.'
+end
+
+namespace :lexers do
+  desc 'Compile LexerKit DSL files into precompiled .lkt1 programs'
+  task :compile do
+    compile_lexers
+  end
+
+  desc 'Verify precompiled LexerKit programs are present and up to date'
+  task :check do
+    abort_if_lexers_stale
+  end
+end
+
+task default: %i[lexers:check spec rubocop]
