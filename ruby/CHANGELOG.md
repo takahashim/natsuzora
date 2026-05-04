@@ -10,7 +10,14 @@
   `Natsuzora::Contract.parse_file(input)`,
   `Natsuzora::Contract.parse_file_with_diff(input)`,
   `Natsuzora::Contract.validate(contract, data)`,
-  `Natsuzora::Contract.validate_with_target(contract_file, data, target:)`.
+  `Natsuzora::Contract.validate_with_target(document, data, target:)`.
+- Contract AST nodes are grouped under `Natsuzora::Contract::AST::`
+  (`Any`, `Scalar`, `Record`, `List`, `Ref`, with `Node` as the abstract
+  base). `Natsuzora::Contract::AST.from_h(hash)` rebuilds an AST tree
+  from its hash representation.
+- `Natsuzora::Contract::TypeRefResolver` walks an AST tree replacing
+  `AST::Ref` nodes with concrete contracts; configurable via
+  `on_missing` / `on_unavailable` callbacks.
 - Shared JSON tests under `tests/contract/` for cross-language parity with
   the Rust `natsuzora-contract` crate.
 - `Natsuzora::Payload` class wrapping render input data. The class
@@ -23,10 +30,6 @@
   prepared value conforms to the Natsuzora type system.
 
 ### Changed
-- `subaru` gem is now obsolete; users should switch to
-  `gem 'natsuzora', '~> 0.4'` and replace `Subaru::Foo` references with
-  `Natsuzora::Contract::Foo`. `Subaru.parse` / `Subaru.validate` map to
-  `Natsuzora::Contract.parse` / `Natsuzora::Contract.validate`.
 - **Breaking** (pre-1.0): `Natsuzora::Template#render` now accepts a
   `Natsuzora::Payload` instead of a raw `Hash`. The top-level facade
   `Natsuzora.render(source, data, ...)` is unchanged and wraps `data` in a
