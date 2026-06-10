@@ -42,6 +42,108 @@
       "template": "before{[% comment -]}\nafter",
       "data": {},
       "expected": "beforeafter"
+    },
+    {
+      "name": "comment with special characters",
+      "template": "a{[% <div class=\"x\">, {y: (1,2)}. ]}b",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "comment containing open delimiter",
+      "template": "a{[% {[ not a tag ]}b",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "comment with bracket inside content",
+      "template": "a{[%x]y]}b",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "comment content ending with bracket",
+      "template": "a{[%x]]}b",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "comment with specials and right trim",
+      "template": "before{[% <b>&\"x\" -]}\nafter",
+      "data": {},
+      "expected": "beforeafter"
+    },
+    {
+      "name": "comment with specials and left trim",
+      "template": "line1\n  {[-% <c> ]}line2",
+      "data": {},
+      "expected": "line1\nline2"
+    },
+    {
+      "name": "dash inside comment content",
+      "template": "a{[% x-y ]}b",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "dash then space is not a trim flag",
+      "template": "a{[% x - ]}b",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "empty comment with right trim",
+      "template": "a{[%-]}\nb",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "double dash comment is content dash plus trim",
+      "template": "a{[%--]}\nb",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "empty comment",
+      "template": "a{[%]}b",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "comment terminates at first close delimiter",
+      "template": "a{[% c ]}b]}c",
+      "data": {},
+      "expected": "ab]}c"
+    },
+    {
+      "name": "multi-line comment with special characters",
+      "template": "a{[% <x>\n{y}, :z ]}b",
+      "data": {},
+      "expected": "ab"
+    },
+    {
+      "name": "unclosed comment with special characters",
+      "template": "{[% <unclosed",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "unclosed comment",
+      "template": "{[% abc",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "space before percent is not a comment",
+      "template": "{[ % c ]}",
+      "data": {},
+      "error": "SyntaxError"
+    },
+    {
+      "name": "percent in the middle of a tag",
+      "template": "{[ a % b ]}",
+      "data": {"a": "1", "b": "2"},
+      "error": "SyntaxError"
     }
   ]
 }

@@ -209,7 +209,19 @@ fn text() -> impl Strategy<Value = String> {
 }
 
 fn comment_node() -> impl Strategy<Value = Node> {
-    ("[a-zA-Z0-9_ <>&]{0,10}", trim()).prop_map(|(content, trim)| Node::Comment { content, trim })
+    // Content may be anything not containing the close delimiter `]}`.
+    // A trailing `-` is excluded so the generated Trim flag stays
+    // authoritative (a literal trailing dash would be reinterpreted as
+    // the right-trim flag by both implementations).
+    let content = prop_oneof![
+        4 => "[ -~]{0,12}",
+        1 => "[ -~\n]{0,12}",
+        1 => Just("日本語 <>& コメント".to_string()),
+    ]
+    .prop_filter("comment content must not contain ]} or end with -", |s| {
+        !s.contains("]}") && !s.ends_with('-')
+    });
+    (content, trim()).prop_map(|(content, trim)| Node::Comment { content, trim })
 }
 
 fn var_modifier() -> impl Strategy<Value = Option<char>> {

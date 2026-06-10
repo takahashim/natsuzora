@@ -108,3 +108,17 @@ include without arguments
     (include_name)
     (tag_close)))
 
+
+==================
+comment with special characters and bracket-ending content
+==================
+{[% <div class="x">, {y: (1,2)}. ]}
+{[%a]]}
+{[%-]}
+---
+(template
+  (comment)
+  (text)
+  (comment)
+  (text)
+  (comment))

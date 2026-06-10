@@ -138,6 +138,43 @@ RSpec.describe Natsuzora::Lexer do
       it 'raises error for unclosed comment' do
         expect { tokenize('{[% unclosed') }.to raise_error(Natsuzora::LexerError, /Unclosed comment/)
       end
+
+      it 'allows special characters in comment content' do
+        types = token_types('{[% <a>, "b": {c.d} ]}')
+        expect(types).to eq(%i[EOF])
+      end
+
+      it 'allows open delimiter inside comment content' do
+        types = token_types('{[% {[ not a tag ]}')
+        expect(types).to eq(%i[EOF])
+      end
+
+      it 'allows brackets inside and at the end of content' do
+        expect(token_types('{[%a]b]}')).to eq(%i[EOF])
+        expect(token_types('{[%a]]}')).to eq(%i[EOF])
+      end
+
+      it 'treats dash before close as right trim with special content' do
+        tokens = tokenize("a{[%x<8-]}\nb")
+        texts = tokens.select { |t| t.type == :TEXT }
+        expect(texts.map(&:value)).to eq(%w[a b])
+      end
+
+      it 'handles empty comment and dash-only comment' do
+        expect(token_types('{[%]}')).to eq(%i[EOF])
+        expect(token_types('{[%-]}')).to eq(%i[EOF])
+        expect(token_types('{[%--]}')).to eq(%i[EOF])
+      end
+
+      it 'terminates at the first close delimiter' do
+        tokens = tokenize('a{[% c ]}b]}c')
+        texts = tokens.select { |t| t.type == :TEXT }
+        expect(texts.map(&:value)).to eq(['a', 'b]}c'])
+      end
+
+      it 'raises error for unclosed comment with special characters' do
+        expect { tokenize('{[% <unclosed') }.to raise_error(Natsuzora::LexerError, /Unclosed comment/)
+      end
     end
 
     context 'with whitespace control markers' do

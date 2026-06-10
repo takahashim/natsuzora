@@ -125,6 +125,7 @@ impl<'a> Lexer<'a> {
 
             b'%' => {
                 self.emit_fixed(tokens, TokenType::Percent, loc);
+                self.scan_comment_rest(tokens);
             }
 
             b'-' => {
@@ -238,6 +239,30 @@ impl<'a> Lexer<'a> {
             }
         }
         self.emit_fixed(tokens, TokenType::Exclamation, loc);
+    }
+
+    /// Raw-scan a comment body after `%` up to the first `]}` (spec
+    /// 4.5.4): the content is not tokenized, so any characters
+    /// (including `{[` and newlines) are allowed. A `-` immediately
+    /// before `]}` is the right-trim flag and becomes a Dash token; the
+    /// content itself produces no tokens. On EOF the tag stays open and
+    /// the token processor reports the unclosed comment at the Percent
+    /// location.
+    fn scan_comment_rest(&mut self, tokens: &mut Vec<Token>) {
+        while self.pos < self.source.len() {
+            if self.looking_at(b"-]}") {
+                let loc = Location::new(self.line, self.col, self.pos);
+                self.emit_fixed(tokens, TokenType::Dash, loc);
+                continue; // the next iteration emits Close
+            }
+            if self.looking_at_token(TokenType::Close) {
+                let loc = Location::new(self.line, self.col, self.pos);
+                self.emit_fixed(tokens, TokenType::Close, loc);
+                self.in_tag = false;
+                return;
+            }
+            self.advance_char();
+        }
     }
 
     /// Check if byte at given position is a valid identifier continuation character.
@@ -365,6 +390,120 @@ mod tests {
     #[test]
     fn test_comment() {
         let tokens = tokenize("{[% this is a comment ]}").unwrap();
-        assert!(types(&tokens).contains(&TokenType::Percent));
+        assert_eq!(
+            types(&tokens),
+            vec![TokenType::Percent, TokenType::Close, TokenType::Eof]
+        );
+    }
+
+    #[test]
+    fn test_comment_with_special_characters() {
+        let tokens = tokenize("{[% <a>, \"b\": {c.d} ]}").unwrap();
+        assert_eq!(
+            types(&tokens),
+            vec![TokenType::Percent, TokenType::Close, TokenType::Eof]
+        );
+    }
+
+    #[test]
+    fn test_comment_with_right_trim() {
+        let tokens = tokenize("{[%a<8-]}").unwrap();
+        assert_eq!(
+            types(&tokens),
+            vec![
+                TokenType::Percent,
+                TokenType::Dash,
+                TokenType::Close,
+                TokenType::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_empty_comment_with_trim_dash() {
+        let tokens = tokenize("{[%-]}").unwrap();
+        assert_eq!(
+            types(&tokens),
+            vec![
+                TokenType::Percent,
+                TokenType::Dash,
+                TokenType::Close,
+                TokenType::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_double_dash_comment() {
+        // First dash is content, second is the right-trim flag.
+        let tokens = tokenize("{[%--]}").unwrap();
+        assert_eq!(
+            types(&tokens),
+            vec![
+                TokenType::Percent,
+                TokenType::Dash,
+                TokenType::Close,
+                TokenType::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_empty_comment() {
+        let tokens = tokenize("{[%]}").unwrap();
+        assert_eq!(
+            types(&tokens),
+            vec![TokenType::Percent, TokenType::Close, TokenType::Eof]
+        );
+    }
+
+    #[test]
+    fn test_comment_content_with_brackets() {
+        let tokens = tokenize("{[%a]b]}").unwrap();
+        assert_eq!(
+            types(&tokens),
+            vec![TokenType::Percent, TokenType::Close, TokenType::Eof]
+        );
+
+        // Content ending with a lone `]` is valid.
+        let tokens = tokenize("{[%a]]}").unwrap();
+        assert_eq!(
+            types(&tokens),
+            vec![TokenType::Percent, TokenType::Close, TokenType::Eof]
+        );
+    }
+
+    #[test]
+    fn test_comment_terminates_at_first_close() {
+        let tokens = tokenize("{[% a ]} b ]}").unwrap();
+        assert_eq!(
+            types(&tokens),
+            vec![
+                TokenType::Percent,
+                TokenType::Close,
+                TokenType::Text,
+                TokenType::Eof,
+            ]
+        );
+        assert_eq!(tokens[2].value, " b ]}");
+    }
+
+    #[test]
+    fn test_multiline_comment_location_tracking() {
+        let tokens = tokenize("{[% <x>\n{y} ]}{[ a ]}").unwrap();
+        // The token after the multi-line comment must be on line 2.
+        let ident = tokens
+            .iter()
+            .find(|t| t.token_type == TokenType::Ident)
+            .unwrap();
+        assert_eq!(ident.location.line, 2);
+    }
+
+    #[test]
+    fn test_unclosed_comment_emits_percent_only() {
+        // The lexer leaves the comment unclosed; the token processor
+        // reports the error.
+        let tokens = tokenize("{[% a<b").unwrap();
+        assert_eq!(types(&tokens), vec![TokenType::Percent, TokenType::Eof]);
     }
 }

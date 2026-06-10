@@ -50,6 +50,16 @@ module Natsuzora
           line, col = stream.line_col
           raise LexerError.new("Unexpected character: '#{text}'", line: line, column: col)
 
+        when :COMMENT_BODY
+          line, col = stream.line_col
+          result.concat(comment_tokens(text, line, col))
+
+        when :COMMENT_UNCLOSED
+          # No `]}` before EOF: emit PERCENT only; the TokenProcessor
+          # reports the unclosed comment at this location.
+          line, col = stream.line_col
+          result << Token.new(:PERCENT, '%', line: line, column: col)
+
         else
           line, col = stream.line_col
           result << Token.new(name, text, line: line, column: col)
@@ -65,6 +75,24 @@ module Natsuzora
       text.gsub(ESCAPE_SEQUENCE, ESCAPED_VALUE)
     end
 
+    # Expands a raw comment-body match ("%...]}") into the token stream
+    # the TokenProcessor expects: PERCENT [DASH] CLOSE. A `-` immediately
+    # before `]}` is the right-trim flag, never content (spec 4.5.4).
+    def comment_tokens(text, line, column)
+      body = text[1..-3]
+      trim = body.end_with?('-')
+      content = trim ? body[0..-2] : body
+
+      tokens = [Token.new(:PERCENT, '%', line: line, column: column)]
+      pos_line, pos_col = position_after(line, column, "%#{content}")
+      if trim
+        tokens << Token.new(:DASH, '-', line: pos_line, column: pos_col)
+        pos_col += 1
+      end
+      tokens << Token.new(:CLOSE, ']}', line: pos_line, column: pos_col)
+      tokens
+    end
+
     def add_eof(tokens)
       if tokens.empty?
         tokens << Token.new(:EOF, nil, line: 1, column: 1)
@@ -76,10 +104,10 @@ module Natsuzora
     end
 
     def position_after_value(token)
-      line = token.line
-      column = token.column
-      value = token.value || ''
+      position_after(token.line, token.column, token.value || '')
+    end
 
+    def position_after(line, column, value)
       value.each_char do |char|
         if char == "\n"
           line += 1

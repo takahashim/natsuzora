@@ -220,11 +220,13 @@ module.exports = grammar({
     include_name: _ => /\/[A-Za-z][A-Za-z0-9_]*(\/[A-Za-z][A-Za-z0-9_]*)*/,
 
     // Comment: {[% ... ]} - % prefix is unambiguous, no external scanner needed
+    // Content is raw-scanned to the first `]}` (spec 4.5.4); the trailing
+    // `]*` allows content ending with a lone `]` (e.g. `{[%a]]}`).
     comment: _ => token(
       seq(
         choice('{[-', '{['),
         '%',
-        /([^\]]|\][^}])*/,
+        /([^\]]|\]+[^}\]])*\]*/,
         choice('-]}', ']}'),
       )
     ),
