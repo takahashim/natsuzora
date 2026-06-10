@@ -174,8 +174,14 @@ impl TemplateLoader {
         }
 
         let source = fs::read_to_string(&path)?;
-        crate::ast::parse(&source).map_err(|e| NatsuzoraError::IncludeError {
-            message: format!("Failed to parse include '{name}': {e}"),
+        // A syntax error inside a partial stays a parse error (spec 6);
+        // the include context is carried by the trace wrapper.
+        crate::ast::parse(&source).map_err(|e| NatsuzoraError::WithIncludeTrace {
+            trace: format!("{name} ({})", path.display()),
+            source: Box::new(NatsuzoraError::ParseError {
+                message: e.to_string(),
+                location: crate::error::Location::default(),
+            }),
         })
     }
 }

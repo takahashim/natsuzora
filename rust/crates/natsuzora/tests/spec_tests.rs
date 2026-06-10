@@ -123,6 +123,8 @@ fn error_type_matches(e: &natsuzora::NatsuzoraError, expected: &str) -> bool {
         (TypeError { .. }, "EmptyStringError") => true,
         (ShadowingError { .. }, "ShadowingError") => true,
         (IncludeError { .. }, "IncludeError") => true,
+        // Errors inside a partial keep their type behind the trace wrapper
+        (WithIncludeTrace { source, .. }, _) => error_type_matches(source, expected),
         _ => false,
     }
 }

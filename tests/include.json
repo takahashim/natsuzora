@@ -119,6 +119,15 @@
       },
       "data": {},
       "expected": "before\npartialafter"
+    },
+    {
+      "name": "syntax error inside partial is a syntax error",
+      "template": "{[!include /broken]}",
+      "partials": {
+        "/broken": "{[#if x]}unclosed"
+      },
+      "data": {"x": 1},
+      "error": "SyntaxError"
     }
   ]
 }
