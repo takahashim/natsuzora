@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'lexer_kit', '~> 0.5'
+gem 'lexer_kit', '~> 0.6'
 
 group :development, :test do
   gem 'rake'
