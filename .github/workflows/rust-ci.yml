@@ -28,4 +28,32 @@ jobs:
           workspaces: rust -> target
 
       - name: Run Rust tests
-        run: cargo test --workspace
+        run: cargo test --workspace --exclude natsuzora-difftest
+
+  difftest:
+    name: Differential Tests (Rust vs Ruby)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust -> target
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - name: Install Ruby dependencies
+        run: bundle install --jobs 4 --retry 3
+        working-directory: ruby
+
+      - name: Run differential tests
+        run: cargo test -p natsuzora-difftest
+        working-directory: rust
