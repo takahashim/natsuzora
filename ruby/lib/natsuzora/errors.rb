@@ -19,9 +19,9 @@ module Natsuzora
     end
   end
 
-  class LexerError < Error; end
-
   class ParseError < Error; end
+
+  class LexerError < ParseError; end
 
   class ReservedWordError < ParseError; end
 

@@ -257,7 +257,7 @@ module Natsuzora
 
       token = current_token
       if current_type == :INVALID
-        raise LexerError.new("Invalid character in include path: '#{token.value}'",
+        raise ParseError.new("Invalid character in include path: '#{token.value}'",
                              line: token.line, column: token.column)
       end
       unless current_type == :IDENT
@@ -266,7 +266,7 @@ module Natsuzora
 
       ident_token = consume(:IDENT)
       if ident_token.value.start_with?('_')
-        raise LexerError.new("Include segment cannot start with underscore: #{ident_token.value}",
+        raise ParseError.new("Include segment cannot start with underscore: #{ident_token.value}",
                              line: ident_token.line, column: ident_token.column)
       end
 
