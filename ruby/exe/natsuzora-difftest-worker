@@ -1,0 +1,79 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# JSONL worker for differential testing (see spec/difftest.md).
+#
+# Reads one request per line from stdin:
+#   {"id": 1, "template": "...", "data": {...}, "partials": {"/name": "..."}}
+# Writes one response per line to stdout:
+#   {"id": 1, "ok": true, "output": "..."}
+#   {"id": 1, "ok": false, "error": "<canonical error type>"}
+#
+# Non-Natsuzora exceptions are intentionally not rescued: a crash of this
+# worker is a harness error, not a render outcome.
+
+require 'json'
+require 'tmpdir'
+require 'fileutils'
+require 'natsuzora'
+
+module DifftestWorker
+  module_function
+
+  # Maps a Natsuzora exception to the canonical error type of the
+  # difftest protocol. Order matters: subclasses before parents.
+  def canonical_error(error)
+    case error
+    when Natsuzora::ReservedWordError then 'ReservedWordError'
+    when Natsuzora::ParseError then 'ParseError' # includes LexerError
+    when Natsuzora::UndefinedVariableError then 'UndefinedVariable'
+    when Natsuzora::TypeError then 'TypeError'
+    when Natsuzora::ShadowingError then 'ShadowingError'
+    when Natsuzora::IncludeError then 'IncludeError'
+    else "Unmapped(#{error.class})"
+    end
+  end
+
+  # Same materialization rule as the shared spec tests:
+  # "/a/b" -> <root>/a/_b.ntzr
+  def materialize_partials(partials, dir)
+    partials.each do |name, content|
+      segments = name.split('/').reject(&:empty?)
+      segments[-1] = "_#{segments[-1]}"
+      path = "#{File.join(dir, *segments)}.ntzr"
+      FileUtils.mkdir_p(File.dirname(path))
+      File.write(path, content)
+    end
+  end
+
+  def render(request)
+    template = request.fetch('template')
+    data = request.fetch('data')
+    partials = request['partials']
+
+    return Natsuzora.render(template, data) if partials.nil? || partials.empty?
+
+    Dir.mktmpdir('natsuzora_difftest') do |dir|
+      materialize_partials(partials, dir)
+      Natsuzora.render(template, data, include_root: dir)
+    end
+  end
+
+  def handle(request)
+    { id: request['id'], ok: true, output: render(request) }
+  rescue Natsuzora::Error => e
+    { id: request['id'], ok: false, error: canonical_error(e) }
+  end
+
+  def run(input: $stdin, output: $stdout)
+    output.sync = true
+    input.each_line do |line|
+      line = line.strip
+      next if line.empty?
+
+      output.puts(JSON.generate(handle(JSON.parse(line))))
+    end
+  end
+end
+
+DifftestWorker.run if $PROGRAM_NAME == __FILE__

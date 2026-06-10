@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc c0d4231daadf0402834c02948e2b8eac776c71d0dea58f78b6154228c2041f4b # shrinks to case = TestCase { template: "{[!include /fmlv r=d911zi ]}", data: Object {"b60_": Bool(true), "d911zi": Array [Array [], String("<b>&\"'</b>")]}, partials: {"/fmlv": "{[#each r as c ]}{[#each r as l ]}{[%&]}{[/each]}{[-/each]}"} }

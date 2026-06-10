@@ -2,6 +2,7 @@
 members = [
     "crates/natsuzora",
     "crates/natsuzora-contract",
+    "crates/natsuzora-difftest",
 ]
 resolver = "2"
 
