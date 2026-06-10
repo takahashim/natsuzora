@@ -7,7 +7,7 @@ Natsuzoraは「表示専用」のミニテンプレート言語で、Rust・Ruby
 
 ```
 natsuzora/
-├── spec/           # 言語仕様（spec.md v3.0, bnf.md）
+├── spec/           # 言語仕様（spec.md v4.0, bnf.md）
 ├── tests/          # 共有テストケース（*.json）
 ├── rust/           # Rust実装
 ├── ruby/           # Ruby実装

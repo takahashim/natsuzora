@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.1
+
+### Added
+- `exe/natsuzora-difftest-worker`: JSONL worker for the
+  cross-implementation differential tests (`spec/difftest.md`).
+
+### Changed
+- Comment content is raw-scanned to the first `]}`; any characters are
+  now allowed inside `{[% ... ]}`.
+- `LexerError` is now a subclass of `ParseError`; the parser raises
+  `ParseError` for include-path violations.
+- Requires `lexer_kit` >= 0.6.1.
+
 ## 0.4.0
 
 ### Added
